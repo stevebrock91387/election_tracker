@@ -59,15 +59,25 @@ BallotItem = {
 
 ## Oddities (don't rely on these fields without checking)
 
-- **Statewide `reportingStatuses` all say `Not Reported`** while every county says `Fully Reported` (or `Not Participating` for one vote type). The statewide status field does not reflect the count.
-- **Precinct `reportingStatus` is mostly `Partially Reported`** (117,320 of 143,533 rows) even in counties marked fully reported. Its meaning is unknown; check the media JSON guide.
+- **Statewide `reportingStatuses` all say `Not Reported`** while every county says `Fully Reported` (or `Not Participating` for one vote type). The guide says this field is not used at state level.
+- **Precinct `reportingStatus` is mostly `Partially Reported`** (117,320 of 143,533 rows) even in counties marked fully reported. The guide lists the value but doesn't define it; meaning still unknown.
 - `Content-Type` is `application/octet-stream`, not `application/json`.
 
 ## Format reference: Arizona Media JSON Guide
 
 - Linked as "Arizona Media JSON Guide" on the SOS press page (`https://azsos.gov/press`, which `/pressazsosgov` redirects to) → `https://azsos.gov/media/752` → PDF at `https://azsos.gov/sites/default/files/docs/Arizona%20Media%20JSON%20Guide.pdf`.
 - Read in the browser 2026-11-20: HTTP 200, `application/pdf`, 221,174 bytes, Last-Modified 2026-10-16, SHA-256 `ff9a1fd41ff5a23a8f5d4d4feb3d765d3434aeddbf77dc4d6e5991e3da559636`.
-- **Not yet saved into `docs/`:** azsos.gov returns 403 to curl (with and without a browser User-Agent), and the browser-download path couldn't be confirmed. Any copy saved here must match the SHA-256 above.
+- Saved as `docs/Arizona Media JSON Guide.pdf` (Steve moved the browser download in, 2026-11-20); SHA-256 matches the browser read above. azsos.gov returns 403 to curl with and without a browser User-Agent.
+
+What the guide (by Enhanced Voting, 4 pages) settles:
+
+- **Request frequency:** "no more frequently than once per minute"; the CDN caches results for up to one minute, so faster requests just get the cached copy. No IP allow-list is needed. **This differs from the 2-minute limit Steve was given from the SOS; the code uses 2 minutes, which satisfies both.**
+- **ZIP is the recommended download:** `https://app.enhancedvoting.com/cdn/results/Arizona/export-{Election ID}.zip` (contains the same JSON; smaller transfer).
+- **Statewide `reportingStatuses`, `precinctsParticipating`, `precinctsReporting` and `precinctResults` are "not used for state results".** That explains the statewide "Not Reported" values; use county-level statuses.
+- **Precinct `reportingStatus` values:** empty, "Not Reported", "Partially Reported", "Election Night Complete", "Fully Reported". The guide doesn't define them further.
+- **`groupResults` (vote types) appear only if the state publishes that detail.**
+- Guide vs. actual file: the guide says `localityResults` and `isVromVirtualPrecinct`; the file has `localResults` and `isFromVirtualPrecinct`. Trust the file and check both names in code.
+- `rankChoiceResults` (file: `rankedChoiceResults`) is filled only for ranked-choice contests: per round, `inactiveBallotCount`, `residualSurplus`, and per option `isElected`/`isEliminated`.
 
 The same press page links "Unofficial Results" to `https://app.enhancedvoting.com/results/public/Arizona/110326GeneralElection` — the same `/results/public/<state>` pattern GA, UT and WA redirect to.
 
