@@ -75,6 +75,13 @@ Steve chose to start loading past results now, ahead of the source-verification 
 2. Verify the 29 unverified rows and the 10 403 rows by actually looking at the pages. Find live election-night sources for ME, KS, RI and CT.
 3. Only after that, start step 2 with the Clarity reader, tested against real 2026 data.
 
+## Queued components (not part of the six-step pipeline)
+
+Order (Steve, 2026-11-20): finish source verification → scenario model → league tracker. Neither may touch `sources/` or `tools/`; flag either if it starts growing.
+
+- `scenarios/` — 2028 "what-if" model from hand-set swings on 2024 county results. Spec: `docs/queued/scenario-model-spec.md`.
+- `league/` — 2028 fantasy league tracker. Spec: `docs/queued/league-tracker-spec.md`.
+
 ## How I work
 
 - Small, verifiable commits; flag it if scope grows.
