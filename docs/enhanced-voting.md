@@ -24,6 +24,18 @@ Each state's 2026 general-election page has a **"Media Export"** link. URL patte
 | UT | `https://electionresults.utah.gov/cdn/results/Utah/export-General11032026.json` | 200, octet-stream, 518,303 bytes, Last-Modified 2026-11-20 16:28:06 GMT |
 | WA | `https://results.votewa.gov/cdn/results/washington/export-20261103.json` | 200, octet-stream, 74,864,683 bytes, Last-Modified 2026-11-20 00:42:53 GMT |
 
+## Added later on 2026-11-20: VA, RI, ID
+
+Found while verifying the registry; each official state page links an Enhanced Voting site (CSP allows `app.enhancedvoting.com`) with a Media Export link. None of these exports has been downloaded.
+
+| State | Results page | Linked export |
+|---|---|---|
+| VA | `https://enr.elections.virginia.gov/results/public/virginia/elections/2026-November-General` | `https://enr.elections.virginia.gov/cdn/results/virginia/export-2026-November-General.json` |
+| RI | `https://electionresults.ri.gov/results/public/rhodeisland/elections/2026StatewideGeneralElection` | `https://electionresults.ri.gov/cdn/results/RhodeIsland/export-2026StatewideGeneralElection.json` |
+| ID | `https://results.voteidaho.gov/results/public/id/elections/nov2026` | `https://results.voteidaho.gov/cdn/results/id/export-nov2026.json` |
+
+That makes seven states on the platform: AZ, GA, UT, WA, VA, RI, ID.
+
 ## Not yet known
 
 - **Whether GA, UT and WA exports use the same JSON structure as AZ.** Not downloaded or opened.

@@ -69,10 +69,20 @@ Steve chose to start loading past results now, ahead of the source-verification 
 - Goal (Steve): the 2024 replay is practice; the real dry run is against 2026 results. Replay plan: hide part of each state's counties, project the rest, score against the final count. Needs a 2020 baseline (not yet downloaded) and Steve's decision on step 5.
 - Not yet obtained: precinct boundaries (UF Election Lab has 2024 shapes; license unverified, some downloads need an account), 2022 codebook/sources not read, MEDSL county-president and House-district datasets (unverified links).
 
+### Source verification pass (2026-11-20)
+
+Every registry row was looked at in the built-in browser. **48 verified, 3 partial (IL, MA, MS), 0 unverified.** Each row's `evidence` says where the link came from and what the page showed.
+
+- Platforms worth one reader each: **Enhanced Voting** (AZ GA UT WA VA RI ID; shared JSON export, see `docs/enhanced-voting.md`), **Clarity** (CO IA SC WV; election ID changes per election, bare `/<ST>/` is a generic shell), the **ResultsAjax.svc** family (MT NE NM OR SD), and Tally-style ENR (AR ND).
+- Sites that moved for 2026: AR (tally-enr), TX (civixapps), ND (resultsnd), KS (kssos.org → ent.sos.ks.gov).
+- No statewide election-night feed from the state: NH, ME, WY, MS, IL, MA, plus MI, NJ, WI.
+- Blockers for automation: CA (Incapsula), PA (reCAPTCHA). Don't bypass either.
+- Not yet done: no API or export other than AZ's has been downloaded or parsed.
+
 ## Next tasks, in order
 
 1. ~~Diagnose the MA TLS error~~ — done 2026-11-20 (see above).
-2. Verify the 29 unverified rows and the 10 403 rows by actually looking at the pages. Find live election-night sources for ME, KS, RI and CT.
+2. ~~Verify the unverified and 403 rows~~ — done 2026-11-20 (see "Source verification pass"). Original wording: Verify the 29 unverified rows and the 10 403 rows by actually looking at the pages. Find live election-night sources for ME, KS, RI and CT.
 3. Only after that, start step 2 with the Clarity reader, tested against real 2026 data.
 
 ## Queued components (not part of the six-step pipeline)
