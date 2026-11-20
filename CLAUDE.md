@@ -23,28 +23,35 @@ Six steps; full version on the whiteboard: https://claude.ai/artifact/G1GZgLyj8r
 
 Dry runs: load the 2026 certified results and compare to the official totals; then the 2027 KY/LA/MS state elections; then the 2028 primaries.
 
-## Current state (as of 2026-11-20, 2 commits)
+## Current state (as of 2026-11-20)
 
 - `sources/registry.csv` — 51 rows (50 states + DC): 13 verified, 9 partial, 29 unverified.
   - **verified** = official URL confirmed from an official page or a 2026 source
   - **partial** = site exists, but format or reporting level not confirmed
   - **unverified** = `candidate_url` is a guess, not yet checked
   - A row becomes verified only after a person (or Claude, in a browser) looks at the page. **An HTTP 200 alone is not verification.**
-- `tools/check_sources.py` — stdlib-only, read-only URL checker.
-- `evidence/check-20261120T194311Z.csv` — first run from this Mac.
+- `tools/check_sources.py` — stdlib-only, read-only URL checker. Run it with `/opt/homebrew/bin/python3` (needs TLS 1.3; it exits early otherwise and records the Python/SSL versions in each row).
+- `evidence/check-20261120T194311Z.csv` — first run from this Mac (Xcode Python 3.9.6, LibreSSL 2.8.3).
+- `evidence/check-20261120T195122Z.csv` — re-run under Homebrew Python 3.14.8, OpenSSL 3.6.5.
 
 ### What the first check found
 
 - Clarity's 200 for CO/IA/SC/WV is the same generic page (identical hash), so it proves nothing about those states. AR/KY got 403 from Clarity, which may mean they're no longer on it (unconfirmed).
 - 403 responses (AZ, AR, KY, MO, NH, NY, OK, TX, NV, WI) most likely mean the site blocks non-browser clients, not that the site is gone.
 - GA, UT, WA all redirect to `/results/public/<state>` — possibly one shared platform.
-- ME candidate URL is a 404. MA failed with a TLS protocol-version error. CA returned only 212 bytes (likely a placeholder between elections).
+- ME candidate URL is a 404. MA failed with a TLS protocol-version error (resolved, see below). CA returned only 212 bytes (likely a placeholder between elections).
 - MI, NJ and WI publish no statewide results on election night; results come from 83 + 21 + 72 county sites.
 - PA's daily Supplemental Election Returns Report estimates the share of mail ballots still uncounted — a useful input for step 4.
 
+### MA TLS error: resolved (2026-11-20)
+
+- Root cause: the MA site refuses TLS 1.2; the default `python3` (Xcode 3.9.6, LibreSSL 2.8.3) supports at most TLS 1.2. Under Homebrew Python, MA returns 200. MA is still **unverified** (nobody has looked at the page).
+- Other changes in the re-run: NY 403 → 200; NV 403 → `HTTPError 302` (redirect Python gave up on; not diagnosed); MN's 200 now lands on a Radware bot-check page (`validate.perfdrive.com`), not the results site. The checker can't tell a bot-check page from a real 200.
+- The registry's `check_20261120` column holds the **first** run's results; it was not rewritten from the re-run.
+
 ## Next tasks, in order
 
-1. Diagnose the MA TLS error: check the Python version and `ssl.OPENSSL_VERSION` before changing any code.
+1. ~~Diagnose the MA TLS error~~ — done 2026-11-20 (see above).
 2. Verify the 29 unverified rows and the 10 403 rows by actually looking at the pages. Find live election-night sources for ME, KS, RI and CT.
 3. Only after that, start step 2 with the Clarity reader, tested against real 2026 data.
 
