@@ -2,3 +2,4 @@ checks/
 __pycache__/
 data/
 .DS_Store
+scenarios/out/
