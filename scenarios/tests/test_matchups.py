@@ -55,6 +55,22 @@ class MatchupsTest(unittest.TestCase):
             self.assertEqual(sum(r.ev for r in res if r.winner == "R"), 312, m.name)
             self.assertEqual(sum(r.ev for r in res if r.winner == "D"), 226, m.name)
 
+    def test_negative_share_rejected(self):
+        with self.assertRaises(ScenarioError):
+            load_text(BASE + '[[matchup.third_party]]\nname = "X"\nshare = -10.0\nfrom_r = 0.5\nfrom_d = 0.5\n')
+
+    def test_split_outside_0_1_rejected(self):
+        with self.assertRaises(ScenarioError):
+            load_text(BASE + '[[matchup.third_party]]\nname = "X"\nshare = 1.0\nfrom_r = 1.5\nfrom_d = -0.5\n')
+
+    def test_non_finite_numbers_rejected(self):
+        with self.assertRaises(ScenarioError):
+            load_text(BASE.replace("national_swing = 0.0", "national_swing = nan"))
+        with self.assertRaises(ScenarioError):
+            load_text(BASE + '[matchup.regional_swing]\nPA = inf\n')
+        with self.assertRaises(ScenarioError):
+            load_text(BASE + '[[matchup.third_party]]\nname = "X"\nshare = inf\nfrom_r = 0.5\nfrom_d = 0.5\n')
+
 
 if __name__ == "__main__":
     unittest.main()

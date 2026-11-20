@@ -2,7 +2,7 @@
 import dataclasses
 import unittest
 
-from scenarios.engine import Scenario, apply
+from scenarios.engine import Scenario, ThirdParty, apply
 from scenarios.matchups import DEFAULT_MATCHUPS, load_matchups
 from scenarios.report import (LABEL, ev_totals, flip_swing, render_csv, render_markdown,
                               sensitivity, tipping_point)
@@ -54,9 +54,10 @@ class ReportTest(unittest.TestCase):
         self.assertEqual(len(rows), 41)
         self.assertEqual(rows[0][0], -10.0)
         self.assertEqual(rows[-1][0], 10.0)
-        for swing, r_ev, d_ev in rows:
+        for swing, r_ev, d_ev, note in rows:
             self.assertLessEqual(r_ev + d_ev, 538)
-        self.assertEqual(dict((s, (r, d)) for s, r, d in rows)[0.0], (312, 226))
+            self.assertEqual(note, "")
+        self.assertEqual({sw: (r, d) for sw, r, d, _ in rows}[0.0], (312, 226))
 
     def test_tie_reported(self):
         units = [Unit("AA", "AA", 269, 600, 400, 0), Unit("BB", "BB", 269, 400, 600, 0)]
@@ -67,6 +68,33 @@ class ReportTest(unittest.TestCase):
         self.assertIsNone(totals["winner"])
         md = render_markdown(s, res, totals, tipping_point(res), None, [])
         self.assertIn("No majority: House decides", md)
+
+    def test_sensitivity_survives_invalid_rows(self):
+        s = dataclasses.replace(VS, third_party=(ThirdParty("X", 5.0, 0.5, 0.5),))
+        rows = sensitivity(UNITS, s)
+        self.assertEqual(len(rows), 41)
+        bad = [row for row in rows if row[1] is None]
+        self.assertTrue(bad, "expected some swings to be not computable")
+        self.assertIn("DC", bad[0][3])
+        res = apply(UNITS, s)
+        md = render_markdown(s, res, ev_totals(res), tipping_point(res), flip_swing(UNITS, s), rows)
+        self.assertIn("not computable", md)
+
+    def test_flip_line_shows_threshold(self):
+        s = dataclasses.replace(VS, national_swing=3.0)
+        res = apply(UNITS, s)
+        flip = flip_swing(UNITS, s)
+        md = render_markdown(s, res, ev_totals(res), tipping_point(res), flip, sensitivity(UNITS, s))
+        self.assertAlmostEqual(3.0 + flip, 1.726, places=3)
+        self.assertIn(f"at a national swing of {3.0 + flip:+.3f}", md)
+
+    def test_unit_tables_show_shares(self):
+        md = render_markdown(VS, self.results, self.totals, tipping_point(self.results), None, [])
+        self.assertIn("| R % | D % |", md)
+        self.assertIn("Other (2024)", md)
+        header = render_csv(VS, self.results).splitlines()[1]
+        self.assertIn("r_pct", header)
+        self.assertIn("d_pct", header)
 
 
 if __name__ == "__main__":

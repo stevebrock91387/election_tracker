@@ -87,13 +87,18 @@ def flip_swing(units, s):
 
 
 def sensitivity(units, s):
-    """(national_swing, R EVs, D EVs) for national swing -10.0..+10.0 in 0.5 steps,
-    all other inputs held."""
+    """(national_swing, R EVs, D EVs, note) for national swing -10.0..+10.0 in 0.5
+    steps, all other inputs held. A swing the model can't compute (a unit would
+    get negative votes) gives (swing, None, None, reason) instead of stopping."""
     rows = []
     for k in range(-20, 21):
         swing = k * 0.5
-        t = ev_totals(apply(units, dataclasses.replace(s, national_swing=swing)))
-        rows.append((swing, t["R"], t["D"]))
+        try:
+            t = ev_totals(apply(units, dataclasses.replace(s, national_swing=swing)))
+        except ScenarioError as e:
+            rows.append((swing, None, None, str(e)))
+            continue
+        rows.append((swing, t["R"], t["D"], ""))
     return rows
 
 
@@ -116,19 +121,25 @@ def render_markdown(s, results, totals, tp, flip, sens):
     ev = ", ".join(f"{_name(s, k)} {v}" for k, v in totals.items() if k not in ("winner", "tie"))
     lines += ["", f"Electoral votes: {ev} (of 538).",
               f"Tipping point: {tp or 'none'}.",
-              "National swing needed to change the winner: "
-              + ("none within ±100 points" if flip is None else f"{flip:+.3f} points") + ".", "",
-              "| Unit | EV | R votes | D votes | Third party | Margin (D−R, pts) | Winner |",
-              "|---|---|---|---|---|---|---|"]
+              ("Winner changes: no national swing within ±100 points changes it." if flip is None else
+               f"Winner changes at a national swing of {s.national_swing + flip:+.3f} points "
+               f"(a change of {flip:+.3f} from the current {s.national_swing:+g})."), "",
+              "Shares are of the unit's total vote; margin is the two-party margin.", "",
+              "| Unit | EV | R votes | D votes | R % | D % | Third party | Other (2024) "
+              "| Two-party margin (D−R, pts) | Winner |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
     for r in results:
         total = r.r + r.d + sum(r.third.values()) + r.other
-        third = ", ".join(f"{k} {v:,.0f}" for k, v in r.third.items() if v) or ""
-        lines.append(f"| {r.id} | {r.ev} | {r.r:,.0f} | {r.d:,.0f} | {third} | "
-                     f"{(r.d - r.r) / total * 100:+.2f} | {_name(s, r.winner)} |")
+        third = ", ".join(f"{k} {v:,.0f} ({v / total * 100:.1f}%)" for k, v in r.third.items() if v)
+        lines.append(f"| {r.id} | {r.ev} | {r.r:,.0f} | {r.d:,.0f} | {r.r / total * 100:.2f} | "
+                     f"{r.d / total * 100:.2f} | {third} | {r.other:,} | "
+                     f"{(r.d - r.r) / (r.d + r.r) * 100:+.2f} | {_name(s, r.winner)} |")
     if sens:
         lines += ["", "## Sensitivity (national swing, other inputs held)", "",
                   "| National swing | R EV | D EV |", "|---|---|---|"]
-        lines += [f"| {sw:+.1f} | {r_ev} | {d_ev} |" for sw, r_ev, d_ev in sens]
+        for sw, r_ev, d_ev, note in sens:
+            lines.append(f"| {sw:+.1f} | {r_ev} | {d_ev} |" if r_ev is not None
+                         else f"| {sw:+.1f} | not computable: {note} | |")
     return "\n".join(lines) + "\n"
 
 
@@ -137,8 +148,12 @@ def render_csv(s, results):
     buf.write("# " + LABEL + "\n")
     w = csv.writer(buf)
     names = [t.name for t in s.third_party]
-    w.writerow(["matchup", "unit", "state", "ev", "r", "d", *names, "other_2024", "winner"])
+    w.writerow(["matchup", "unit", "state", "ev", "r", "d", "r_pct", "d_pct", *names,
+                "other_2024", "two_party_margin_pts", "winner"])
     for r in results:
+        total = r.r + r.d + sum(r.third.values()) + r.other
         w.writerow([s.name, r.id, r.state, r.ev, f"{r.r:.1f}", f"{r.d:.1f}",
-                    *(f"{r.third.get(n, 0):.1f}" for n in names), r.other, r.winner])
+                    f"{r.r / total * 100:.4f}", f"{r.d / total * 100:.4f}",
+                    *(f"{r.third.get(n, 0):.1f}" for n in names), r.other,
+                    f"{(r.d - r.r) / (r.d + r.r) * 100:.4f}", r.winner])
     return buf.getvalue()
