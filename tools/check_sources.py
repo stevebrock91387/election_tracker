@@ -1,16 +1,23 @@
-#!/usr/bin/env python3
+#!/opt/homebrew/bin/python3
 """Check every URL in sources/registry.csv and record what came back.
 
 Run on the Mac mini (the cloud workspace can't reach most state sites):
-    python3 tools/check_sources.py sources/registry.csv checks/
+    /opt/homebrew/bin/python3 tools/check_sources.py sources/registry.csv checks/
+
+Needs an SSL library with TLS 1.3: some state sites (e.g. MA) refuse TLS 1.2.
+The Xcode/system python3 (LibreSSL 2.8.3) lacks it, so the script exits early
+there rather than record false TLS errors.
 
 Writes checks/check-<UTC timestamp>.csv with one row per URL:
-abbr, column, url, http_status, final_url, content_type, bytes, sha256, error.
+abbr, column, url, http_status, final_url, content_type, bytes, sha256, error,
+python, ssl (the interpreter and SSL library that made the request).
 Standard library only. Read-only: it never edits the registry.
 """
 import csv
 import hashlib
 import os
+import platform
+import ssl
 import sys
 import time
 import urllib.error
@@ -47,7 +54,9 @@ def main(registry_path, out_dir):
     stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
     out_path = os.path.join(out_dir, f"check-{stamp}.csv")
     fields = ["abbr", "column", "url", "http_status", "final_url",
-              "content_type", "bytes", "sha256", "error"]
+              "content_type", "bytes", "sha256", "error", "python", "ssl"]
+    env = {"python": platform.python_version(), "ssl": ssl.OPENSSL_VERSION}
+    print(f"python {env['python']}, {env['ssl']}")
     with open(registry_path, newline="") as f, open(out_path, "w", newline="") as out:
         writer = csv.DictWriter(out, fieldnames=fields)
         writer.writeheader()
@@ -57,7 +66,7 @@ def main(registry_path, out_dir):
                 if not url:
                     continue
                 result = check(url)
-                writer.writerow({"abbr": row["abbr"], "column": col, "url": url, **result})
+                writer.writerow({"abbr": row["abbr"], "column": col, "url": url, **result, **env})
                 print(f"{row['abbr']:3} {col:14} {result['http_status'] or '---':>4} {url}"
                       + (f"  [{result['error']}]" if result["error"] else ""))
     print(f"\nWrote {out_path}")
@@ -67,4 +76,6 @@ def main(registry_path, out_dir):
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         sys.exit("usage: check_sources.py <registry.csv> <out_dir>")
+    if not ssl.HAS_TLSv1_3:
+        sys.exit(f"{ssl.OPENSSL_VERSION} has no TLS 1.3; run with /opt/homebrew/bin/python3")
     main(sys.argv[1], sys.argv[2])

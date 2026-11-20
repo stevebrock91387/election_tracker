@@ -17,6 +17,8 @@ One row per state + DC.
 
 This runs on the Mac mini, because the cloud workspace can't reach most state sites.
 
-    python3 tools/check_sources.py sources/registry.csv checks/
+    /opt/homebrew/bin/python3 tools/check_sources.py sources/registry.csv checks/
+
+Use Homebrew's Python, not the system `python3`: the system one (Xcode's 3.9, LibreSSL 2.8.3) has no TLS 1.3, and some state sites (MA) refuse anything older. The script exits early if TLS 1.3 is missing, and each output row records the Python and SSL versions used.
 
 It records the HTTP status, final URL, content type, size and hash for every URL, and never edits the registry. A 200 response only shows that the page exists. A row moves to `verified` only after someone looks at the page.
