@@ -1,0 +1,50 @@
+abbr,column,url,http_status,final_url,content_type,bytes,sha256,error
+AL,results_url,https://www2.alabamavotes.gov/electionNight/,200,https://www2.alabamavotes.gov/electionNight/,text/html; charset=utf-8,501,f9aaff3ad8e97a1c2d0afcd95bf11000ed8dc7880ab35aef0093c891aa61273e,
+AK,results_url,https://www.elections.alaska.gov/election-results/,200,https://www.elections.alaska.gov/election-results/,text/html; charset=UTF-8,117894,907e48010d313c69c308552d73b13590b1aaa787985a0b9450d053d8f2c74be6,
+AZ,candidate_url,https://results.arizona.vote/,403,https://results.arizona.vote/,,0,,HTTPError 403
+AR,candidate_url,https://results.enr.clarityelections.com/AR/,403,https://results.enr.clarityelections.com/AR/,,0,,HTTPError 403
+CA,candidate_url,https://electionresults.sos.ca.gov/,200,https://electionresults.sos.ca.gov/,text/html,212,d02032286070b4dd9d8fbd985a7bdca8af8edf52b89ff177db3bfcb2c8a9c43d,
+CO,candidate_url,https://results.enr.clarityelections.com/CO/,200,https://results.enr.clarityelections.com/CO/,text/html; charset=utf-8,4440,7032b162ec5b3e9677621c47314cd51a0a209d6fd248fe716552b2ce3f28209b,
+CT,candidate_url,https://electionhistory.ct.gov/,200,https://electionhistory.ct.gov/,text/html; charset=utf-8,78149,18e43b01cbb4ec0e625dd99baa81121385154bfc3398fe8d2de3b9e2b134f116,
+DE,results_url,https://elections.delaware.gov/results/,200,https://elections.delaware.gov/results/,text/html; charset=UTF-8,40203,aa5f78b651649ba0b4478fce09e37a80f27a50848a10ed1b1877e2969b8d38a1,
+DC,results_url,https://electionresults.dcboe.org/,200,https://electionresults.dcboe.org/,text/html,4987,6a16656c6a796f2e6530d7eeb5bd74f0b73c831999df732793e50130ab1a2b3c,
+FL,results_url,https://floridaelectionwatch.gov/,200,https://floridaelectionwatch.gov/,text/html; charset=utf-8,23925,996641edbd14d5dbb7e20070d877823640096a89b00623070dcc86a99ab4bb91,
+GA,results_url,https://results.sos.ga.gov/,200,https://results.sos.ga.gov/results/public/Georgia,text/html,10798,8c7808f874a91052da109a99d7fbb76d15d1264b9a2d952018032b24e308f158,
+HI,results_url,https://elections.hawaii.gov/,200,https://elections.hawaii.gov/,text/html; charset=UTF-8,170561,2ef50cf8db3765d0983235390dda7598aa5f1305a1d347b7ad775cd3b212ada4,
+ID,results_url,https://voteidaho.gov/,200,https://voteidaho.gov/,text/html; charset=UTF-8,163918,1fdf24ff424b746ae6fa1be43bec51a6cf78a61a995a8f318739d971d0105a58,
+IL,candidate_url,https://www.elections.il.gov/,200,https://www.elections.il.gov/,text/html; charset=utf-8,78456,87c3ea9175273ba0a9c76d3556b9e147ebd95d547baf7e0d8434f721b84851a3,
+IN,results_url,https://enr.indianavoters.in.gov/site/index.html,200,https://enr.indianavoters.in.gov/site/index.html,text/html; charset=utf-8,16870,bcc5b1b3ef7910be1859347617ff99ca55f082515dab943f1de2b62319de03b1,
+IA,results_url,https://results.enr.clarityelections.com/IA/,200,https://results.enr.clarityelections.com/IA/,text/html; charset=utf-8,4440,7032b162ec5b3e9677621c47314cd51a0a209d6fd248fe716552b2ce3f28209b,
+KY,candidate_url,https://results.enr.clarityelections.com/KY/,403,https://results.enr.clarityelections.com/KY/,,0,,HTTPError 403
+LA,results_url,https://voterportal.sos.la.gov/graphical,200,https://voterportal.sos.la.gov/graphical,text/html; charset=utf-8,35210,267325ddeb5ff66b054c031f16cd80779cc76ce79fe062383e0b205a58737115,
+ME,candidate_url,https://www.maine.gov/sos/cec/elec/results/,404,https://www.maine.gov/sos/cec/elec/results/,,0,,HTTPError 404
+MD,results_url,https://elections.maryland.gov/elections/2026/election_data/index.html,200,https://elections.maryland.gov/elections/2026/election_data/index.html,text/html,41027,a9cdae72a4aaedca747abdec25f65af0917de3bd327c1171e6d775b0aea64cd8,
+MA,candidate_url,https://electionstats.state.ma.us/,,https://electionstats.state.ma.us/,,0,,URLError: <urlopen error [SSL: TLSV1_ALERT_PROTOCOL_VERSION] tlsv1 alert protocol version (_ssl.c:1129)>
+MI,results_url,https://www.michigan.gov/sos/elections,200,https://www.michigan.gov/sos/elections,text/html; charset=utf-8,428623,55842583a4b68f0149ff7863338d2af43ac00f8163255d4b88b6be8b28e80b26,
+MN,results_url,https://electionresults.sos.mn.gov/,200,https://electionresults.sos.mn.gov/,text/html; charset=utf-8,265565,ded34c2411bea0ac71856d5e65539425021158c39aea9c72f6f6ed106a1b5c79,
+MS,candidate_url,https://www.sos.ms.gov/elections-voting,200,https://www.sos.ms.gov/elections-voting,text/html; charset=UTF-8,165325,b37586df98211e861af697bf43c23a1023b7dd4fc1c7934e871cd00c91e000a8,
+MO,candidate_url,https://enr.sos.mo.gov/,403,https://enr.sos.mo.gov/,,0,,HTTPError 403
+MT,candidate_url,https://electionresults.mt.gov/,200,https://electionresults.mt.gov/,text/html; charset=utf-8,39872,83ec442928ff729fc327cfc4879d6a44d842a4ac4423a23e3d7b3549813da7b7,
+NE,candidate_url,https://electionresults.nebraska.gov/,200,https://electionresults.nebraska.gov/,text/html; charset=utf-8,54846,c725b6212c6e1773ea162cd460174834f9e9c3b8601dd4074e90490f288c36ce,
+NV,results_url,https://silverstateelection.nv.gov/,403,https://silverstateelection.nv.gov/,,0,,HTTPError 403
+NH,candidate_url,https://www.sos.nh.gov/elections,403,https://www.sos.nh.gov/elections,,0,,HTTPError 403
+NJ,results_url,https://nj.gov/state/elections/election-night-results.shtml,200,https://nj.gov/state/elections/election-night-results.shtml,text/html,47710,440ff869f0efa4ebd54d7d3e87b95d12ace23361a87c3ee01759f80f7fca31b9,
+NM,candidate_url,https://electionresults.sos.nm.gov/,200,https://electionresults.sos.nm.gov/,text/html; charset=utf-8,57026,8699ff5abeb5f335a078584e1d758572fac6de8ff707db3f02a84f8db3617fd3,
+NY,candidate_url,https://nyenr.elections.ny.gov/,403,https://nyenr.elections.ny.gov/,,0,,HTTPError 403
+NC,results_url,https://ncsbe.gov/Election-Results,200,https://www.ncsbe.gov/results-data/election-results,text/html; charset=UTF-8,77569,f01bf31076f8aeab747b26f40921c747d93169b95d43f5675df0f452644729a7,
+ND,candidate_url,https://results.sos.nd.gov/,200,https://results.sos.nd.gov/,text/html; charset=utf-8,82821,70e5e414045cbdef276f572d5fe726a61f88d55c6e26624ae59fcc7fe16c277f,
+OH,candidate_url,https://liveresults.ohiosos.gov/,200,https://liveresults.ohiosos.gov/,text/html; charset=utf-8,68103,49aaeb719fa255a5ac6754744e5f5893e30b856900ac4aee82e86f00e2e6cc5c,
+OK,candidate_url,https://results.okelections.gov/,403,https://results.okelections.gov/,,0,,HTTPError 403
+OR,candidate_url,https://results.oregonvotes.gov/,200,https://results.oregonvotes.gov/,text/html; charset=utf-8,36906,0ba3cd4e3edb824d4e3a6756450ae2e6d393607691f87597cabae642002c6ba8,
+PA,candidate_url,https://www.electionreturns.pa.gov/,200,https://www.electionreturns.pa.gov/,text/html; charset=utf-8,130310,5cf0db1b2bafdb0565c06e42cf03d283ca00b7ea20139ffa0b3498080bccdc9c,
+SC,candidate_url,https://results.enr.clarityelections.com/SC/,200,https://results.enr.clarityelections.com/SC/,text/html; charset=utf-8,4440,7032b162ec5b3e9677621c47314cd51a0a209d6fd248fe716552b2ce3f28209b,
+SD,candidate_url,https://electionresults.sd.gov/,200,https://electionresults.sd.gov/,text/html; charset=utf-8,44661,cbcc6127f77f607ebe5f02a217a1e99d1acc4f10834e5d7efe7c81637d2d4d76,
+TN,candidate_url,https://sos.tn.gov/elections/results,200,https://sos.tn.gov/elections/results,text/html; charset=UTF-8,264958,96c02cb9564e831917c8ae4fce16a5a63df6b5d70a3c12a0c12ed3950c6e0c9c,
+TX,candidate_url,https://results.texas-election.com/,403,https://results.texas-election.com/,,0,,HTTPError 403
+UT,candidate_url,https://electionresults.utah.gov/,200,https://electionresults.utah.gov/results/public/Utah,text/html,9684,623ca0da7c53240316537e2483112568d1e009158354bbe8b62673ee12b0cfb6,
+VT,candidate_url,https://electionarchive.vermont.gov/,200,https://electionarchive.vermont.gov/,text/html; charset=utf-8,78637,b0d21a517db41116a2a82199584dd78ea14e0e7be235aeeb649f9ec4089076f0,
+VA,candidate_url,https://enr.elections.virginia.gov/,200,https://www.elections.virginia.gov/results/,text/html; charset=UTF-8,37956,943b58537b4090074f6361bbf610643d004d93cac5a09a0ef2b5e49041e2a0c2,
+WA,candidate_url,https://results.vote.wa.gov/,200,https://results.votewa.gov/results/public/washington,text/html,10326,d97934e32c4c816e43a52fa5d7610bc0bf9c1da74b4423f2ca9db1d5310eec4f,
+WV,candidate_url,https://results.enr.clarityelections.com/WV/,200,https://results.enr.clarityelections.com/WV/,text/html; charset=utf-8,4440,7032b162ec5b3e9677621c47314cd51a0a209d6fd248fe716552b2ce3f28209b,
+WI,results_url,https://elections.wi.gov/wisconsin-county-election-websites,403,https://elections.wi.gov/wisconsin-county-election-websites,,0,,HTTPError 403
+WY,candidate_url,https://sos.wyo.gov/Elections/,200,https://sos.wyo.gov/Elections/,text/html; charset=utf-8,57618,7c4798d36cf2b2a8a9df05029bad80bf68e1cfcf4df2500180f58b18778c38bf,
