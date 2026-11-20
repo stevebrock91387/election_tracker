@@ -62,6 +62,11 @@ Steve chose to start loading past results now, ahead of the source-verification 
   - MIT MEDSL 2022 precinct, all offices: 51 state zips, 89.6 MB, commit `a8126c5790b8` (`evidence/fetch-20261120T200305Z.csv`). One zip has 2 members (not yet identified).
 - **MEDSL is a compilation, not an official source.** AZ 2024 comes from OpenElections; GA HI IN NV NJ NY OR SD list no source; MEDSL says AI tools used in collection can hallucinate data. Every state must be checked against official certified totals before use. Vote-mode labels are not standardized across states, and a `TOTAL` row can coexist with split modes (double-count risk).
 - **2026:** no compiled dataset exists; states are still certifying (latest around Dec 11, CA, per news reports). Take it from official state sites after certification.
+- **2024 President check (2026-11-20).** `tools/medsl_county.py` sums MEDSL precincts to counties (rules in its docstring: TOTAL preferred per precinct-candidate, `*` not counted, tally rows dropped, no silent corrections). `tools/compare_fec_president.py` compares state Trump/Harris totals with the FEC's official compilation (`data/raw/fec-2024/2024presgeresults.xlsx`, hash in `evidence/fetch-fec-2024presgeresults.csv`). Result in `evidence/compare-2024-president-medsl-vs-fec.csv`: **28/51 states match exactly**; 20 differ by under ~17k votes combined (causes not investigated; CA/NM/NV/KS have suppressed `*` cells); 3 are unusable as-is:
+  - LA: about half the vote is missing (−590,637 Trump, −366,433 Harris); only precinct TOTAL rows exist.
+  - NJ: +283k/+280k. Gloucester has a "COUNTY TOTAL" row as a precinct; Bergen's TOTAL rows are about 2× its split-mode rows.
+  - IN: +87k/+60k. Hendricks precinct "1229-Washington 29" appears twice, once with ~50k Trump votes (looks like a county total).
+- Goal (Steve): the 2024 replay is practice; the real dry run is against 2026 results. Replay plan: hide part of each state's counties, project the rest, score against the final count. Needs a 2020 baseline (not yet downloaded) and Steve's decision on step 5.
 - Not yet obtained: precinct boundaries (UF Election Lab has 2024 shapes; license unverified, some downloads need an account), 2022 codebook/sources not read, MEDSL county-president and House-district datasets (unverified links).
 
 ## Next tasks, in order
