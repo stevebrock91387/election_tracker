@@ -1,5 +1,5 @@
 checks/
 __pycache__/
-data/
+/data/
 .DS_Store
 scenarios/out/

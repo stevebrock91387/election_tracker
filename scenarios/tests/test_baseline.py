@@ -1,5 +1,7 @@
 """Baseline units built from official 2024 totals (FEC + ME/NE certificates)."""
 import csv
+import os
+import subprocess
 import unittest
 
 from scenarios.units import DEFAULT_DISTRICTS_CSV, DEFAULT_STATES_CSV, load_units
@@ -44,6 +46,13 @@ class BaselineTest(unittest.TestCase):
             self.assertEqual(won[st]["d"], int(r["ev_awarded_d"]), st)
         self.assertEqual(sum(w["r"] for w in won.values()), 312)
         self.assertEqual(sum(w["d"] for w in won.values()), 226)
+
+    def test_baseline_files_tracked_by_git(self):
+        repo = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        for path in (DEFAULT_STATES_CSV, DEFAULT_DISTRICTS_CSV):
+            r = subprocess.run(["git", "ls-files", "--error-unmatch", os.path.relpath(path, repo)],
+                               cwd=repo, capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, f"{path} is not tracked by git")
 
 
 if __name__ == "__main__":
