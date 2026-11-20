@@ -1,0 +1,52 @@
+state,abbr,status,results_url,candidate_url,platform,statewide_live,reporting_level,formats,evidence,notes
+Alabama,AL,verified,https://www2.alabamavotes.gov/electionNight/,,SOS custom,yes,county,HTML + Export Data link,SOS newsroom: Nov 3 2026 unofficial results posted on AlabamaVotes.gov; 2026 primary results page shows Statewide/County/Export Data,
+Alaska,AK,verified,https://www.elections.alaska.gov/election-results/,,Division of Elections custom,yes (scheduled batches),house district,HTM report,Results page; 2026 primary lists Combined Report (htm),Ranked-choice tabulation published 15 days after election
+Arizona,AZ,unverified,,https://results.arizona.vote/,unknown,unknown,county,unknown,Fetch from cloud workspace failed (client error),Maricopa = ~61% of 2024 AZ vote; county site likely needed
+Arkansas,AR,unverified,,https://results.enr.clarityelections.com/AR/,Clarity? (sources conflict),unknown,county,unknown,One source lists AR as Clarity statewide and another says not; fetch failed,
+California,CA,partial,,https://electionresults.sos.ca.gov/,SOS custom + Election Night Data Feed,yes,county,data feed (guide v6.0),Wikipedia cites SOS Election Night Data Feed guide v6.0; URL redirects to prior-elections between elections,Counting runs weeks; 85% reported one week after 2026 election
+Colorado,CO,partial,,https://results.enr.clarityelections.com/CO/,Clarity (per Parsons docs),yes,county,Clarity JSON/XML,Parsons Scytl docs list Colorado as a Clarity user; fetch failed,
+Connecticut,CT,unverified,,https://electionhistory.ct.gov/,unknown,unknown,town,PDF statement of vote (certified),Only certified Statement of Vote found,Live election-night source not identified
+Delaware,DE,verified,https://elections.delaware.gov/results/,,Dept of Elections custom,yes,election district,HTML results report + full report,Results page lists 2026 General Election results,
+District of Columbia,DC,partial,https://electionresults.dcboe.org/,,DCBOE custom JS app,yes,ward/precinct (unconfirmed),unknown,Page loads as DCBOE Election Results; content requires JavaScript,
+Florida,FL,verified,https://floridaelectionwatch.gov/,,Division of Elections custom,yes,county,HTML (contest results by county),Florida Election Watch shows 2026 primary official results and county breakdowns,County ENR sites at enr.electionsfl.org
+Georgia,GA,partial,https://results.sos.ga.gov/,,SOS custom (not Clarity per one source),yes,county/precinct (unconfirmed),unknown,Site loads with title Election Results; JS app,
+Hawaii,HI,verified,https://elections.hawaii.gov/,,Office of Elections,yes (numbered printouts),statewide/district,PDF summary reports,News: Office of Elections released numbered printouts; 2024 printout is a PDF summary report,
+Idaho,ID,partial,https://voteidaho.gov/,,SOS custom,yes,county,unknown,News: early statewide results appear on SOS website election night,
+Illinois,IL,unverified,,https://www.elections.il.gov/,unknown,unknown,election authority,unknown,Not checked,Live results may be per county/election authority
+Indiana,IN,verified,https://enr.indianavoters.in.gov/site/index.html,,SOS custom,yes,county,unknown,SOS cited this URL for final 2026 primary results,
+Iowa,IA,partial,https://results.enr.clarityelections.com/IA/,,Clarity,yes,county/precinct,Clarity JSON/XML,Clarity IA List Elections page loads,
+Kansas,KS,unverified,,,unknown,unknown,county,unknown,Not checked,
+Kentucky,KY,unverified,,https://results.enr.clarityelections.com/KY/,Clarity? (sources conflict),unknown,county,unknown,Sources disagree; fetch failed,
+Louisiana,LA,verified,https://voterportal.sos.la.gov/graphical,,SOS custom,yes,parish,Download Results link,SOS-branded graphical results with Download Results link,
+Maine,ME,unverified,,https://www.maine.gov/sos/cec/elec/results/,unknown,unknown,town,unknown,Not checked,Ranked-choice for federal races
+Maryland,MD,partial,https://elections.maryland.gov/elections/2026/election_data/index.html,,SBE custom,unknown,precinct,raw data files,2026 election data files page found; live ENR page not checked,
+Massachusetts,MA,unverified,,https://electionstats.state.ma.us/,unknown,unknown,town,unknown,Not checked,
+Michigan,MI,verified,https://www.michigan.gov/sos/elections,,county clerk sites on election night,no,county,varies by county,SOS: rely on county clerk websites election night; statewide posted after all counties report,83 county sources needed for live data
+Minnesota,MN,verified,https://electionresults.sos.mn.gov/,,SOS custom,yes,precinct,downloadable text files,Shows Nov 3 2026 general results to precinct level with downloadable text,
+Mississippi,MS,unverified,,https://www.sos.ms.gov/elections-voting,unknown,unknown,county,unknown,Not checked,
+Missouri,MO,unverified,,https://enr.sos.mo.gov/,unknown,unknown,county,unknown,Fetch failed (client error),
+Montana,MT,unverified,,https://electionresults.mt.gov/,unknown,unknown,county,unknown,Not checked,
+Nebraska,NE,unverified,,https://electionresults.nebraska.gov/,unknown,unknown,county,unknown,Not checked,Splits electoral votes by congressional district
+Nevada,NV,verified,https://silverstateelection.nv.gov/,,SOS custom (Silver State Elections),yes,county,unknown,News: SOS launched upgraded results site for 2026 with county filter,Counting continues days after election
+New Hampshire,NH,unverified,,https://www.sos.nh.gov/elections,unknown,unknown,town,unknown,Not checked,
+New Jersey,NJ,verified,https://nj.gov/state/elections/election-night-results.shtml,,county sites (many Clarity),no,county,varies (Clarity JSON/XML for many),Division of Elections posts no results on election night; links 21 county sites,21 county sources needed
+New Mexico,NM,unverified,,https://electionresults.sos.nm.gov/,unknown,unknown,county,unknown,Not checked,
+New York,NY,unverified,,https://nyenr.elections.ny.gov/,unknown,unknown,county,unknown,Not checked,
+North Carolina,NC,verified,https://ncsbe.gov/Election-Results,,SBE custom + S3 public files,yes,precinct,ZIP results files; S3 public files,Election Results Dashboard for live results; historical results ZIPs and S3 downloads,
+North Dakota,ND,unverified,,https://results.sos.nd.gov/,unknown,unknown,county,unknown,Not checked,
+Ohio,OH,unverified,,https://liveresults.ohiosos.gov/,unknown,unknown,county,unknown,Not checked,
+Oklahoma,OK,unverified,,https://results.okelections.gov/,unknown,unknown,county,unknown,Not checked,
+Oregon,OR,unverified,,https://results.oregonvotes.gov/,unknown,unknown,county,unknown,Not checked,
+Pennsylvania,PA,partial,,https://www.electionreturns.pa.gov/,DOS Election Night Returns + Supplemental Returns Report,yes,county,PDF/spreadsheet mail-ballot report,DOS: unofficial results on Election Night Returns site; supplemental report gives estimated % of mail ballots uncounted,Supplemental report is an official input for expected-vote estimates
+Rhode Island,RI,unverified,,,unknown,unknown,town,unknown,Not checked,
+South Carolina,SC,unverified,,https://results.enr.clarityelections.com/SC/,Clarity?,unknown,county,unknown,Not checked,
+South Dakota,SD,unverified,,https://electionresults.sd.gov/,unknown,unknown,county,unknown,Not checked,
+Tennessee,TN,unverified,,https://sos.tn.gov/elections/results,unknown,unknown,county,unknown,Not checked,
+Texas,TX,unverified,,https://results.texas-election.com/,unknown,unknown,county,unknown,Not checked,
+Utah,UT,unverified,,https://electionresults.utah.gov/,unknown,unknown,county,unknown,Not checked,
+Vermont,VT,unverified,,https://electionarchive.vermont.gov/,unknown,unknown,town,unknown,Not checked,
+Virginia,VA,unverified,,https://enr.elections.virginia.gov/,unknown,unknown,county/city,unknown,Not checked,
+Washington,WA,unverified,,https://results.vote.wa.gov/,unknown,unknown,county,unknown,Not checked,Counting runs days after election
+West Virginia,WV,partial,,https://results.enr.clarityelections.com/WV/,Clarity,yes,county,Clarity JSON/XML,Clarity directory page names WV as a statewide Clarity site,
+Wisconsin,WI,verified,https://elections.wi.gov/wisconsin-county-election-websites,,county sites,no,county,varies by county,WEC does not centrally compile unofficial results; links county sites,72 county sources needed
+Wyoming,WY,unverified,,https://sos.wyo.gov/Elections/,unknown,unknown,county,unknown,Not checked,
