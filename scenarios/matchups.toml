@@ -1,0 +1,76 @@
+# Hypothetical 2028 matchups from Steve's fantasy draft.
+# Names are draft picks, not predictions of who will run.
+# Every number here is set by hand by Steve. All start at 0, which reproduces 2024.
+#
+# national_swing: two-party margin shift vs 2024, in points (positive = toward the Democrat)
+# [matchup.regional_swing]: optional, state code = extra points for that state (ME/NE districts use their state's)
+# [[matchup.third_party]]: share = percent of the total vote; from_r + from_d must equal 1
+# No Constitution Party entry: no pick yet.
+
+[[matchup]]
+name = "vance-vs-shapiro"
+r_name = "JD Vance"
+d_name = "Josh Shapiro"
+national_swing = 0.0
+[matchup.regional_swing]
+[[matchup.third_party]]
+name = "Thomas Massie (L)"
+share = 0.0
+from_r = 0.5
+from_d = 0.5
+[[matchup.third_party]]
+name = "Butch Ware (G)"
+share = 0.0
+from_r = 0.5
+from_d = 0.5
+
+[[matchup]]
+name = "rubio-vs-shapiro"
+r_name = "Marco Rubio"
+d_name = "Josh Shapiro"
+national_swing = 0.0
+[matchup.regional_swing]
+[[matchup.third_party]]
+name = "Thomas Massie (L)"
+share = 0.0
+from_r = 0.5
+from_d = 0.5
+[[matchup.third_party]]
+name = "Butch Ware (G)"
+share = 0.0
+from_r = 0.5
+from_d = 0.5
+
+[[matchup]]
+name = "vance-vs-ocasio-cortez"
+r_name = "JD Vance"
+d_name = "Alexandria Ocasio-Cortez"
+national_swing = 0.0
+[matchup.regional_swing]
+[[matchup.third_party]]
+name = "Thomas Massie (L)"
+share = 0.0
+from_r = 0.5
+from_d = 0.5
+[[matchup.third_party]]
+name = "Butch Ware (G)"
+share = 0.0
+from_r = 0.5
+from_d = 0.5
+
+[[matchup]]
+name = "vance-vs-khanna"
+r_name = "JD Vance"
+d_name = "Ro Khanna"
+national_swing = 0.0
+[matchup.regional_swing]
+[[matchup.third_party]]
+name = "Thomas Massie (L)"
+share = 0.0
+from_r = 0.5
+from_d = 0.5
+[[matchup.third_party]]
+name = "Butch Ware (G)"
+share = 0.0
+from_r = 0.5
+from_d = 0.5
