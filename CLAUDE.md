@@ -87,7 +87,7 @@ Every registry row was looked at in the built-in browser. **48 verified, 3 parti
 
 ## Queued components (not part of the six-step pipeline)
 
-Order (Steve, 2026-11-20): finish source verification → scenario model → league tracker. Neither may touch `sources/` or `tools/`; flag either if it starts growing.
+Order (Steve, 2026-11-20, revised the same day): source verification → scenario model (done) → **finish all six pipeline steps** (step 2 readers: Enhanced Voting first, then Clarity) → league tracker → NPVIC. Neither may touch `sources/` or `tools/`; flag either if it starts growing.
 
 - `scenarios/` — **built 2026-11-20** (design `docs/superpowers/specs/2026-11-20-scenario-model-design.md`, plan `docs/superpowers/plans/2026-11-20-scenario-model.md`). Starts from official FEC 2024 state totals + ME/NE district totals from the Certificates of Ascertainment (Steve chose state totals over county data; the swings are linear, so results are identical except for clipping). Run `/opt/homebrew/bin/python3 -m scenarios.run`; tests `/opt/homebrew/bin/python3 -m unittest discover -s scenarios/tests -t .` (28). Zero settings reproduce 312–226; flip point +1.726 (PA). Known limit: a third-party share drawn from R hits DC first (Trump ≈6.5% there), so large uniform draws stop the run by design (no clamping). Deferred minors listed in the build's final message. Original spec: `docs/queued/scenario-model-spec.md`.
 - `league/` — 2028 fantasy league tracker. Spec: `docs/queued/league-tracker-spec.md`.
