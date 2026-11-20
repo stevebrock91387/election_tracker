@@ -1,0 +1,156 @@
+{
+ "electionDate": "2026-11-03",
+ "electionName": "2026 General Election",
+ "createdAt": "2026-11-20T23:33:24.7746561Z",
+ "_fixture_source_sha256": "99cd8bf6f6590b322969d629b5757f36136651c7660dca75179d9e6f5d9f272e",
+ "results": {
+  "id": "a7510980-7b10-4aca-a2d8-ff92951aca1c",
+  "name": "Utah",
+  "ballotItems": [
+   {
+    "type": "State",
+    "id": "636107054",
+    "name": "U.S. House District 3",
+    "voteFor": 1,
+    "ballotOrder": 3,
+    "precinctsParticipating": null,
+    "precinctsReporting": null,
+    "contestType": "Candidate",
+    "ballotOptions": [
+     {
+      "id": "637830393",
+      "name": "CELESTE MALOY",
+      "ballotOrder": 1,
+      "voteCount": 146856,
+      "politicalParty": "Republican",
+      "groupResults": null,
+      "precinctResults": null
+     },
+     {
+      "id": "637531431",
+      "name": "KENT S. UDELL",
+      "ballotOrder": 6,
+      "voteCount": 93534,
+      "politicalParty": "Democratic",
+      "groupResults": null,
+      "precinctResults": null
+     },
+     {
+      "id": "637858608",
+      "name": "CASSIE EASLEY",
+      "ballotOrder": 5,
+      "voteCount": 8116,
+      "politicalParty": "Constitution",
+      "groupResults": null,
+      "precinctResults": null
+     },
+     {
+      "id": "637895227",
+      "name": "MICHAEL R. STODDARD",
+      "ballotOrder": 3,
+      "voteCount": 5810,
+      "politicalParty": "Libertarian",
+      "groupResults": null,
+      "precinctResults": null
+     },
+     {
+      "id": "641321905",
+      "name": "AYDEN SCOTT",
+      "ballotOrder": 4,
+      "voteCount": 4305,
+      "politicalParty": "Unaffiliated",
+      "groupResults": null,
+      "precinctResults": null
+     },
+     {
+      "id": "642021192",
+      "name": "ADONIS HOOSLYN",
+      "ballotOrder": 2,
+      "voteCount": 1890,
+      "politicalParty": "Unaffiliated",
+      "groupResults": null,
+      "precinctResults": null
+     }
+    ],
+    "rankedChoiceResults": null
+   }
+  ],
+  "reportingStatuses": null
+ },
+ "localResults": [
+  {
+   "id": "31",
+   "name": "Piute County",
+   "ballotItems": [
+    {
+     "type": "State",
+     "id": "636107054",
+     "name": "U.S. House District 3",
+     "voteFor": 1,
+     "ballotOrder": 1,
+     "precinctsParticipating": 0,
+     "precinctsReporting": 0,
+     "contestType": "Candidate",
+     "ballotOptions": [
+      {
+       "id": "637830393",
+       "name": "CELESTE MALOY",
+       "ballotOrder": 3,
+       "voteCount": 613,
+       "politicalParty": "Republican",
+       "groupResults": null,
+       "precinctResults": []
+      },
+      {
+       "id": "637531431",
+       "name": "KENT S. UDELL",
+       "ballotOrder": 1,
+       "voteCount": 62,
+       "politicalParty": "Democratic",
+       "groupResults": null,
+       "precinctResults": []
+      },
+      {
+       "id": "637858608",
+       "name": "CASSIE EASLEY",
+       "ballotOrder": 2,
+       "voteCount": 21,
+       "politicalParty": "Constitution",
+       "groupResults": null,
+       "precinctResults": []
+      },
+      {
+       "id": "641321905",
+       "name": "AYDEN SCOTT",
+       "ballotOrder": 4,
+       "voteCount": 7,
+       "politicalParty": "Unaffiliated",
+       "groupResults": null,
+       "precinctResults": []
+      },
+      {
+       "id": "637895227",
+       "name": "MICHAEL R. STODDARD",
+       "ballotOrder": 5,
+       "voteCount": 7,
+       "politicalParty": "Libertarian",
+       "groupResults": null,
+       "precinctResults": []
+      },
+      {
+       "id": "642021192",
+       "name": "ADONIS HOOSLYN",
+       "ballotOrder": 2,
+       "voteCount": 0,
+       "politicalParty": "Unaffiliated",
+       "groupResults": null,
+       "precinctResults": []
+      }
+     ],
+     "rankedChoiceResults": null
+    }
+   ],
+   "reportingStatuses": null
+  }
+ ]
+}
