@@ -81,6 +81,7 @@ Order (Steve, 2026-11-20): finish source verification → scenario model → lea
 
 - `scenarios/` — 2028 "what-if" model from hand-set swings on 2024 county results. Spec: `docs/queued/scenario-model-spec.md`.
 - `league/` — 2028 fantasy league tracker. Spec: `docs/queued/league-tracker-spec.md`.
+- NPVIC tracking (`config/npvic.yaml`, `tools/npvic_status.py`; election-night behavior later). Queued 2026-11-20 "behind current work"; placed after the league tracker until Steve says otherwise. Spec: `docs/queued/npvic-spec.md`.
 
 ## How I work
 
