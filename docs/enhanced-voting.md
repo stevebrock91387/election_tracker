@@ -36,6 +36,24 @@ Found while verifying the registry; each official state page links an Enhanced V
 
 That makes seven states on the platform: AZ, GA, UT, WA, VA, RI, ID.
 
+## Parsed with `pipeline/readers/enhanced_voting.py` (2026-11-20)
+
+One download per state through `pipeline/fetch.py` (hashes in `data/raw/manifest.csv`; AZ and UT were saved earlier). All seven parse.
+
+| State | Bytes | Counties | Precincts | Vote types | Statewide ≠ county sum | Groups ≠ total |
+|---|---|---|---|---|---|---|
+| AZ | 72,662,370 | 15 | yes | yes | 0 | 0 |
+| GA | 47,465,091 | 159 | yes | yes | **37** | **191** (county level) |
+| UT | 518,303 | 29 | no | no | 0 | 0 |
+| WA | 74,864,685 | 39 | yes | no | **21** | 0 |
+| VA | 26,732,640 | 133 | yes | yes | 0 | 0 |
+| RI | 11,104,413 | 40 | yes | yes | 0 | 0 |
+| ID | 8,233,749 | 44 | yes | no | 0 | 0 |
+
+- **GA's mismatches are in the file itself, not the reader:** e.g. State School Superintendent (`S7`) is in all 159 counties under the same id, yet Richard Woods' county totals sum to 1,072,774 against 1,891,982 statewide; US House 5 is 175,797 vs 274,922. Some county rows have a nonzero total but vote-type groups summing to 0. Cause unknown; step 3's checks must flag this rather than trust either number.
+- **WA's are all write-in lines** (a few to a few hundred votes each).
+- GA's vote-type groups: Election Day, Advance Voting, Absentee by Mail, Provisional. WA and ID publish none.
+
 ## Not yet known
 
 - **Whether GA, UT and WA exports use the same JSON structure as AZ.** Not downloaded or opened.

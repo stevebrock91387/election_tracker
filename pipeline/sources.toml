@@ -1,0 +1,39 @@
+# Enhanced Voting media exports, 2026 general election.
+# Each URL is the "Media Export" (or, for AZ, "JSON") link on the state's official results page;
+# see docs/enhanced-voting.md and sources/registry.csv for where each link was seen.
+# min_interval_s: AZ's SOS allows one download per 2 minutes; the others publish no limit, so the same applies.
+
+[ev-AZ-2026-general]
+state = "AZ"
+url = "https://app.enhancedvoting.com/cdn/results/Arizona/export-110326GeneralElection.json"
+min_interval_s = 120
+
+[ev-GA-2026-general]
+state = "GA"
+url = "https://results.sos.ga.gov/cdn/results/Georgia/export-11032026GeneralAndSpecialElection.json"
+min_interval_s = 120
+
+[ev-UT-2026-general]
+state = "UT"
+url = "https://electionresults.utah.gov/cdn/results/Utah/export-General11032026.json"
+min_interval_s = 120
+
+[ev-WA-2026-general]
+state = "WA"
+url = "https://results.votewa.gov/cdn/results/washington/export-20261103.json"
+min_interval_s = 120
+
+[ev-VA-2026-general]
+state = "VA"
+url = "https://enr.elections.virginia.gov/cdn/results/virginia/export-2026-November-General.json"
+min_interval_s = 120
+
+[ev-RI-2026-general]
+state = "RI"
+url = "https://electionresults.ri.gov/cdn/results/RhodeIsland/export-2026StatewideGeneralElection.json"
+min_interval_s = 120
+
+[ev-ID-2026-general]
+state = "ID"
+url = "https://results.voteidaho.gov/cdn/results/id/export-nov2026.json"
+min_interval_s = 120
