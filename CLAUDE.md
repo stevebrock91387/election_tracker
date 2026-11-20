@@ -1,0 +1,57 @@
+# CLAUDE.md — election-tracker
+
+Steve's own 2028 US election results tracking system, built from official state/county sources rather than AP. Goal is to eventually make my own projections and race calls, like a TV decision desk (think Steve Kornacki).
+
+## Scope
+
+All three federal races on Nov 7, 2028:
+
+- **President** — 538 electoral votes; Maine and Nebraska also award votes by congressional district.
+- **Senate** — 34 regular Class 3 seats, plus a likely Tennessee special election (expected, not yet confirmed).
+- **House** — all 435 seats. The hard part is districts that split counties.
+
+## Plan
+
+Six steps; full version on the whiteboard: https://claude.ai/artifact/G1GZgLyj8raYiqzHHTCXSY
+
+1. **Source list** — each state's official results site, format, reporting level, update cadence. ← IN PROGRESS
+2. **Readers**, one per format (Clarity, custom state feeds, HTML). Save each raw download with a timestamp and SHA-256 hash before parsing.
+3. **Checks** — totals never decrease, votes never exceed registered voters, counties add up to the state total. AP numbers are a cross-check only, never a source.
+4. **Expected vote** — each county's 2024 turnout, adjusted for the change in registered voters, shown as a range.
+5. **Projections** — each county's swing vs. its 2024 result, applied to the vote still out, split by vote type. *Proposal, not yet approved.*
+6. **Calls**, plus per-race pages that replace the earlier Mississippi and Alaska Senate tracker pages.
+
+Dry runs: load the 2026 certified results and compare to the official totals; then the 2027 KY/LA/MS state elections; then the 2028 primaries.
+
+## Current state (as of 2026-11-20, 2 commits)
+
+- `sources/registry.csv` — 51 rows (50 states + DC): 13 verified, 9 partial, 29 unverified.
+  - **verified** = official URL confirmed from an official page or a 2026 source
+  - **partial** = site exists, but format or reporting level not confirmed
+  - **unverified** = `candidate_url` is a guess, not yet checked
+  - A row becomes verified only after a person (or Claude, in a browser) looks at the page. **An HTTP 200 alone is not verification.**
+- `tools/check_sources.py` — stdlib-only, read-only URL checker.
+- `evidence/check-20261120T194311Z.csv` — first run from this Mac.
+
+### What the first check found
+
+- Clarity's 200 for CO/IA/SC/WV is the same generic page (identical hash), so it proves nothing about those states. AR/KY got 403 from Clarity, which may mean they're no longer on it (unconfirmed).
+- 403 responses (AZ, AR, KY, MO, NH, NY, OK, TX, NV, WI) most likely mean the site blocks non-browser clients, not that the site is gone.
+- GA, UT, WA all redirect to `/results/public/<state>` — possibly one shared platform.
+- ME candidate URL is a 404. MA failed with a TLS protocol-version error. CA returned only 212 bytes (likely a placeholder between elections).
+- MI, NJ and WI publish no statewide results on election night; results come from 83 + 21 + 72 county sites.
+- PA's daily Supplemental Election Returns Report estimates the share of mail ballots still uncounted — a useful input for step 4.
+
+## Next tasks, in order
+
+1. Diagnose the MA TLS error: check the Python version and `ssl.OPENSSL_VERSION` before changing any code.
+2. Verify the 29 unverified rows and the 10 403 rows by actually looking at the pages. Find live election-night sources for ME, KS, RI and CT.
+3. Only after that, start step 2 with the Clarity reader, tested against real 2026 data.
+
+## How I work
+
+- Small, verifiable commits; flag it if scope grows.
+- Deterministic, inspectable code; no LLM-based logic unless I ask for it.
+- Never present an unverified URL or number as fact. Mark it unverified.
+- When something misbehaves, gather diagnostic data before proposing a fix.
+- Be direct; no preamble.
