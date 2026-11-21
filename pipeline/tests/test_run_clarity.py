@@ -1,11 +1,17 @@
 """Clarity source list, the version-first fetch pass, and body reading."""
+import csv
+import glob
 import gzip
 import os
 import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
-from pipeline.run_clarity import DEFAULT_SOURCES, fetch_pass, load_sources, read_body
+from pipeline.readers.clarity import TURNOUT_COLUMNS
+from pipeline.run_clarity import DEFAULT_SOURCES, fetch_pass, load_sources, main, read_body
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 
 def opener_for(version_body, record):
@@ -68,6 +74,29 @@ class ReadBodyTest(unittest.TestCase):
             f.write(b'{"a":1}')
         self.assertEqual(read_body(gz), b'{"a":1}')
         self.assertEqual(read_body(plain), b'{"a":1}')
+
+
+def header(path):
+    with open(path, newline="") as f:
+        return next(csv.reader(f))
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command_xml(self):
+        out = tempfile.mkdtemp()
+        main(["parse", "clarity-CO-2026-general", os.path.join(FX, "clarity_co.zip"), "--parsed-dir", out])
+        files = sorted(glob.glob(os.path.join(out, "clarity-CO-2026-general", "*.csv")))
+        (turnout,) = [f for f in files if f.endswith("-turnout.csv")]
+        (rows,) = [f for f in files if not f.endswith("-turnout.csv")]
+        self.assertEqual(header(rows), COLUMNS)
+        self.assertEqual(header(turnout), TURNOUT_COLUMNS)
+
+    def test_parse_command_json(self):
+        out = tempfile.mkdtemp()
+        main(["parse", "clarity-IA-2026-general", os.path.join(FX, "clarity_ia_sum.json"),
+              os.path.join(FX, "clarity_ia_all.json"), "--parsed-dir", out])
+        (path,) = glob.glob(os.path.join(out, "clarity-IA-2026-general", "*.csv"))
+        self.assertEqual(header(path), COLUMNS)
 
 
 if __name__ == "__main__":

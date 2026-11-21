@@ -4,13 +4,24 @@ A fetch pass reads <base>/current_ver.txt first and builds every data URL from
 that one version, so the files of a pass belong together. Each file has its
 own source id (<id>-ver, then <id> for the XML zip, or <id>-sum and <id>-all
 for JSON), and pipeline/fetch.py enforces min_interval_s on each.
+
+    /opt/homebrew/bin/python3 -m pipeline.run_clarity fetch SOURCE_ID
+    /opt/homebrew/bin/python3 -m pipeline.run_clarity parse SOURCE_ID ZIP          (xml sources)
+    /opt/homebrew/bin/python3 -m pipeline.run_clarity parse SOURCE_ID SUM ALL      (json sources)
+    /opt/homebrew/bin/python3 -m pipeline.run_clarity fetch-parse SOURCE_ID
+
+parse writes <parsed-dir>/<source_id>/<UTC timestamp>.csv (common columns) and,
+for XML, <UTC timestamp>-turnout.csv, then prints the summary counts.
 """
+import argparse
 import os
 import re
+import time
 import tomllib
 
 from pipeline.fetch import FetchError, fetch
-from pipeline.readers.clarity import read_body
+from pipeline.readers.clarity import TURNOUT_COLUMNS, parse_json, parse_xml, read_body
+from pipeline.schema import write_csv
 
 DEFAULT_SOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sources_clarity.toml")
 
@@ -37,3 +48,56 @@ def fetch_pass(source_id, src, raw_dir="data/raw", now=None, opener=None):
     else:
         raise ValueError(f"{source_id}: unknown format {src['format']!r}")
     return {"version": version, "paths": paths}
+
+
+def parse_files(source_id, src, paths, parsed_dir="data/parsed"):
+    """paths: [zip] for xml sources, [sum, all] for json sources. Returns the output paths."""
+    out_dir = os.path.join(parsed_dir, source_id)
+    os.makedirs(out_dir, exist_ok=True)
+    stem = os.path.join(out_dir, time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()))
+    if src["format"] == "xml":
+        (zip_path,) = paths
+        rows, summary, turnout = parse_xml(zip_path, src["state"], source_id)
+        write_csv(turnout, stem + "-turnout.csv", TURNOUT_COLUMNS)
+        outs = [stem + ".csv", stem + "-turnout.csv"]
+    else:
+        sum_path, all_path = paths
+        rows, summary = parse_json(sum_path, all_path, src["state"], source_id)
+        outs = [stem + ".csv"]
+    n = write_csv(rows, stem + ".csv")
+    print(f"{source_id}: {n} rows -> {', '.join(outs)}")
+    for k, v in summary.items():
+        print(f"  {k}: {len(v) if isinstance(v, list) and k != 'vote_types' else v}")
+    return outs
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser()
+    p.add_argument("command", choices=["fetch", "parse", "fetch-parse"])
+    p.add_argument("source_id")
+    p.add_argument("paths", nargs="*")
+    p.add_argument("--sources", default=DEFAULT_SOURCES)
+    p.add_argument("--raw-dir", default="data/raw")
+    p.add_argument("--parsed-dir", default="data/parsed")
+    a = p.parse_args(argv)
+    sources = load_sources(a.sources)
+    if a.source_id not in sources:
+        p.error(f"unknown source id {a.source_id!r}; known: {', '.join(sources)}")
+    src = sources[a.source_id]
+    if a.command == "parse":
+        need = 1 if src["format"] == "xml" else 2
+        if len(a.paths) != need:
+            p.error(f"{a.source_id} is {src['format']}: parse needs {need} path(s)")
+        return parse_files(a.source_id, src, a.paths, a.parsed_dir)
+    if a.paths:
+        p.error(f"{a.command} takes no paths")
+    r = fetch_pass(a.source_id, src, raw_dir=a.raw_dir)
+    print(f"{a.source_id}: version {r['version']}, saved {r['paths']}")
+    if a.command == "fetch-parse":
+        order = ["xml"] if src["format"] == "xml" else ["sum", "all"]
+        return parse_files(a.source_id, src, [r["paths"][k] for k in order], a.parsed_dir)
+    return r
+
+
+if __name__ == "__main__":
+    main()
