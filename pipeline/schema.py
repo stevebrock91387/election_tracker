@@ -19,10 +19,10 @@ COLUMNS = [
 ]
 
 
-def write_csv(rows, path):
+def write_csv(rows, path, columns=COLUMNS):
     n = 0
     with open(path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=COLUMNS)
+        w = csv.DictWriter(f, fieldnames=columns)
         w.writeheader()
         for r in rows:
             w.writerow(r)

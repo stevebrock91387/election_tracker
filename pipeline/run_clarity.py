@@ -5,12 +5,12 @@ that one version, so the files of a pass belong together. Each file has its
 own source id (<id>-ver, then <id> for the XML zip, or <id>-sum and <id>-all
 for JSON), and pipeline/fetch.py enforces min_interval_s on each.
 """
-import gzip
 import os
 import re
 import tomllib
 
 from pipeline.fetch import FetchError, fetch
+from pipeline.readers.clarity import read_body
 
 DEFAULT_SOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sources_clarity.toml")
 
@@ -18,13 +18,6 @@ DEFAULT_SOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sour
 def load_sources(path=DEFAULT_SOURCES):
     with open(path, "rb") as f:
         return tomllib.load(f)
-
-
-def read_body(path):
-    """File bytes, un-gzipped when the saved body is gzip (Iowa sends gzip unasked)."""
-    with open(path, "rb") as f:
-        data = f.read()
-    return gzip.decompress(data) if data[:2] == b"\x1f\x8b" else data
 
 
 def fetch_pass(source_id, src, raw_dir="data/raw", now=None, opener=None):
