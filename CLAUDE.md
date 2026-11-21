@@ -79,6 +79,10 @@ Every registry row was looked at in the built-in browser. **48 verified, 3 parti
 - Blockers for automation: CA (Incapsula), PA (reCAPTCHA). Don't bypass either.
 - Not yet done: no API or export other than AZ's has been downloaded or parsed.
 
+### Step 2: Enhanced Voting reader (built 2026-11-20)
+
+`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (22). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Open for Steve: add option-id / contest-scope columns to the output (names aren't reliable keys). Next: Clarity reader.
+
 ## Next tasks, in order
 
 1. ~~Diagnose the MA TLS error~~ — done 2026-11-20 (see above).
