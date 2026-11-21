@@ -1,0 +1,30 @@
+# Clarity (Scytl) statewide results, 2026 general election, county level.
+# Each base is the election on the state's officially linked results page; see
+# docs/superpowers/specs/2026-11-20-step2-clarity-reader-design.md and sources/registry.csv.
+# A pass reads <base>/current_ver.txt, then files under <base>/<version>/.
+# format "xml": reports/detailxml.zip. format "json": json/sum.json + json/ALL.json (Iowa has no XML).
+# min_interval_s applies to each fetched file's source id; no state publishes a limit, so 2 minutes as for AZ.
+
+[clarity-CO-2026-general]
+state = "CO"
+base = "https://results.enr.clarityelections.com/CO/127407"
+format = "xml"
+min_interval_s = 120
+
+[clarity-SC-2026-general]
+state = "SC"
+base = "https://www.enr-scvotes.org/SC/127300"
+format = "xml"
+min_interval_s = 120
+
+[clarity-WV-2026-general]
+state = "WV"
+base = "https://results.enr.clarityelections.com/WV/127496"
+format = "xml"
+min_interval_s = 120
+
+[clarity-IA-2026-general]
+state = "IA"
+base = "https://electionresults.iowa.gov/IA/127077"
+format = "json"
+min_interval_s = 120
