@@ -95,8 +95,8 @@ class RealFixtureTest(unittest.TestCase):
 
     def test_no_anomalies_on_real_fixtures(self):
         for st, (_, s) in self.res.items():
-            for k in ("races_no_data", "failed_races", "duplicate_keys", "media_races_not_on_pages",
-                      "page_races_not_in_media", "non_numeric_votes"):
+            for k in ("races_no_data", "races_unreadable", "failed_races", "duplicate_keys",
+                      "non_numeric_votes", "media_problems"):
                 self.assertEqual(s[k], [], (st, k))
 
 
@@ -106,10 +106,30 @@ class ParseFunctionsTest(unittest.TestCase):
         self.assertEqual(parse_race(b'{"d": []}'), [])
         self.assertEqual(parse_race(b'[{"RaceID": 1}]'), [{"RaceID": 1}])
 
+    def test_parse_race_rejects_wrong_shapes(self):
+        for body in (b"<html>bot check</html>", b"", b'{"d": "oops"}', b'{"d": [1, 2]}'):
+            with self.assertRaises(ValueError, msg=body):
+                parse_race(body)
+
+    def test_media_bad_rows_listed_not_fatal(self):
+        text = ('RaceID,CandidateID,CandidateVotes\n'
+                '1,10,*\n'
+                '1,11,1,234\n'
+                '1,12\n'
+                '1,13,5\n'
+                '1,13,6\n')
+        got, problems = parse_media_csv(text)
+        self.assertEqual(got[("1", "10")]["votes"], "")
+        self.assertEqual(got[("1", "13")]["votes"], 5)
+        self.assertEqual([p[1] for p in problems],
+                         ["non-numeric votes '*'", "unexpected field count", "missing CandidateID or votes",
+                          "duplicate key"])
+
     def test_media_ids_match_as_strings(self):
         text = ('RaceID,RaceName,PartyCode,CandidateID,CandidateName,CandidateVotes,PrecinctsReporting\n'
                 '14412,"US Senator","REP",24967,"Mike  Rounds ",184590,="671/671",\n')
-        got = parse_media_csv(text)
+        got, problems = parse_media_csv(text)
+        self.assertEqual(problems, [])
         self.assertEqual(list(got), [("14412", "24967")])
         self.assertEqual((got[("14412", "24967")]["votes"], got[("14412", "24967")]["precincts"]), (184590, "671/671"))
 
@@ -145,6 +165,22 @@ class AnomalyTest(unittest.TestCase):
         self.assertEqual(r["votes"], "")
         self.assertEqual(s["non_numeric_votes"], [(NM_SEN, cty, cand, "*")])
         self.assertEqual(len(s["mismatches_counties_vs_media"]), 1)
+
+    def test_unreadable_race_listed(self):
+        def html(rec):
+            pass
+        rows, s = variant("sd", edit_text=(f"ra_sd_race_{SD_SEN}.json", lambda t: "<html>error</html>"))
+        self.assertEqual([r for r, _ in s["races_unreadable"]], [SD_SEN])
+        self.assertFalse(find(rows, level="county", contest_id=SD_SEN))
+        self.assertEqual(s["races_checked"], 0)
+
+    def test_no_media_means_not_checked(self):
+        _, s = run("mt")
+        for k in ("mismatches_counties_vs_media", "media_races_not_on_pages", "page_races_not_in_media"):
+            self.assertIsNone(s[k], k)
+        self.assertIsNone(s["races_checked"])
+        _, s = run("sd")
+        self.assertEqual(s["races_checked"], 1)
 
     def test_duplicate_key_listed(self):
         rows, s = variant("sd", edit_race=(f"ra_sd_race_{SD_SEN}.json", lambda d: d["d"].append(d["d"][0])))

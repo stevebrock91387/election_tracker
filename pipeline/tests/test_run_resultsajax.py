@@ -6,7 +6,7 @@ import os
 import tempfile
 import unittest
 
-from pipeline.fetch import FetchError
+from pipeline.fetch import FetchError, FetchTooSoon
 from pipeline.readers.resultsajax import parse_page
 from pipeline.run_resultsajax import DEFAULT_SOURCES, fetch_pass, load_sources, main
 from pipeline.schema import COLUMNS
@@ -94,6 +94,21 @@ class FetchPassTest(unittest.TestCase):
             r = json.load(f)
         self.assertEqual([x["race_id"] for x in r["failed_races"]], ["11185"])
         self.assertIn("11186", [x["race_id"] for x in r["files"]])
+
+    def test_race_network_error_and_too_soon_continue(self):
+        for exc in (TimeoutError("timed out"), FetchTooSoon("too soon")):
+            base = opener_for({"FED": PAGE}, [])
+
+            def opener(url, exc=exc):
+                if "raceID=11185" in url:
+                    raise exc
+                return base(url)
+            self.raw = tempfile.mkdtemp()
+            rec = self.run_pass(nm_src(), opener)
+            with open(rec) as f:
+                r = json.load(f)
+            self.assertEqual([x["race_id"] for x in r["failed_races"]], ["11185"], exc)
+            self.assertIn("11186", [x["race_id"] for x in r["files"]], exc)
 
     def test_page_failure_stops_pass(self):
         with self.assertRaises(FetchError):

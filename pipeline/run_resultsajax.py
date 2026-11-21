@@ -5,7 +5,8 @@ CSV (statewide totals, where the state publishes one), then one county JSON per 
 Every file goes through pipeline/fetch.py under its own source id (<id>-page-<T>,
 <id>-media-<T>, <id>-race-<raceID>), which enforces min_interval_s per source id; the
 pass also pauses request_gap_s between consecutive requests. A failed page or media CSV
-stops the pass; a failed race is listed and the pass goes on. The pass writes a record
+stops the pass; a race that fails (HTTP error, network error or timeout, or too soon
+since its last fetch) is listed and the pass goes on. The pass writes a record
 <raw_dir>/<id>/pass-<UTC timestamp>.json that the parse step reads.
 
     /opt/homebrew/bin/python3 -m pipeline.run_resultsajax fetch SOURCE_ID
@@ -21,7 +22,7 @@ import os
 import time
 import tomllib
 
-from pipeline.fetch import FetchError, fetch
+from pipeline.fetch import FetchError, FetchTooSoon, fetch
 from pipeline.readers.resultsajax import parse_page, parse_pass
 from pipeline.schema import write_csv
 
@@ -64,7 +65,7 @@ def fetch_pass(source_id, src, raw_dir="data/raw", now=None, opener=None, sleep=
                f"&raceID={race_id}&osn={osn}&county=0&party={party or 0}")
         try:
             path = get(f"{source_id}-race-{race_id}", url)
-        except FetchError as e:
+        except (FetchError, FetchTooSoon, OSError) as e:
             failed.append({"type": t, "race_id": race_id, "error": str(e)})
             continue
         files.append({"kind": "race", "type": t, "race_id": race_id, "osn": osn, "party": party, "path": path})
@@ -89,6 +90,8 @@ def parse_record(source_id, record_path, parsed_dir="data/parsed", base_dir=".")
         if k == "counties_per_race":
             counts = sorted(v.values())
             print(f"  {k}: {len(v)} races, {counts[0] if counts else 0}-{counts[-1] if counts else 0} counties")
+        elif v is None:
+            print(f"  {k}: not checked")
         elif isinstance(v, list):
             print(f"  {k}: {len(v)}" + (f"  e.g. {v[:5]}" if v else ""))
         else:

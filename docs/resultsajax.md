@@ -32,6 +32,7 @@ Seen 2026-11-21 in the built-in browser and with single recon downloads; then do
 - **NM** pads `CountyID` (`"01 "`; stripped, the one normalisation), sends votes as strings, and returns a bare JSON list.
 - MT and OR mark counties `IsReported: false` even at full precincts (not used).
 - OR's SWNON page includes single-county races (circuit judges, district attorneys); they keep `contest_scope = "statewide"` like every race from these pages.
+- A race body that isn't the expected JSON (an HTML error or bot-check page, an empty body) is listed under `races_unreadable` and skipped; a race fetch that fails (HTTP error, timeout, too soon) is listed under `failed_races` and the pass goes on. Unreadable media CSV rows (non-integer votes, extra fields, missing ids, repeated keys) go to `media_problems`. Where no media CSV exists, the check results print as "not checked", never 0.
 - No vote types (election day / mail) are published in the county JSON; every row is `TOTAL`. NM's media CSV has empty absentee / election-day / early columns.
 
 ## Running

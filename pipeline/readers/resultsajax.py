@@ -16,8 +16,11 @@ parse_pass turns a fetch pass record into rows and a summary:
   contest_scope "statewide", party = PartyCode as published (Oregon's "NON" kept),
   reporting_status "<PrecinctsReporting>/<TotalPrecincts> precincts" as published.
   county_id has surrounding whitespace stripped (New Mexico pads it): the one normalisation.
-- State rows only from media CSVs; Montana and Oregon publish none, so they get none and
-  statewide_check is "not available" rather than a clean result.
+- State rows only from media CSVs; Montana and Oregon publish none, so they get none,
+  statewide_check is "not available", and the check results (races_checked, mismatches,
+  orphan lists) are None rather than an empty, clean-looking list.
+- A race body that isn't the expected JSON (HTML error page, empty body) is listed under
+  races_unreadable and skipped; unreadable media CSV rows go to media_problems.
 - Ids are compared as strings. Nothing is corrected; the summary lists races with no data,
   failed races (from the pass record), duplicate (race, county, candidate) keys, county
   sums that differ from the media CSV, and races found only on pages or only in the CSV.
@@ -47,10 +50,21 @@ def parse_page(html):
 
 
 def parse_race(body):
-    """Records of one race's GetMapData response; None when the service returned no data."""
-    data = json.loads(body.decode("utf-8-sig"))
+    """Records of one race's GetMapData response; None when the service returned no data.
+
+    Raises ValueError for anything else (an HTML error or bot-check page, an empty body,
+    "d" not a list, records that aren't objects), so the caller can list the race.
+    """
+    try:
+        data = json.loads(body.decode("utf-8-sig"))
+    except UnicodeDecodeError as e:
+        raise ValueError(f"not UTF-8: {e}") from e
     if isinstance(data, dict):
-        return data.get("d")
+        data = data.get("d")
+        if data is None:
+            return None
+    if not isinstance(data, list) or not all(isinstance(r, dict) for r in data):
+        raise ValueError(f"unexpected JSON shape: {type(data).__name__}")
     return data
 
 
@@ -60,16 +74,39 @@ def _unwrap(value):
 
 
 def parse_media_csv(text):
-    """{(race_id, candidate_id): {votes, race_name, candidate_name, party, precincts}}."""
-    out = {}
-    for row in csv.DictReader(io.StringIO(text)):
-        if not row.get("RaceID"):
+    """({(race_id, candidate_id): {votes, race_name, candidate_name, party, vote_for, precincts}}, problems).
+
+    problems lists (line number, reason) for rows that can't be read as published: a vote
+    count that isn't an integer (kept, votes ""), extra non-empty fields, a missing id or
+    vote count (row skipped), a repeated (race, candidate) key (first kept).
+    """
+    out, problems = {}, []
+    reader = csv.DictReader(io.StringIO(text))
+    for row in reader:
+        line = reader.line_num
+        if not (row.get("RaceID") or "").strip():
             continue
-        out[(row["RaceID"].strip(), row["CandidateID"].strip())] = {
-            "votes": int(row["CandidateVotes"]), "race_name": row.get("RaceName") or "",
-            "candidate_name": row.get("CandidateName") or "", "party": row.get("PartyCode") or "",
-            "vote_for": row.get("VoteFor") or "", "precincts": _unwrap(row.get("PrecinctsReporting"))}
-    return out
+        if any((v or "").strip() for v in row.get(None, [])):
+            problems.append((line, "unexpected field count"))
+            continue
+        cand, raw = (row.get("CandidateID") or "").strip(), row.get("CandidateVotes")
+        if not cand or raw is None:
+            problems.append((line, "missing CandidateID or votes"))
+            continue
+        key = (row["RaceID"].strip(), cand)
+        if key in out:
+            problems.append((line, "duplicate key"))
+            continue
+        raw = raw.strip()
+        if re.fullmatch(r"-?\d+", raw):
+            votes = int(raw)
+        else:
+            votes = ""
+            problems.append((line, f"non-numeric votes {raw!r}"))
+        out[key] = {"votes": votes, "race_name": row.get("RaceName") or "",
+                    "candidate_name": row.get("CandidateName") or "", "party": row.get("PartyCode") or "",
+                    "vote_for": row.get("VoteFor") or "", "precincts": _unwrap(row.get("PrecinctsReporting"))}
+    return out, problems
 
 
 def _read(path):
@@ -87,10 +124,11 @@ def parse_pass(record_path, base_dir="."):
 
     base = dict.fromkeys(COLUMNS, "")
     base.update(state=state, source_id=source_id, contest_scope="statewide", vote_type="TOTAL")
-    summary = {"races_on_pages": 0, "races_parsed": 0, "races_no_data": [], "failed_races": rec["failed_races"],
-               "counties_per_race": {}, "duplicate_keys": [], "statewide_check": "not available",
-               "mismatches_counties_vs_media": [], "media_races_not_on_pages": [], "page_races_not_in_media": [],
-               "non_numeric_votes": []}
+    summary = {"races_on_pages": 0, "races_parsed": 0, "races_no_data": [], "races_unreadable": [],
+               "failed_races": rec["failed_races"], "counties_per_race": {}, "duplicate_keys": [],
+               "non_numeric_votes": [], "statewide_check": "not available", "media_problems": [],
+               "races_checked": None, "mismatches_counties_vs_media": None, "media_races_not_on_pages": None,
+               "page_races_not_in_media": None}
     page_races, media, media_sha, rows = [], {}, {}, []
     for x in rec["files"]:
         if x["kind"] == "page":
@@ -100,7 +138,12 @@ def parse_pass(record_path, base_dir="."):
         elif x["kind"] == "media":
             body = _read(path(x["path"]))
             sha = hashlib.sha256(body).hexdigest()
-            for k, v in parse_media_csv(body.decode("utf-8-sig", "replace")).items():
+            parsed_media, problems = parse_media_csv(body.decode("utf-8-sig", "replace"))
+            summary["media_problems"] += [(x["type"], line, why) for line, why in problems]
+            for k, v in parsed_media.items():
+                if k in media:
+                    summary["media_problems"].append((x["type"], "", f"key {k} also in another media CSV"))
+                    continue
                 media[k], media_sha[k] = v, sha
             summary["statewide_check"] = "media CSV"
     summary["races_on_pages"] = len(page_races)
@@ -110,7 +153,11 @@ def parse_pass(record_path, base_dir="."):
         if x["kind"] != "race":
             continue
         body = _read(path(x["path"]))
-        records = parse_race(body)
+        try:
+            records = parse_race(body)
+        except ValueError as e:
+            summary["races_unreadable"].append((x["race_id"], str(e)))
+            continue
         if not records:
             summary["races_no_data"].append(x["race_id"])
             continue
@@ -146,6 +193,8 @@ def parse_pass(record_path, base_dir="."):
                          reporting_status=f"{v['precincts']} precincts" if v["precincts"] else ""))
     if summary["statewide_check"] == "media CSV":
         media_races = {race for race, _ in media}
+        summary["mismatches_counties_vs_media"] = []
+        summary["races_checked"] = len([r for r in parsed if r in media_races])
         for key in sorted(set(media) | {k for k in sums if k[0] in media_races}):
             if key[0] not in parsed:
                 continue
