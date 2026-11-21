@@ -1,6 +1,8 @@
 """Rate-limited fetch: raw body saved and logged before return."""
+import concurrent.futures
 import csv
 import hashlib
+import json
 import os
 import tempfile
 import unittest
@@ -17,6 +19,26 @@ def opener_returning(status, body):
 def manifest_rows(raw):
     with open(os.path.join(raw, "manifest.csv"), newline="") as f:
         return list(csv.DictReader(f))
+
+
+def _fetch_many(raw, worker, n):
+    """Worker for the concurrency test: n fetches under distinct source ids."""
+    for i in range(n):
+        fetch(f"w{worker}-s{i}", URL, 120, raw_dir=raw, opener=lambda url: (200, b"x" * (i % 7)))
+    return n
+
+
+class ConcurrentFetchTest(unittest.TestCase):
+    def test_parallel_processes_keep_state_and_manifest_whole(self):
+        raw, workers, n = tempfile.mkdtemp(), 6, 40
+        with concurrent.futures.ProcessPoolExecutor(workers) as ex:
+            list(ex.map(_fetch_many, [raw] * workers, range(workers), [n] * workers))
+        with open(os.path.join(raw, ".last_fetch.json")) as f:
+            state = json.load(f)
+        self.assertEqual(len(state), workers * n)
+        rows = manifest_rows(raw)
+        self.assertEqual(len(rows), workers * n)
+        self.assertEqual({r["source_id"] for r in rows}, set(state))
 
 
 class FetchTest(unittest.TestCase):

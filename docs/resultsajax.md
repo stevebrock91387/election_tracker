@@ -41,7 +41,7 @@ Seen 2026-11-21 in the built-in browser and with single recon downloads; then do
 /opt/homebrew/bin/python3 -m pipeline.run_resultsajax fetch-parse resultsajax-NE-2026-general
 ```
 
-A pass makes one request per page, media CSV and race, 10 s apart (NM ≈ 25 requests, about 4 minutes). **Run passes one at a time:** `pipeline/fetch.py` keeps its last-fetch times in one file (`data/raw/.last_fetch.json`) with no locking; five passes run in parallel on 2026-11-21 corrupted it (repaired by hand, backup kept outside the repo).
+A pass makes one request per page, media CSV and race, 10 s apart (NM ≈ 25 requests, about 4 minutes). Five passes run in parallel on 2026-11-21 corrupted `data/raw/.last_fetch.json` (repaired by hand, backup kept outside the repo); `pipeline/fetch.py` has since been made safe for concurrent runs (an exclusive lock on `data/raw/.fetch.lock` around the timing check and the manifest append, and an atomic replace of the timing file).
 
 ## Not yet known / not done
 

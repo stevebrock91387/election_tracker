@@ -12,12 +12,20 @@ sha256, path) before returning. A non-200 response is saved and logged the
 same way, then raises FetchError. An exception before any response (timeout,
 DNS failure) still uses up the interval and saves nothing.
 
+Safe for concurrent runs (several processes sharing one raw_dir): the interval check and
+state update, and the manifest append, each happen under an exclusive lock on
+<raw_dir>/.fetch.lock, and the state file is replaced atomically (written to a temporary
+file, then renamed). The lock is not held during the download itself.
+
 Run with Homebrew Python: some sources (e.g. Arizona) require TLS 1.3.
 """
+import contextlib
 import csv
+import fcntl
 import hashlib
 import json
 import os
+import tempfile
 import posixpath
 import time
 import urllib.error
@@ -54,19 +62,40 @@ def _load_state(path):
         return {}
 
 
+@contextlib.contextmanager
+def _locked(raw_dir):
+    with open(os.path.join(raw_dir, ".fetch.lock"), "a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
+
+
+def _write_state(path, state):
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".last_fetch.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(state, f, indent=1, sort_keys=True)
+        os.replace(tmp, path)
+    except BaseException:
+        with contextlib.suppress(FileNotFoundError):
+            os.unlink(tmp)
+        raise
+
+
 def fetch(source_id, url, min_interval_s, raw_dir="data/raw", now=time.time, opener=None):
     opener = opener or _urllib_opener
     os.makedirs(raw_dir, exist_ok=True)
     state_path = os.path.join(raw_dir, ".last_fetch.json")
-    state = _load_state(state_path)
-    t = now()
-    last = state.get(source_id)
-    if last is not None and t - last < min_interval_s:
-        raise FetchTooSoon(f"{source_id}: last fetched {t - last:.0f}s ago; minimum is {min_interval_s}s")
-
-    state[source_id] = t
-    with open(state_path, "w") as f:
-        json.dump(state, f, indent=1, sort_keys=True)
+    with _locked(raw_dir):
+        state = _load_state(state_path)
+        t = now()
+        last = state.get(source_id)
+        if last is not None and t - last < min_interval_s:
+            raise FetchTooSoon(f"{source_id}: last fetched {t - last:.0f}s ago; minimum is {min_interval_s}s")
+        state[source_id] = t
+        _write_state(state_path, state)
 
     status, body = opener(url)
 
@@ -79,10 +108,9 @@ def fetch(source_id, url, min_interval_s, raw_dir="data/raw", now=time.time, ope
         f.write(body)
 
     manifest = os.path.join(raw_dir, "manifest.csv")
-    new = not os.path.exists(manifest)
-    with open(manifest, "a", newline="") as f:
+    with _locked(raw_dir), open(manifest, "a", newline="") as f:
         w = csv.DictWriter(f, fieldnames=FIELDS)
-        if new:
+        if f.tell() == 0:
             w.writeheader()
         w.writerow({"source_id": source_id, "url": url,
                     "fetched_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(t)),
