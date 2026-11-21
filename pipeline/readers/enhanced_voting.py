@@ -8,11 +8,24 @@ Format reference: docs/Arizona Media JSON Guide.pdf and docs/az-feed.md.
   status for that group when the file gives one (UT gives none).
 - Precinct results: TOTAL + groups, all carrying the precinct's reportingStatus.
 - Missing groupResults or precinctResults just produce fewer rows.
-- Ranked-choice results are not handled: UnsupportedFormat.
+- Ranked-choice contests (contestType "RankChoice", or non-empty
+  rankedChoiceResults / the guide's spelling rankChoiceResults) are not
+  parsed: no rows are emitted for them, and each is listed in
+  summary["skipped_ranked_choice"] as (county or "statewide", id, name).
+  Nothing is half-parsed, and one local RCV race (e.g. Arlington County, VA)
+  does not block the rest of the file.
+- A file using the guide's alternate name "localityResults" instead of
+  "localResults" raises UnsupportedFormat rather than parse as zero counties.
 
-Nothing is corrected. Two internal mismatches are reported in the summary:
-statewide total vs the sum of county totals (contest/choice pairs present in
-both), and vote-type groups vs the option total.
+Nothing is corrected. The summary reports:
+- statewide total vs the sum of county totals, matched by (contest id, option
+  id): the guide's option key. Option names are not reliable keys (GA spells
+  "Richard Woods (I) (Rep)" and "Richard Woods (I)(Rep)" under one id).
+  pairs_compared counts matched pairs; options_only_in_counties lists county
+  options with no statewide match in a statewide contest.
+- vote-type groups vs the option total, at state, county and precinct level.
+  Groups with a null voteCount are listed in groups_not_published instead,
+  since nothing can be summed.
 """
 import collections
 import hashlib
@@ -44,11 +57,18 @@ def parse(path, state, source_id):
     summary = {"election_name": d.get("electionName", ""), "created_at": d.get("createdAt", ""),
                "counties": len(d.get("localResults") or []), "has_precincts": False,
                "has_vote_types": False, "mismatches_state_vs_counties": [],
-               "mismatches_groups_vs_total": []}
+               "pairs_compared": 0, "options_only_in_counties": [],
+               "mismatches_groups_vs_total": [], "groups_not_published": [],
+               "skipped_ranked_choice": []}
+    if "localResults" not in d and "localityResults" in d:
+        raise UnsupportedFormat("file uses 'localityResults'; this reader expects 'localResults'")
 
-    def check_item(item, where):
-        if item.get("rankedChoiceResults"):
-            raise UnsupportedFormat(f"{where}: ranked-choice results in {item.get('id')} are not supported")
+    def skip_ranked_choice(item, where):
+        if (item.get("rankedChoiceResults") or item.get("rankChoiceResults")
+                or item.get("contestType") == "RankChoice"):
+            summary["skipped_ranked_choice"].append((where, item.get("id"), item.get("name")))
+            return True
+        return False
 
     def contest(item):
         return dict(contest_id=item["id"], contest_name=item["name"],
@@ -62,28 +82,35 @@ def parse(path, state, source_id):
             summary["has_vote_types"] = True
             rows.append(dict(common, vote_type=g["groupName"], votes=g["voteCount"],
                              reporting_status=statuses(g["groupName"])))
-        if groups and level in ("state", "county"):
-            gsum = sum(g["voteCount"] or 0 for g in groups)
-            if gsum != option["voteCount"]:
-                summary["mismatches_groups_vs_total"].append(
-                    (level, county_id, fields["contest_id"], option["name"], option["voteCount"], gsum))
+        if groups:
+            where = (level, county_id, fields.get("precinct_id", ""), fields["contest_id"], option["name"])
+            if any(g["voteCount"] is None for g in groups):
+                summary["groups_not_published"].append(where)
+            else:
+                gsum = sum(g["voteCount"] for g in groups)
+                if gsum != option["voteCount"]:
+                    summary["mismatches_groups_vs_total"].append(where + (option["voteCount"], gsum))
 
     statewide = {}
     for item in d["results"]["ballotItems"]:
-        check_item(item, "statewide")
+        if skip_ranked_choice(item, "statewide"):
+            continue
         for o in item["ballotOptions"]:
-            statewide[(item["id"], o["name"])] = o["voteCount"]
+            statewide[(item["id"], o["id"])] = (o["name"], o["voteCount"])
             emit(dict(level="state", **contest(item)), o, o.get("groupResults"),
                  lambda g: "", "", "state", "")
 
     county_sum = collections.Counter()
+    county_name = {}
     for c in d.get("localResults") or []:
         status_by_group = {s["groupName"]: s["status"] for s in (c.get("reportingStatuses") or [])}
         cfields = dict(county_id=c["id"], county_name=c["name"])
         for item in c["ballotItems"]:
-            check_item(item, c["name"])
+            if skip_ranked_choice(item, c["name"]):
+                continue
             for o in item["ballotOptions"]:
-                county_sum[(item["id"], o["name"])] += o["voteCount"] or 0
+                county_sum[(item["id"], o["id"])] += o["voteCount"] or 0
+                county_name.setdefault((item["id"], o["id"]), o["name"])
                 emit(dict(level="county", **cfields, **contest(item)), o, o.get("groupResults"),
                      lambda g: status_by_group.get(g, ""), "", "county", c["id"])
                 for p in o.get("precinctResults") or []:
@@ -95,7 +122,13 @@ def parse(path, state, source_id):
                     emit(pfields, dict(o, voteCount=p["voteCount"]), p.get("groupResults"),
                          lambda g, st=st: st, st, "precinct", c["id"])
 
-    for key, total in statewide.items():
-        if key in county_sum and county_sum[key] != total:
-            summary["mismatches_state_vs_counties"].append((key[0], key[1], total, county_sum[key]))
+    statewide_contests = {cid for cid, _ in statewide}
+    for key, (name, total) in statewide.items():
+        if key in county_sum:
+            summary["pairs_compared"] += 1
+            if county_sum[key] != total:
+                summary["mismatches_state_vs_counties"].append((key[0], key[1], name, total, county_sum[key]))
+    for key, csum in county_sum.items():
+        if key[0] in statewide_contests and key not in statewide:
+            summary["options_only_in_counties"].append((key[0], key[1], county_name[key], csum))
     return rows, summary

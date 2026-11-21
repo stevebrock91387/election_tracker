@@ -1,6 +1,6 @@
-# Enhanced Voting platform: AZ, GA, UT, WA
+# Enhanced Voting platform: AZ, GA, UT, WA, VA, RI, ID
 
-Checked 2026-11-20 in the built-in browser (page source, network requests, page links) and with curl `HEAD` requests. No export file except Arizona's was downloaded.
+Platform evidence checked 2026-11-20 in the built-in browser (page source, network requests, page links) and with curl `HEAD` requests. All seven exports were later downloaded once and parsed (see "Parsed with" below).
 
 ## Evidence the states share the platform
 
@@ -13,7 +13,7 @@ Checked 2026-11-20 in the built-in browser (page source, network requests, page 
 
 The jurisdiction API (`/results/public/api/jurisdictions/<State>`) lists elections with a `publicElectionId` and has a `mediaExportPath` field, which is `null` for GA, UT and WA. The export links come from the election pages, not that field.
 
-## Media export files (2026 general)
+## Media export files (2026 general; HEAD checks before download)
 
 Each state's 2026 general-election page has a **"Media Export"** link. URL pattern: `<site>/cdn/results/<State>/export-<publicElectionId>.json`.
 
@@ -26,7 +26,7 @@ Each state's 2026 general-election page has a **"Media Export"** link. URL patte
 
 ## Added later on 2026-11-20: VA, RI, ID
 
-Found while verifying the registry; each official state page links an Enhanced Voting site (CSP allows `app.enhancedvoting.com`) with a Media Export link. None of these exports has been downloaded.
+Found while verifying the registry; each official state page links an Enhanced Voting site (CSP allows `app.enhancedvoting.com`) with a Media Export link. Downloaded and parsed later the same day (below).
 
 | State | Results page | Linked export |
 |---|---|---|
@@ -38,25 +38,29 @@ That makes seven states on the platform: AZ, GA, UT, WA, VA, RI, ID.
 
 ## Parsed with `pipeline/readers/enhanced_voting.py` (2026-11-20)
 
-One download per state through `pipeline/fetch.py` (hashes in `data/raw/manifest.csv`; AZ and UT were saved earlier). All seven parse.
+One download per state through `pipeline/fetch.py` (hashes in `data/raw/manifest.csv`; AZ and UT were saved earlier under `data/raw/az-2026/` and `data/raw/ev-2026/`, outside the manifest). All seven parse. Statewide vs county totals are matched by **(contest id, option id)**, the guide's option key.
 
-| State | Bytes | Counties | Precincts | Vote types | Statewide ≠ county sum | Groups ≠ total |
-|---|---|---|---|---|---|---|
-| AZ | 72,662,370 | 15 | yes | yes | 0 | 0 |
-| GA | 47,465,091 | 159 | yes | yes | **37** | **191** (county level) |
-| UT | 518,303 | 29 | no | no | 0 | 0 |
-| WA | 74,864,685 | 39 | yes | no | **21** | 0 |
-| VA | 26,732,640 | 133 | yes | yes | 0 | 0 |
-| RI | 11,104,413 | 40 | yes | yes | 0 | 0 |
-| ID | 8,233,749 | 44 | yes | no | 0 | 0 |
+| State | Bytes | Counties | Precincts | Vote types | Pairs compared | Statewide ≠ county sum | Null vote-type counts |
+|---|---|---|---|---|---|---|---|
+| AZ | 72,662,370 | 15 | yes | yes | 415 | 0 | 0 |
+| GA | 47,465,091 | 159 | yes | yes | 457 | 0 | 192 county + 37,087 precinct option lines |
+| UT | 518,303 | 29 | no | no | 290 | 0 | 0 |
+| WA | 74,864,685 | 39 | yes | no | 468 | 0 | 0 |
+| VA | 26,732,640 | 133 | yes | yes | 115 | 0 | 0 |
+| RI | 11,104,413 | 40 | yes | yes | 1,277 | 0 | 0 |
+| ID | 8,233,749 | 44 | yes | no | 292 | 0 | 0 |
 
-- **GA's mismatches are in the file itself, not the reader:** e.g. State School Superintendent (`S7`) is in all 159 counties under the same id, yet Richard Woods' county totals sum to 1,072,774 against 1,891,982 statewide; US House 5 is 175,797 vs 274,922. Some county rows have a nonzero total but vote-type groups summing to 0. Cause unknown; step 3's checks must flag this rather than trust either number.
-- **WA's are all write-in lines** (a few to a few hundred votes each).
+No numeric vote-type mismatches at any level in any state.
+
+- **Correction (2026-11-20):** an earlier version of this section said GA had 37 and WA 21 statewide-vs-county mismatches "in the file itself". That was wrong: the first reader matched options by **name**, and some counties spell the same option differently under the same option id (GA `Richard Woods (I) (Rep)` vs `Richard Woods (I)(Rep)`; WA `Write-in` vs `Write-In`, `Levy  Yes` vs `Levy Yes`). Matched by id, there are none. Found by the final code review.
+- **GA publishes some vote-type counts as null** (not 0): those option lines are listed as "not published", not as mismatches.
+- **UT:** one county write-in line (contest 636107031, option 191, 78 votes) has no statewide match.
+- **VA:** one ranked-choice contest (Arlington County Board, `cc381`, typed `RankChoice`, no round results in the file) is skipped and listed, not parsed.
+- **Names are not keys:** option names vary in spelling across counties, local contest ids repeat across counties (GA, UT, ID), and WA King County reuses precinct ids. The common output has no option-id column yet (see the step 2 design's open question).
+- WA's file was regenerated between the HEAD check (74,864,683 bytes) and the download (74,864,685).
 - GA's vote-type groups: Election Day, Advance Voting, Absentee by Mail, Provisional. WA and ID publish none.
 
 ## Not yet known
 
-- **Whether GA, UT and WA exports use the same JSON structure as AZ.** Not downloaded or opened.
-- **Utah's export is 0.5 MB** against 47–75 MB for the others; it may lack precinct detail. Unconfirmed.
-- **Rate limits for GA, UT and WA.** Only Arizona's (2 minutes) is documented; until each state's terms are known, use at least the same interval.
+- **Rate limits** for every state but AZ. Only Arizona's (2 minutes) is documented; the same is applied to all.
 - `publicElectionId` formats differ by state (`110326GeneralElection`, `11032026GeneralAndSpecialElection`, `General11032026`, `20261103`), so a reader must read the ID from the jurisdiction API rather than build it.

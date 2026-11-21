@@ -33,8 +33,11 @@ def _parse(path, source_id, state, parsed_dir):
     print(f"{source_id}: {n} rows -> {out}")
     for k in ("election_name", "created_at", "counties", "has_precincts", "has_vote_types"):
         print(f"  {k}: {summary[k]}")
-    print(f"  statewide vs counties mismatches: {len(summary['mismatches_state_vs_counties'])}")
-    print(f"  vote-type groups vs total mismatches: {len(summary['mismatches_groups_vs_total'])}")
+    print(f"  statewide vs counties: {summary['pairs_compared']} pairs compared, "
+          f"{len(summary['mismatches_state_vs_counties'])} mismatches, "
+          f"{len(summary['options_only_in_counties'])} county options with no statewide match")
+    print(f"  vote-type groups vs total: {len(summary['mismatches_groups_vs_total'])} mismatches, "
+          f"{len(summary['groups_not_published'])} with null group counts")
     return out, summary
 
 

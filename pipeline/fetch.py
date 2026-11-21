@@ -5,11 +5,12 @@ source was fetched less than min_interval_s ago. The last-fetch time lives in
 <raw_dir>/.last_fetch.json so separate runs respect it too. It never waits or
 retries on its own.
 
-Every attempt that reaches the network saves the body unchanged to
+Every attempt that gets an HTTP response saves the body unchanged to
 <raw_dir>/<source_id>/<UTC timestamp>.<ext> and appends a row to
 <raw_dir>/manifest.csv (source_id, url, fetched_utc, http_status, bytes,
 sha256, path) before returning. A non-200 response is saved and logged the
-same way, then raises FetchError.
+same way, then raises FetchError. An exception before any response (timeout,
+DNS failure) still uses up the interval and saves nothing.
 
 Run with Homebrew Python: some sources (e.g. Arizona) require TLS 1.3.
 """
