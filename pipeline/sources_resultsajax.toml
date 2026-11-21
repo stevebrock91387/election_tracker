@@ -1,0 +1,58 @@
+# ResultsAjax-engine state results sites, 2026 general election, county level,
+# federal and statewide races only. See
+# docs/superpowers/specs/2026-11-21-step2-resultsajax-reader-design.md and sources/registry.csv.
+# A pass reads each page <site>ResultsSW.aspx?type=<T>&map=CTY for its race list, each media CSV
+# <site>resultsCSV.aspx?text=All&type=<T>&map=CTY (statewide totals; MT and OR publish none),
+# then <service_root><service>/GetMapData for each race.
+# min_interval_s applies to each fetched file's source id; request_gap_s is the pause between
+# consecutive requests within one pass. No state publishes a limit.
+
+[resultsajax-MT-2026-general]
+state = "MT"
+site = "https://electionresults.mt.gov/"
+service_root = "https://esersws.mt.gov/"
+service = "ResultsAjax.svc"
+page_types = ["FED"]
+media_types = []
+min_interval_s = 120
+request_gap_s = 10
+
+[resultsajax-NE-2026-general]
+state = "NE"
+site = "https://electionresults.nebraska.gov/"
+service_root = "https://neresultswebservice.azurewebsites.us/"
+service = "ResultsAjax.svc"
+page_types = ["SW", "CG"]
+media_types = ["All"]
+min_interval_s = 120
+request_gap_s = 10
+
+[resultsajax-NM-2026-general]
+state = "NM"
+site = "https://electionresults.sos.nm.gov/"
+service_root = "https://nmresultswebservice.azurewebsites.us/"
+service = "NMResultsAjax.svc"
+page_types = ["FED", "SW"]
+media_types = ["FED", "SW"]
+min_interval_s = 120
+request_gap_s = 10
+
+[resultsajax-OR-2026-general]
+state = "OR"
+site = "https://results.oregonvotes.gov/"
+service_root = "https://orresultswebservices.azureedge.us/"
+service = "ResultsAjax.svc"
+page_types = ["FED", "SWPAR", "SWNON"]
+media_types = []
+min_interval_s = 120
+request_gap_s = 10
+
+[resultsajax-SD-2026-general]
+state = "SD"
+site = "https://electionresults.sd.gov/"
+service_root = "https://sdresws.azurewebsites.us/"
+service = "ResultsAjax.svc"
+page_types = ["SWR", "BQ"]
+media_types = ["SWR", "BQ"]
+min_interval_s = 120
+request_gap_s = 10
