@@ -1,16 +1,20 @@
 """Clarity readers on fixtures cut from the real 2026 CO, SC, WV (XML) and IA (JSON) downloads."""
 import csv
+import gzip
+import json
+import shutil
 import os
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 import zipfile
 
-from pipeline.readers.clarity import TURNOUT_COLUMNS, UnsupportedFormat, parse_xml
+from pipeline.readers.clarity import TURNOUT_COLUMNS, UnsupportedFormat, parse_json, parse_xml
 from pipeline.schema import COLUMNS, write_csv
 
 FX = os.path.join(os.path.dirname(__file__), "fixtures")
 CO, SC, WV = (os.path.join(FX, f"clarity_{s}.zip") for s in ("co", "sc", "wv"))
+IA_SUM, IA_ALL = os.path.join(FX, "clarity_ia_sum.json"), os.path.join(FX, "clarity_ia_all.json")
 
 
 def find(rows, **kw):
@@ -107,6 +111,69 @@ class XmlTest(unittest.TestCase):
         write_csv(self.co_turn, out, TURNOUT_COLUMNS)
         with open(out, newline="") as f:
             self.assertEqual(next(csv.reader(f)), TURNOUT_COLUMNS)
+
+
+def ia_variant(edit_all):
+    d = tempfile.mkdtemp()
+    with open(IA_ALL) as f:
+        a = json.load(f)
+    edit_all(a)
+    out = os.path.join(d, "all.json")
+    with open(out, "w") as f:
+        json.dump(a, f)
+    return out
+
+
+def adair(a):
+    return [x for x in a["Contests"] if x["A"] == "Adair"][0]
+
+
+class JsonTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.ia, cls.ia_sum = parse_json(IA_SUM, IA_ALL, "IA", "clarity-IA-2026-general")
+
+    def test_ia_values(self):
+        got = {r["choice_id"]: r["votes"] for r in find(self.ia, level="county", county_name="Adair", contest_id="1000")}
+        self.assertEqual(got, {"1": 1921, "2": 1066, "3": 141, "30": 3})
+        (r,) = find(self.ia, level="county", county_name="Adair", contest_id="1000", choice_id="2")
+        self.assertEqual((r["choice"], r["party"], r["vote_type"], r["contest_scope"]),
+                         ("Josh Turek", "DEM", "TOTAL", "statewide"))
+        st = {r["choice_id"]: r["votes"] for r in find(self.ia, level="state", contest_id="1000")}
+        self.assertEqual(st, {"1": 631276, "2": 688613, "3": 41829, "30": 1653})
+        self.assertFalse(find(self.ia, county_name="-1"))
+        self.assertEqual(self.ia_sum["mismatches_counties_vs_state"], [])
+        self.assertEqual(self.ia_sum["mismatches_total_area_vs_state"], [])
+        self.assertEqual(self.ia_sum["counties"], 99)
+        for r in self.ia:
+            self.assertEqual(list(r), COLUMNS)
+
+    def test_json_gzip_and_plain(self):
+        d = tempfile.mkdtemp()
+        paths = []
+        for src in (IA_SUM, IA_ALL):
+            out = os.path.join(d, os.path.basename(src))
+            with open(src, "rb") as f, open(out, "wb") as g:
+                g.write(gzip.compress(f.read()))
+            paths.append(out)
+        rows, _ = parse_json(*paths, "IA", "clarity-IA-2026-general")
+        strip = lambda rs: [{k: v for k, v in r.items() if k != "source_sha256"} for r in rs]
+        self.assertEqual(strip(rows), strip(self.ia))
+
+    def test_json_length_mismatch_skipped(self):
+        def edit(a):
+            c = adair(a)
+            c["V"][c["C"].index("1000")].pop()
+        rows, s = parse_json(IA_SUM, ia_variant(edit), "IA", "x")
+        self.assertIn(("Adair", "1000"), s["skipped_length_mismatch"])
+        self.assertFalse(find(rows, county_name="Adair", contest_id="1000"))
+        self.assertTrue(find(rows, county_name="Adams", contest_id="1000"))
+
+    def test_json_county_sum_mismatch(self):
+        def edit(a):
+            adair(a)["V"][adair(a)["C"].index("1000")][0] += 1
+        _, s = parse_json(IA_SUM, ia_variant(edit), "IA", "x")
+        self.assertIn(("1000", "1", 631276, 631277), s["mismatches_counties_vs_state"])
 
 
 if __name__ == "__main__":

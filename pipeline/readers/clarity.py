@@ -17,12 +17,24 @@ a statewide file, even for local contests the file carries. county_id is empty
 (Clarity gives county names only). contest_type is "question" when
 isQuestion="true", else "".
 
-Nothing is corrected. The summary lists: vote types that don't sum to the
+parse_json reads json/sum.json + json/ALL.json (Iowa, which publishes no XML):
+- State rows from sum.json (TOTAL), county rows from ALL.json (TOTAL; the
+  values are totals, no vote types). An ALL.json area's votes for a contest are
+  in sum.json's choice order; that position gives choice, choice_id (CHAggId)
+  and party. State rows carry sum.json's hash, county rows ALL.json's.
+- The area named "-1" is the statewide total, not a county: it is compared with
+  sum.json and not emitted.
+- A county whose vote array length differs from sum.json's for a contest is
+  skipped and listed; contests in ALL.json missing from sum.json are listed.
+- election_name, source_created_at and election_date are empty (not in these files).
+
+Nothing is corrected. The XML summary lists: vote types that don't sum to the
 choice total, counties that don't sum to their vote type, and unknown child
 elements of Contest/Choice (listed, not parsed).
 """
 import gzip
 import hashlib
+import json
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -111,3 +123,51 @@ def parse_xml(zip_path, state, source_id):
     summary["counties"] = len(turnout)
     summary["vote_types"] = sorted(vote_types)
     return rows, summary, turnout
+
+
+def parse_json(sum_path, all_path, state, source_id):
+    s = json.loads(read_body(sum_path))
+    a = json.loads(read_body(all_path))
+    base = dict.fromkeys(COLUMNS, "")
+    base.update(state=state, source_id=source_id, contest_scope="statewide")
+    sum_sha, all_sha = _sha256(sum_path), _sha256(all_path)
+    summary = {"contests": 0, "counties": 0, "mismatches_counties_vs_state": [],
+               "mismatches_total_area_vs_state": [], "skipped_length_mismatch": [],
+               "contests_only_in_counties": []}
+    rows, contests = [], {}
+    for c in s["Contests"]:
+        summary["contests"] += 1
+        k = c["K"]
+        choices = [dict(base, contest_id=k, contest_name=c.get("C", ""), vote_for=str(c.get("VF", "")),
+                        choice=name, choice_id=str(cid), party=party or "", vote_type="TOTAL")
+                   for name, cid, party in zip(c["CH"], c["CHAggId"], c["P"])]
+        contests[k] = (choices, c["V"])
+        for ch, v in zip(choices, c["V"]):
+            rows.append(dict(ch, level="state", source_sha256=sum_sha, votes=v))
+
+    county_sum = {k: [0] * len(v) for k, (_, v) in contests.items()}
+    for area in a["Contests"]:
+        name = area["A"]
+        if name != "-1":
+            summary["counties"] += 1
+        for k, votes in zip(area["C"], area["V"]):
+            if k not in contests:
+                summary["contests_only_in_counties"].append((name, k))
+                continue
+            choices, state_v = contests[k]
+            if len(votes) != len(choices):
+                summary["skipped_length_mismatch"].append((name, k))
+                continue
+            if name == "-1":
+                for ch, sv, av in zip(choices, state_v, votes):
+                    if sv != av:
+                        summary["mismatches_total_area_vs_state"].append((k, ch["choice_id"], sv, av))
+                continue
+            for i, (ch, v) in enumerate(zip(choices, votes)):
+                county_sum[k][i] += v
+                rows.append(dict(ch, level="county", county_name=name, source_sha256=all_sha, votes=v))
+    for k, (choices, state_v) in contests.items():
+        for ch, sv, cs in zip(choices, state_v, county_sum[k]):
+            if sv != cs:
+                summary["mismatches_counties_vs_state"].append((k, ch["choice_id"], sv, cs))
+    return rows, summary
