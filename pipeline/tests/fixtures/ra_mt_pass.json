@@ -1,0 +1,28 @@
+{
+ "source_id": "resultsajax-MT-2026-general",
+ "state": "MT",
+ "started_utc": "20261121T195550Z",
+ "files": [
+  {
+   "kind": "page",
+   "type": "FED",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_mt_page_FED.html"
+  },
+  {
+   "kind": "race",
+   "type": "FED",
+   "race_id": "450000000004069",
+   "osn": "1000",
+   "party": "",
+   "path": "ra_mt_race_450000000004069.json"
+  }
+ ],
+ "failed_races": [],
+ "_fixture_source_sha256": {
+  "ra_mt_page_FED.html": "863c59b227657ad0d0ec0f5382a0d47aea1b21608623d3376e53c8908afde5c8",
+  "ra_mt_race_450000000004069.json": "70a914f66697630ca17da1b2383f6e5525372b7b82e182d218bc6e81ca03d256"
+ }
+}

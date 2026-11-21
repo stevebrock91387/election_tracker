@@ -1,0 +1,3 @@
+RaceID,RaceName,PartyCode,AreaType,AreaNum,OfficeSeqNo,BallotOrder,CandidateID,CandidateName,CurrentDateTime,VoteFor,CandidateVotes,CandidatePercentage,PrecinctsReporting
+14412,"United States Senator","REP","","",110,,24967,"Mike  Rounds ",11/21/2026 8:07:05 PM,1,184590,0.605008800306782,="671/671",
+14412,"United States Senator","IND","","",110,,24887,"Brian L Bengs ",11/21/2026 8:07:05 PM,1,120513,0.394991199693218,="671/671",

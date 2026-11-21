@@ -23,7 +23,7 @@ site = "https://electionresults.nebraska.gov/"
 service_root = "https://neresultswebservice.azurewebsites.us/"
 service = "ResultsAjax.svc"
 page_types = ["SW", "CG"]
-media_types = ["All"]
+media_types = ["SW", "CG"]
 min_interval_s = 120
 request_gap_s = 10
 

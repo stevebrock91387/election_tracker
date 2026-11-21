@@ -1,0 +1,3 @@
+RaceID,RaceName,PartyCode,AreaNum,CandidateID,CandidateName,VoteFor,CandidateVotes,CandidatePercentage,PrecinctsReporting,CandidateAbsenteeVotes,CandidateElectionDayVotes,CandidateEarlyVotes
+11185,"United States Senator","REP","",19608,"LARRY E MARKER",1,266524,0.367327474999173,2204/2204,,,,
+11185,"United States Senator","DEM","",19607,"BEN R LUJAN",1,459052,0.632672525000827,2204/2204,,,,

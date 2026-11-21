@@ -1,0 +1,46 @@
+{
+ "source_id": "resultsajax-NM-2026-general",
+ "state": "NM",
+ "started_utc": "20261121T200035Z",
+ "files": [
+  {
+   "kind": "page",
+   "type": "FED",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_nm_page_FED.html"
+  },
+  {
+   "kind": "media",
+   "type": "FED",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_nm_media_FED.csv"
+  },
+  {
+   "kind": "media",
+   "type": "SW",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_nm_media_SW.csv"
+  },
+  {
+   "kind": "race",
+   "type": "FED",
+   "race_id": "11185",
+   "osn": "180",
+   "party": "",
+   "path": "ra_nm_race_11185.json"
+  }
+ ],
+ "failed_races": [],
+ "_fixture_source_sha256": {
+  "ra_nm_page_FED.html": "156a2c972986e953a0fb135d479509bdb4375dd095892248393eb6d35056b4f3",
+  "ra_nm_media_FED.csv": "b56de4e8fd9a0fc16ac34bfe9aa66b0ff11a764a706adca1ec80635b920cda1c",
+  "ra_nm_media_SW.csv": "b52bb5df857dd966c606d14ff19edf427454b207fa1884cd40bc794bcf5826b5",
+  "ra_nm_race_11185.json": "f2df0244b8ace317a1724d27810a0a702dd84254fec88973005868519048ebc8"
+ }
+}

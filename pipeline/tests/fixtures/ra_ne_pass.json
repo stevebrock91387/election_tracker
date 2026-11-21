@@ -1,0 +1,64 @@
+{
+ "source_id": "resultsajax-NE-2026-general",
+ "state": "NE",
+ "started_utc": "20261121T195827Z",
+ "files": [
+  {
+   "kind": "page",
+   "type": "SW",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_ne_page_SW.html"
+  },
+  {
+   "kind": "page",
+   "type": "CG",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_ne_page_CG.html"
+  },
+  {
+   "kind": "media",
+   "type": "SW",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_ne_media_SW.csv"
+  },
+  {
+   "kind": "media",
+   "type": "CG",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_ne_media_CG.csv"
+  },
+  {
+   "kind": "race",
+   "type": "SW",
+   "race_id": "13224",
+   "osn": "102",
+   "party": "",
+   "path": "ra_ne_race_13224.json"
+  },
+  {
+   "kind": "race",
+   "type": "CG",
+   "race_id": "13166",
+   "osn": "103",
+   "party": "",
+   "path": "ra_ne_race_13166.json"
+  }
+ ],
+ "failed_races": [],
+ "_fixture_source_sha256": {
+  "ra_ne_page_SW.html": "ce3c98c046540380d0693f1ce0a4198011db5469443fa3c744227e83aa77f32a",
+  "ra_ne_page_CG.html": "6cca64ae8d1258b673c3952a089e7bb943aa49a078d0ad2e0f26579bbbf75763",
+  "ra_ne_media_SW.csv": "d1a4e1daead2d7fa9833bd4536bedef26d8644884bc9f6d0b8621d1cd28882b0",
+  "ra_ne_media_CG.csv": "ed26f300b12a28bce43b0c0292f733006d87035c3da87fdc91809d65db447c1a",
+  "ra_ne_race_13224.json": "8cf636c1166a44c56439d1ec7dae144937bd8a1e849b5efa97a9b0a6de28a253",
+  "ra_ne_race_13166.json": "df382819b3e1977211cb3a9d55272b21e0a8b0583f89c758a042de1c7f602b84"
+ }
+}

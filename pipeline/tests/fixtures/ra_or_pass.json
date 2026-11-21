@@ -1,0 +1,28 @@
+{
+ "source_id": "resultsajax-OR-2026-general",
+ "state": "OR",
+ "started_utc": "20261121T200448Z",
+ "files": [
+  {
+   "kind": "page",
+   "type": "FED",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_or_page_FED.html"
+  },
+  {
+   "kind": "race",
+   "type": "FED",
+   "race_id": "300038695",
+   "osn": "0",
+   "party": "",
+   "path": "ra_or_race_300038695.json"
+  }
+ ],
+ "failed_races": [],
+ "_fixture_source_sha256": {
+  "ra_or_page_FED.html": "4187cea7c55537d4caa7cc2e975d41136a43434d5a77554c0dbe000ada58d0df",
+  "ra_or_race_300038695.json": "3995da1dbdc4c1c55ee85bd20e81629d471ae29b58ef7dc3e5819cbcfa5fd471"
+ }
+}

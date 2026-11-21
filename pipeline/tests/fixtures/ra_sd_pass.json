@@ -1,0 +1,46 @@
+{
+ "source_id": "resultsajax-SD-2026-general",
+ "state": "SD",
+ "started_utc": "20261121T200818Z",
+ "files": [
+  {
+   "kind": "page",
+   "type": "SWR",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_sd_page_SWR.html"
+  },
+  {
+   "kind": "media",
+   "type": "SWR",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_sd_media_SWR.csv"
+  },
+  {
+   "kind": "media",
+   "type": "BQ",
+   "race_id": "",
+   "osn": "",
+   "party": "",
+   "path": "ra_sd_media_BQ.csv"
+  },
+  {
+   "kind": "race",
+   "type": "SWR",
+   "race_id": "14412",
+   "osn": "110",
+   "party": "",
+   "path": "ra_sd_race_14412.json"
+  }
+ ],
+ "failed_races": [],
+ "_fixture_source_sha256": {
+  "ra_sd_page_SWR.html": "3dc85e3ce27c36a9eeb329df350e02429b330421eb715cb9497131279898b302",
+  "ra_sd_media_SWR.csv": "613b1f9bb4ccc5a46bebf1b93d985c723b7fbddb0f39acac3a12477d880fadef",
+  "ra_sd_media_BQ.csv": "55ab2b5eaddb3b45cb9783fd90453068fef096df41bd8c40e9ed96f37a341e25",
+  "ra_sd_race_14412.json": "09b8befe00279c55d0c27260ecba29166d74151e07742a19696dbba6e040831a"
+ }
+}
