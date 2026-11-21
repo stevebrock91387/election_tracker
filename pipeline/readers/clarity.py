@@ -24,8 +24,13 @@ parse_json reads json/sum.json + json/ALL.json (Iowa, which publishes no XML):
   and party. State rows carry sum.json's hash, county rows ALL.json's.
 - The area named "-1" is the statewide total, not a county: it is compared with
   sum.json and not emitted.
-- A county whose vote array length differs from sum.json's for a contest is
-  skipped and listed; contests in ALL.json missing from sum.json are listed.
+- A sum.json contest whose CH/CHAggId/P/V lengths disagree is skipped and
+  listed (no rows anywhere for it). A county whose vote array length differs
+  from sum.json's for a contest is skipped and listed; an area whose C and V
+  lengths differ is skipped whole and listed; contests in ALL.json missing from
+  sum.json are listed.
+- The "-1" check reports how many contests it compared and which sum.json
+  contests had no "-1" entry, so "0 mismatches" can't mean "never checked".
 - election_name, source_created_at and election_date are empty (not in these files).
 
 Nothing is corrected. The XML summary lists: vote types that don't sum to the
@@ -132,12 +137,18 @@ def parse_json(sum_path, all_path, state, source_id):
     base.update(state=state, source_id=source_id, contest_scope="statewide")
     sum_sha, all_sha = _sha256(sum_path), _sha256(all_path)
     summary = {"contests": 0, "counties": 0, "mismatches_counties_vs_state": [],
-               "mismatches_total_area_vs_state": [], "skipped_length_mismatch": [],
-               "contests_only_in_counties": []}
-    rows, contests = [], {}
+               "mismatches_total_area_vs_state": [], "total_area_contests_compared": 0,
+               "contests_missing_total_area": [], "skipped_contest_length_mismatch": [],
+               "skipped_length_mismatch": [], "skipped_areas": [], "contests_only_in_counties": []}
+    rows, contests, skipped = [], {}, set()
     for c in s["Contests"]:
         summary["contests"] += 1
         k = c["K"]
+        lengths = {f: len(c[f]) for f in ("CH", "CHAggId", "P", "V")}
+        if len(set(lengths.values())) != 1:
+            summary["skipped_contest_length_mismatch"].append((k, lengths))
+            skipped.add(k)
+            continue
         choices = [dict(base, contest_id=k, contest_name=c.get("C", ""), vote_for=str(c.get("VF", "")),
                         choice=name, choice_id=str(cid), party=party or "", vote_type="TOTAL")
                    for name, cid, party in zip(c["CH"], c["CHAggId"], c["P"])]
@@ -146,11 +157,17 @@ def parse_json(sum_path, all_path, state, source_id):
             rows.append(dict(ch, level="state", source_sha256=sum_sha, votes=v))
 
     county_sum = {k: [0] * len(v) for k, (_, v) in contests.items()}
+    in_total_area = set()
     for area in a["Contests"]:
         name = area["A"]
+        if len(area["C"]) != len(area["V"]):
+            summary["skipped_areas"].append((name, "contest keys and vote arrays differ in length"))
+            continue
         if name != "-1":
             summary["counties"] += 1
         for k, votes in zip(area["C"], area["V"]):
+            if k in skipped:
+                continue
             if k not in contests:
                 summary["contests_only_in_counties"].append((name, k))
                 continue
@@ -159,6 +176,7 @@ def parse_json(sum_path, all_path, state, source_id):
                 summary["skipped_length_mismatch"].append((name, k))
                 continue
             if name == "-1":
+                in_total_area.add(k)
                 for ch, sv, av in zip(choices, state_v, votes):
                     if sv != av:
                         summary["mismatches_total_area_vs_state"].append((k, ch["choice_id"], sv, av))
@@ -166,6 +184,8 @@ def parse_json(sum_path, all_path, state, source_id):
             for i, (ch, v) in enumerate(zip(choices, votes)):
                 county_sum[k][i] += v
                 rows.append(dict(ch, level="county", county_name=name, source_sha256=all_sha, votes=v))
+    summary["total_area_contests_compared"] = len(in_total_area)
+    summary["contests_missing_total_area"] = [k for k in contests if k not in in_total_area]
     for k, (choices, state_v) in contests.items():
         for ch, sv, cs in zip(choices, state_v, county_sum[k]):
             if sv != cs:

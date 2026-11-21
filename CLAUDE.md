@@ -81,7 +81,7 @@ Every registry row was looked at in the built-in browser. **48 verified, 3 parti
 
 ### Step 2: Enhanced Voting reader (built 2026-11-20)
 
-`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (45 with Clarity). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
+`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (47 with Clarity). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
 
 ### Step 2: Clarity reader (built 2026-11-20, county level)
 
@@ -91,11 +91,11 @@ Steve chose county level now, precincts later. `pipeline/readers/clarity.py` (`p
 
 1. ~~Diagnose the MA TLS error~~ — done 2026-11-20 (see above).
 2. ~~Verify the unverified and 403 rows~~ — done 2026-11-20 (see "Source verification pass"). Original wording: Verify the 29 unverified rows and the 10 403 rows by actually looking at the pages. Find live election-night sources for ME, KS, RI and CT.
-3. Only after that, start step 2 with the Clarity reader, tested against real 2026 data.
+3. ~~Start step 2 with the Clarity reader, tested against real 2026 data~~ — done 2026-11-20 after the Enhanced Voting reader (see the two step-2 sections above).
 
 ## Queued components (not part of the six-step pipeline)
 
-Order (Steve, 2026-11-20, revised the same day): source verification → scenario model (done) → **finish all six pipeline steps** (step 2 readers: Enhanced Voting first, then Clarity) → league tracker → NPVIC. Neither may touch `sources/` or `tools/`; flag either if it starts growing.
+Order (Steve, 2026-11-20, revised the same day): source verification → scenario model (done) → **finish all six pipeline steps** (step 2 readers: Enhanced Voting and Clarity done 2026-11-20; other platforms next) → league tracker → NPVIC. Neither may touch `sources/` or `tools/`; flag either if it starts growing.
 
 - `scenarios/` — **built 2026-11-20** (design `docs/superpowers/specs/2026-11-20-scenario-model-design.md`, plan `docs/superpowers/plans/2026-11-20-scenario-model.md`). Starts from official FEC 2024 state totals + ME/NE district totals from the Certificates of Ascertainment (Steve chose state totals over county data; the swings are linear, so results are identical except for clipping). Run `/opt/homebrew/bin/python3 -m scenarios.run`; tests `/opt/homebrew/bin/python3 -m unittest discover -s scenarios/tests -t .` (28). Zero settings reproduce 312–226; flip point +1.726 (PA). Known limit: a third-party share drawn from R hits DC first (Trump ≈6.5% there), so large uniform draws stop the run by design (no clamping). Deferred minors listed in the build's final message. Original spec: `docs/queued/scenario-model-spec.md`.
 - `league/` — 2028 fantasy league tracker. Spec: `docs/queued/league-tracker-spec.md`.

@@ -31,14 +31,14 @@ The election id (127407 etc.) changes per election; a new election means a new b
 | WV | 16,804 | 126 | 55 | 1,355 | Election Day (only) | 0 |
 | IA | 26,354 + 27,284 (gzip) | 274 | 99 | 6,014 | none (totals only) | 0 |
 
-"Mismatches": XML vote types vs choice total and counties vs vote type; IA counties vs statewide and the `-1` area vs statewide.
+"Mismatches": XML vote types vs choice total and counties vs vote type; IA counties vs statewide and the `-1` area vs statewide (the `-1` check compared all 274 contests).
 
 - **SC** spells "Provisional" as **"Provionsal"** on 33 choice lines; kept as published.
 - **WV** labels every vote "Election Day", though the state also has early and absentee voting; kept as published.
 - **SC's statewide file carries local contests** (e.g. 40111, a school-district referendum in 2 counties). They are `contest_scope = statewide` because their key is unique across the file.
 - No county `TOTAL` row is made for XML states (none is published); sum the vote types.
 - `county_id` is empty: Clarity names counties but gives no code.
-- WV's file was last updated 2026-11-16, SC's 2026-11-10 ("Official Results" per the earlier browser check), CO's and IA's 2026-11-20.
+- Last updated: CO 11/20/2026 4:17:53 PM MST, SC 11/10/2026 5:20:31 PM EST, WV 11/16/2026 6:08:32 PM EST (each file's own `Timestamp`); SC's page said "Official Results" in the earlier browser check. Iowa's files carry no timestamp; its site's `json/en/electionsettings.json` said `websiteupdatedat` 11/20/2026 2:47:00 PM CST when seen in the browser on 2026-11-20 (not saved).
 
 ## Not yet known / not done
 

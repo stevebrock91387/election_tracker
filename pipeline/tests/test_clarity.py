@@ -176,5 +176,31 @@ class JsonTest(unittest.TestCase):
         self.assertIn(("1000", "1", 631276, 631277), s["mismatches_counties_vs_state"])
 
 
+    def sum_variant(self, edit):
+        with open(IA_SUM) as f:
+            d = json.load(f)
+        edit(d["Contests"][0])
+        out = os.path.join(tempfile.mkdtemp(), "sum.json")
+        with open(out, "w") as f:
+            json.dump(d, f)
+        return out
+
+    def test_sum_json_length_disagreement_skipped_and_listed(self):
+        for field in ("CHAggId", "V", "P"):
+            path = self.sum_variant(lambda c: c[field].pop())
+            rows, s = parse_json(path, IA_ALL, "IA", "x")
+            self.assertEqual([c for c, _ in s["skipped_contest_length_mismatch"]], ["1000"], field)
+            self.assertFalse(find(rows, contest_id="1000"), field)
+            self.assertEqual(s["skipped_length_mismatch"], [], field)
+
+    def test_total_area_compare_counted_and_absence_listed(self):
+        self.assertEqual(self.ia_sum["total_area_contests_compared"], 1)
+        self.assertEqual(self.ia_sum["contests_missing_total_area"], [])
+        _, s = parse_json(IA_SUM, ia_variant(lambda a: a["Contests"].remove(
+            [x for x in a["Contests"] if x["A"] == "-1"][0])), "IA", "x")
+        self.assertEqual(s["total_area_contests_compared"], 0)
+        self.assertEqual(s["contests_missing_total_area"], ["1000"])
+
+
 if __name__ == "__main__":
     unittest.main()
