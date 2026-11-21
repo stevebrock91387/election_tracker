@@ -86,6 +86,17 @@ class EnhancedVotingTest(unittest.TestCase):
         self.assertFalse(find(rows, level="county", contest_id="636107054"))
         self.assertIn(("Piute County", "636107054"), [(c, i) for c, i, _n in s["skipped_ranked_choice"]])
 
+    def test_choice_id_carried_at_every_level(self):
+        for level in ("state", "county", "precinct"):
+            rows = find(self.az, level=level, contest_id="AZ-6", choice="Juan Ciscomani")
+            self.assertTrue(rows, level)
+            self.assertEqual({r["choice_id"] for r in rows}, {"15"}, level)
+        self.assertEqual({r["choice_id"] for r in find(self.ut, choice="CELESTE MALOY")}, {"637830393"})
+
+    def test_contest_scope_statewide(self):
+        self.assertEqual({r["contest_scope"] for r in find(self.az, contest_id="AZ-6")}, {"statewide"})
+        self.assertEqual({r["contest_scope"] for r in self.ut}, {"statewide"})
+
     def test_columns_and_csv(self):
         for r in self.az + self.ut:
             self.assertEqual(list(r), COLUMNS)
@@ -156,6 +167,16 @@ class ChecksTest(unittest.TestCase):
             county_item(d)["ballotOptions"][0]["precinctResults"][0]["groupResults"][0]["voteCount"] += 5
         _, s = variant(edit)
         self.assertTrue([m for m in s["mismatches_groups_vs_total"] if m[0] == "precinct"])
+
+    def test_local_contest_scope(self):
+        def edit(d):
+            county_item(d)["id"] = "LOCAL-1"
+        rows, _ = variant(edit)
+        local = find(rows, contest_id="LOCAL-1")
+        self.assertTrue(local)
+        self.assertEqual({r["contest_scope"] for r in local}, {"local"})
+        self.assertEqual({r["level"] for r in local}, {"county", "precinct"})
+        self.assertEqual({r["contest_scope"] for r in find(rows, contest_id="AZ-6")}, {"statewide"})
 
     def test_locality_results_name_refused(self):
         def locality(d):

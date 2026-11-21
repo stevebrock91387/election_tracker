@@ -40,7 +40,9 @@ Turn each state's official election-night file into one common, inspectable tabl
 
 **Common output (long format, one row per vote count):**
 
-`state, source_id, source_sha256, source_created_at, election_name, election_date, level, county_id, county_name, precinct_id, precinct_name, precinct_is_virtual, contest_id, contest_name, contest_type, vote_for, choice, party, vote_type, votes, reporting_status`
+`state, source_id, source_sha256, source_created_at, election_name, election_date, level, county_id, county_name, precinct_id, precinct_name, precinct_is_virtual, contest_id, contest_scope, contest_name, contest_type, vote_for, choice, choice_id, party, vote_type, votes, reporting_status`
+
+- `contest_scope` and `choice_id`: added 2026-11-20 after the build (Steve approved). `contest_scope` is `statewide` when the contest appears in the file's state-level results (so `contest_id` is unique across counties), else `local` (key is `county_id` + `contest_id`). `choice_id` is the source's option id. Names are not reliable keys.
 
 - `level`: `state`, `county` or `precinct`.
 - `vote_type`: `TOTAL` for the option's total, otherwise the state's own group name unchanged (AZ: "Election Day", "Early Voting", "Provisional", "Early A.R.S. 16-579", "Late Early*"). Mapping these to common categories is deferred to step 5 (not yet approved).

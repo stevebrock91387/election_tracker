@@ -56,7 +56,9 @@ No numeric vote-type mismatches at any level in any state.
 - **GA publishes some vote-type counts as null** (not 0): those option lines are listed as "not published", not as mismatches.
 - **UT:** one county write-in line (contest 636107031, option 191, 78 votes) has no statewide match.
 - **VA:** one ranked-choice contest (Arlington County Board, `cc381`, typed `RankChoice`, no round results in the file) is skipped and listed, not parsed.
-- **Names are not keys:** option names vary in spelling across counties, local contest ids repeat across counties (GA, UT, ID), and WA King County reuses precinct ids. The common output has no option-id column yet (see the step 2 design's open question).
+- **Names are not keys:** option names vary in spelling across counties, local contest ids repeat across counties (GA, UT, ID), and WA King County reuses precinct ids. The output carries `choice_id` and `contest_scope` (added 2026-11-20): join statewide contests on `contest_id` + `choice_id`, local ones on `county_id` + `contest_id` + `choice_id`. Contest names vary too (GA counties: "Constitutional Amendment 1" vs statewide "Proposed Constitutional Amendment 1"; Spanish bilingual names in one county).
+- **Checked on all seven files:** every county contest whose id is a statewide id is the same race (only the name may differ), and no row lacks an option id.
+- **UT duplicate option id (in the source):** Carbon County's local Clerk/Auditor (contest 7) and Sheriff (contest 8) each list two options under id `2`: "Write-in: Not Assigned" (76 and 79 votes) and "Write-in" (0). A join on `choice_id` there merges two lines; the vote sum is unchanged. Not corrected; a duplicate-id check belongs in step 3.
 - WA's file was regenerated between the HEAD check (74,864,683 bytes) and the download (74,864,685).
 - GA's vote-type groups: Election Day, Advance Voting, Absentee by Mail, Provisional. WA and ID publish none.
 

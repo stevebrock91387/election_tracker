@@ -14,6 +14,9 @@ Format reference: docs/Arizona Media JSON Guide.pdf and docs/az-feed.md.
   summary["skipped_ranked_choice"] as (county or "statewide", id, name).
   Nothing is half-parsed, and one local RCV race (e.g. Arlington County, VA)
   does not block the rest of the file.
+- contest_scope is "statewide" for any contest id present in the state-level
+  ballotItems (checked on all seven 2026 files: a county item with such an id
+  is always the same race, only its name may differ), else "local".
 - A file using the guide's alternate name "localityResults" instead of
   "localResults" raises UnsupportedFormat rather than parse as zero counties.
 
@@ -70,12 +73,16 @@ def parse(path, state, source_id):
             return True
         return False
 
+    statewide_ids = {item["id"] for item in d["results"]["ballotItems"]}
+
     def contest(item):
-        return dict(contest_id=item["id"], contest_name=item["name"],
+        scope = "statewide" if item["id"] in statewide_ids else "local"
+        return dict(contest_id=item["id"], contest_scope=scope, contest_name=item["name"],
                     contest_type=item.get("contestType", ""), vote_for=item.get("voteFor", ""))
 
     def emit(fields, option, groups, statuses, total_status, level, county_id):
-        common = dict(base, **fields, choice=option["name"], party=option.get("politicalParty") or "")
+        common = dict(base, **fields, choice=option["name"], choice_id=option["id"],
+                      party=option.get("politicalParty") or "")
         rows.append(dict(common, vote_type="TOTAL", votes=option["voteCount"],
                          reporting_status=total_status))
         for g in groups or []:
