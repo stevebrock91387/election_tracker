@@ -1,6 +1,6 @@
 # Step 2: Clarity reader (CO, IA, SC, WV), county level — design
 
-Status: draft, awaiting Steve's approval. Short design (the reader reuses the Enhanced Voting reader's fetch, schema and CLI pattern).
+Status: approved by Steve 2026-11-20. Short design (the reader reuses the Enhanced Voting reader's fetch, schema and CLI pattern).
 
 ## Intent
 
@@ -15,7 +15,7 @@ Every Clarity election has `<base>/current_ver.txt` (the current version number)
 | CO | `https://results.enr.clarityelections.com/CO/127407` | yes (62 KB zip, 302 contests) | one vote type, "Total Votes" |
 | SC | `https://www.enr-scvotes.org/SC/127300` | yes (78 KB zip, 171 contests) | Election Day, Early Voting, Absentee By Mail, Failsafe, Failsafe Provisional, Provisional (33 lines spelled "Provionsal") |
 | WV | `https://results.enr.clarityelections.com/WV/127496` | yes (17 KB zip, 126 contests) | one vote type, labelled "Election Day" |
-| IA | `https://electionresults.iowa.gov/IA/127077` | **no** (404) | JSON: `json/sum.json` (contest key `K`, choice names `CH`, choice ids `CHAggId`, party `P`, statewide votes `V`) and `json/ALL.json` (per county `A`: contest keys `C`, votes `V` in the same choice order, totals `T`; one extra area named `-1`). A fixed-width `reports/detailtxt.zip` has vote types but no ids. |
+| IA | `https://electionresults.iowa.gov/IA/127077` | **no** (404) | JSON: `json/sum.json` (contest key `K`, choice names `CH`, choice ids `CHAggId`, party `P`, statewide votes `V`) and `json/ALL.json` (per county `A`: contest keys `C`, votes `V` in the same choice order, totals `T`; one extra area named `-1`, which is the statewide total and matches `sum.json` on all 274 contests). A fixed-width `reports/detailtxt.zip` has vote types but no ids. |
 
 The XML (`detail.xml` inside `reports/detailxml.zip`): `ElectionResult` → `Timestamp`, `ElectionName`, `ElectionDate`, `Region`, `ElectionVoterTurnout` (per county: `totalVoters` (registered), `ballotsCast`, precincts participating/reported) and `Contest` (`key`, `text`, `voteFor`, `isQuestion`; children `ParticipatingCounties` with per-county precincts participating/reported, and `Choice` (`key`, `text`, `party`, `totalVotes`) → `VoteType` (`name`, `votes`) → `County` (`name`, `votes`)). On all three files, vote types sum to each choice total and counties sum to each vote type (1,431 choices, 0 differences).
 
@@ -29,8 +29,8 @@ Iowa's vote-type split can be added later from the TXT, matched to JSON by colum
 
 ## Design
 
-- **Sources** (`pipeline/sources.toml`): one entry per state with `platform = "clarity"`, `base`, `format = "xml"` or `"json"`, `min_interval_s = 120`. The existing EV entries are unchanged.
-- **Fetch** (`pipeline/fetch.py`, unchanged): one pass reads `current_ver.txt` (source id `<id>-ver`), then the data file(s) built from that one version: `reports/detailxml.zip` (XML states) or `json/sum.json` + `json/ALL.json` (IA, source ids `<id>-sum`, `<id>-all`). Each source id keeps its own 120 s minimum, so a pass is 2 requests (3 for IA). Raw bodies and manifest rows are saved before parsing, as now. The version is recorded in the summary.
+- **Sources** (`pipeline/sources_clarity.toml`, a separate file so the EV list and its CLI stay unchanged; amended while planning): one entry per state with `base`, `format = "xml"` or `"json"`, `min_interval_s = 120`.
+- **Fetch** (`pipeline/fetch.py`, unchanged): one pass reads `current_ver.txt` (source id `<id>-ver`), then the data file(s) built from that one version: `reports/detailxml.zip` (XML states) or `json/sum.json` + `json/ALL.json` (IA, source ids `<id>-sum`, `<id>-all`). Each source id keeps its own 120 s minimum, so a pass is 2 requests (3 for IA). Raw bodies and manifest rows are saved before parsing, as now. The version is recorded in the summary. Iowa's server gzips its JSON even when not asked (`Content-Encoding: gzip`, seen 2026-11-20); raw bodies are saved as received and the reader un-gzips when the body starts with the gzip magic bytes. A version file that isn't all digits stops the pass before any data URL is built.
 - **Reader** `pipeline/readers/clarity.py`:
   - `parse_xml(zip_path, state, source_id) -> (rows, summary, turnout)` reads `detail.xml` from the zip with `zipfile` (no extraction to disk).
   - `parse_json(sum_path, all_path, state, source_id) -> (rows, summary)`.
@@ -39,7 +39,7 @@ Iowa's vote-type split can be added later from the TXT, matched to JSON by colum
   - County level: **vote types exactly as published** (CO "Total Votes", WV "Election Day", SC's five). No county `TOTAL` row is made up by summing, since none is published. Iowa's county values are totals and get `TOTAL`.
   - `reporting_status` for XML county rows: `"<reported>/<participating> precincts"` from that contest's `ParticipatingCounties`. Empty elsewhere.
 - **Turnout** (XML only): a second CSV per parse with state, source_id, source_sha256, county_name, registered_voters, ballots_cast, precincts_participating, precincts_reported. Registered voters feed step 3's "votes never exceed registered voters" check.
-- **Reported, not fixed** (summary, like the EV reader): vote types ≠ choice total; counties ≠ vote type (XML) or ≠ statewide (IA, by contest key and choice position); IA areas not matching a county (`-1`) listed and not emitted as county rows; unknown child elements of `Contest`/`Choice` listed and not parsed; IA contests or choice arrays whose lengths disagree, listed and skipped.
+- **Reported, not fixed** (summary, like the EV reader): vote types ≠ choice total; counties ≠ vote type (XML) or ≠ statewide (IA, by contest key and choice position); IA's `-1` area is not a county: it is compared with `sum.json` and any difference listed; unknown child elements of `Contest`/`Choice` listed and not parsed; IA contests or choice arrays whose lengths disagree, listed and skipped.
 - **CLI** `python3 -m pipeline.run_clarity fetch|parse|fetch-parse SOURCE_ID`, writing `data/parsed/<source_id>/<timestamp>.csv` (+ `-turnout.csv`).
 - **Tests**: fixtures cut from the real files (a few contests and counties each, with the source hash recorded), committed; exact values from the files; the checks; fetch order (version first, data URL built from it) with an injected opener. Integration test on the full saved files when present.
 
@@ -52,4 +52,7 @@ Precinct results and the 264 county sites; mapping county names to FIPS; Iowa vo
 - One shared module for XML and JSON, since they share the version step and the output rules.
 - County rows keep published vote types only; no summed county `TOTAL`.
 - `reporting_status` text format for Clarity county rows.
+- `contest_scope` is `statewide` for every contest in a statewide file, including local ones it carries (e.g. SC contest 40111, a school-district referendum in 2 counties): the contest key is unique across the file, which is what the column promises.
+- `contest_type` is `question` when `isQuestion="true"`, else empty.
+- For Iowa, state rows carry `sum.json`'s hash and county rows `ALL.json`'s.
 - Turnout as a separate CSV rather than new columns.
