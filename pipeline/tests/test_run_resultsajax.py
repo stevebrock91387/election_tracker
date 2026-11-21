@@ -1,11 +1,17 @@
 """ResultsAjax source list and the fetch pass (fake opener and sleep; no network)."""
+import csv
+import glob
 import json
+import os
 import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
 from pipeline.readers.resultsajax import parse_page
-from pipeline.run_resultsajax import DEFAULT_SOURCES, fetch_pass, load_sources
+from pipeline.run_resultsajax import DEFAULT_SOURCES, fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 NM_ID = "resultsajax-NM-2026-general"
 PAGE = (b"<input onclick=\"BuildCounty('FED', '11185', '180', '');\" />"
@@ -92,6 +98,16 @@ class FetchPassTest(unittest.TestCase):
     def test_page_failure_stops_pass(self):
         with self.assertRaises(FetchError):
             self.run_pass(nm_src(), opener_for({"FED": PAGE}, [], fail=("ResultsSW.aspx",)))
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        main(["parse", "resultsajax-SD-2026-general", os.path.join(FX, "ra_sd_pass.json"),
+              "--base-dir", FX, "--parsed-dir", out])
+        (path,) = glob.glob(os.path.join(out, "resultsajax-SD-2026-general", "*.csv"))
+        with open(path, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), COLUMNS)
 
 
 if __name__ == "__main__":
