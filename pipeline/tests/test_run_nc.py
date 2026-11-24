@@ -1,11 +1,18 @@
 """NC source list and the fetch pass (fake opener and sleep; no network)."""
+import csv
+import glob
+import io
 import json
 import os
 import tempfile
+import contextlib
 import unittest
 
 from pipeline.fetch import FetchError
-from pipeline.run_nc import DEFAULT_SOURCES, fetch_pass, load_sources
+from pipeline.run_nc import DEFAULT_SOURCES, fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 NC_ID = "nc-2026-general"
 ZIP_URL = "https://s3.amazonaws.com/dl.ncsbe.gov/ENRS/2026_11_03/results_pct_20261103.zip"
@@ -65,6 +72,31 @@ class FetchPassTest(unittest.TestCase):
         self.assertEqual(seen, [ZIP_URL])
         d = os.path.join(self.raw, NC_ID)
         self.assertFalse(os.path.isdir(d) and [p for p in os.listdir(d) if p.startswith("pass-")])
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", NC_ID, os.path.join(FX, "nc_pass.json"), "--base-dir", FX, "--parsed-dir", out])
+        (path,) = glob.glob(os.path.join(out, NC_ID, "*.csv"))
+        with open(path, newline="") as f:
+            r = csv.reader(f)
+            self.assertEqual(next(r), COLUMNS)
+            self.assertEqual(sum(1 for _ in r), 343 * 5 + 7 * 5)
+        self.assertIn("mismatches_dashboard_vs_zip: 35", buf.getvalue())
+
+    def test_parse_prints_not_checked(self):
+        d = tempfile.mkdtemp()
+        rec = os.path.join(d, "pass.json")
+        with open(rec, "w") as f:
+            json.dump({"source_id": NC_ID, "state": "NC", "member": "m.txt",
+                       "files": [{"kind": "dashboard", "path": os.path.join(FX, "nc_dashboard.txt")}]}, f)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", NC_ID, rec, "--parsed-dir", d])
+        self.assertIn("mismatches_dashboard_vs_zip: not checked", buf.getvalue())
 
 
 if __name__ == "__main__":
