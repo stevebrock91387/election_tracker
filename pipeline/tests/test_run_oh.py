@@ -1,11 +1,19 @@
 """OH source list and the fetch pass (fake opener; no network)."""
+import contextlib
+import csv
+import glob
+import io
 import json
 import os
 import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
-from pipeline.run_oh import fetch_pass, load_sources
+from pipeline.readers.oh import TURNOUT_COLUMNS
+from pipeline.run_oh import fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 OH_ID = "oh-2026-general"
 XML_URL = "https://liveresults.ohiosos.gov/Api/v1/download?filename=VSSC1622XmlFileBlob"
@@ -45,6 +53,37 @@ class FetchPassTest(unittest.TestCase):
         with self.assertRaises(FetchError):
             fetch_pass(OH_ID, self.src, raw_dir=self.raw, opener=lambda url: (403, b"blocked"))
         self.assertFalse(os.path.exists(os.path.join(self.raw, OH_ID)))
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", OH_ID, os.path.join(FX, "oh_pass.json"), "--base-dir", FX, "--parsed-dir", out])
+        (results,) = glob.glob(os.path.join(out, OH_ID, "*Z.csv"))
+        (turnout,) = glob.glob(os.path.join(out, OH_ID, "*-turnout.csv"))
+        self.assertEqual(turnout, results[:-4] + "-turnout.csv")
+        with open(results, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), COLUMNS)
+        with open(turnout, newline="") as f:
+            r = csv.reader(f)
+            self.assertEqual(next(r), TURNOUT_COLUMNS)
+            self.assertEqual(sum(1 for _ in r), 88)
+        text = buf.getvalue()
+        self.assertIn("unreferenced_county_units: 88", text)
+        self.assertIn("absentee_exceeds_total: 88", text)
+        self.assertIn("election_status: UnofficialComplete", text)
+
+    def test_parse_prints_not_checked(self):
+        d = tempfile.mkdtemp()
+        rec = os.path.join(d, "pass.json")
+        with open(rec, "w") as f:
+            json.dump({"source_id": OH_ID, "state": "OH", "files": []}, f)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", OH_ID, rec, "--parsed-dir", d])
+        self.assertIn("bad_sums: not checked", buf.getvalue())
 
 
 if __name__ == "__main__":
