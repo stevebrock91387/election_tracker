@@ -1,0 +1,15 @@
+# Connecticut Secretary of the State public reporting (CT Elections Management System), 2026
+# general election. See docs/superpowers/specs/2026-11-24-step2-ct-reader-design.md and
+# sources/registry.csv. Election 108 = "11/03/2026 -- November 2026 State Election" (from
+# .../ng-app/data/Elections.json). A pass reads <base>Version.json, then seven files under
+# <base><version>/, so all files come from one snapshot. office_types: the office types in scope
+# (SW statewide, C congress, S state senate, A state representative, PD judge of probate; SM town
+# offices are out). min_interval_s applies to each file's source id; request_gap_s is the pause
+# between requests. The state publishes no limit.
+
+[ct-2026-general]
+state = "CT"
+base_url = "https://ctemspublic.tgstg.net/ng-app/data/election/108/"
+office_types = ["SW", "C", "S", "A", "PD"]
+min_interval_s = 120
+request_gap_s = 10
