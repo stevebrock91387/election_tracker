@@ -1,0 +1,14 @@
+# Texas Secretary of State election-night results (Civix IVIS ENR), 2026 general election.
+# See docs/superpowers/specs/2026-11-24-step2-tx-reader-design.md and sources/registry.csv.
+# A pass fetches the statewide file (every federal, statewide and district race; values are
+# base64-encoded JSON), then the county file (every such race in every county).
+# Both URLs end in the election id (53815 = "2026 NOVEMBER GENERAL ELECTION"; ids are listed by
+# .../api-ivis-system/api/s3/enr/electionConstants). min_interval_s applies to each file's
+# source id; request_gap_s is the pause between the two requests. The state publishes no limit.
+
+[tx-2026-general]
+state = "TX"
+election_url = "https://goelect.txelections.civixapps.com/api-ivis-system/api/s3/enr/election/53815"
+county_url = "https://goelect.txelections.civixapps.com/api-ivis-system/api/s3/enr/election/countyInfo/53815"
+min_interval_s = 120
+request_gap_s = 10
