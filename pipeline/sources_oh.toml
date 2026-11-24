@@ -1,0 +1,11 @@
+# Ohio Secretary of State live results, 2026 general election. See
+# docs/superpowers/specs/2026-11-24-step2-oh-reader-design.md and sources/registry.csv.
+# A pass fetches the NIST SP 1500-100 (IEEE 1622.2 V1) XML feed once: every contest, with the
+# contest's own state or district total and one count per county (a county's part of a district).
+# The server builds the body on each request. min_interval_s applies to the source id
+# <id>-xml; the state publishes no limit.
+
+[oh-2026-general]
+state = "OH"
+xml_url = "https://liveresults.ohiosos.gov/Api/v1/download?filename=VSSC1622XmlFileBlob"
+min_interval_s = 120

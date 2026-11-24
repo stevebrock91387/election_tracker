@@ -6,7 +6,8 @@ source was fetched less than min_interval_s ago. The last-fetch time lives in
 retries on its own.
 
 Every attempt that gets an HTTP response saves the body unchanged to
-<raw_dir>/<source_id>/<UTC timestamp>.<ext> and appends a row to
+<raw_dir>/<source_id>/<UTC timestamp>.<ext> (ext: the URL path's extension, else
+"bin", unless the caller passes ext) and appends a row to
 <raw_dir>/manifest.csv (source_id, url, fetched_utc, http_status, bytes,
 sha256, path) before returning. A non-200 response is saved and logged the
 same way, then raises FetchError. An exception before any response (timeout,
@@ -84,7 +85,7 @@ def _write_state(path, state):
         raise
 
 
-def fetch(source_id, url, min_interval_s, raw_dir="data/raw", now=time.time, opener=None):
+def fetch(source_id, url, min_interval_s, raw_dir="data/raw", now=time.time, opener=None, ext=None):
     opener = opener or _urllib_opener
     os.makedirs(raw_dir, exist_ok=True)
     state_path = os.path.join(raw_dir, ".last_fetch.json")
@@ -100,7 +101,8 @@ def fetch(source_id, url, min_interval_s, raw_dir="data/raw", now=time.time, ope
     status, body = opener(url)
 
     stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime(t))
-    ext = posixpath.splitext(urllib.parse.urlparse(url).path)[1].lstrip(".") or "bin"
+    if ext is None:
+        ext = posixpath.splitext(urllib.parse.urlparse(url).path)[1].lstrip(".") or "bin"
     out_dir = os.path.join(raw_dir, source_id)
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, f"{stamp}.{ext}")

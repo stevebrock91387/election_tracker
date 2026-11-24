@@ -45,6 +45,12 @@ class FetchTest(unittest.TestCase):
     def setUp(self):
         self.raw = tempfile.mkdtemp()
 
+    def test_fetch_ext_override(self):
+        url = "https://example.test/Api/v1/download?filename=X"
+        op = opener_returning(200, b"<x/>")
+        self.assertTrue(fetch("a", url, 120, raw_dir=self.raw, now=lambda: 1000.0, opener=op, ext="xml").endswith(".xml"))
+        self.assertTrue(fetch("b", url, 120, raw_dir=self.raw, now=lambda: 1000.0, opener=op).endswith(".bin"))
+
     def test_saves_body_and_manifest_before_return(self):
         body = b'{"a": 1}'
         path = fetch("src", URL, 120, raw_dir=self.raw, now=lambda: 1000.0,
