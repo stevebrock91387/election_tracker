@@ -1,0 +1,24 @@
+# Tally ENR results API (AR, ND), 2026 general election, county level, federal and
+# statewide contest types only. See docs/superpowers/specs/2026-11-21-step2-tally-reader-design.md
+# and sources/registry.csv. A pass fetches election info, the contest list, then one results
+# file per contest type. The election id changes per election.
+# min_interval_s applies to each fetched file's source id; request_gap_s is the pause between
+# consecutive requests within one pass. No state publishes a limit.
+
+[tally-AR-2026-general]
+state = "AR"
+api = "https://enr-results-api.totalresults.com/"
+cid = "arkansas"
+election_id = "11b07106-031e-4d7c-911a-d01fb473d6dd"
+contest_types = ["Federal", "Statewide"]
+min_interval_s = 120
+request_gap_s = 10
+
+[tally-ND-2026-general]
+state = "ND"
+api = "https://api.resultsnd.sos.nd.gov/"
+cid = "north-dakota"
+election_id = "348"
+contest_types = ["SW"]
+min_interval_s = 120
+request_gap_s = 10
