@@ -21,7 +21,7 @@ Ohio has a 2028 Senate race (Class 3) and 15 House seats. The live results site 
   - `JurisdictionalScopeId` on each contest names its district unit; `OfficeId` points to an `Office` with a `Term` (start or end date).
 - **Duplicate contest names:** "Justice of the Supreme Court" twice (terms starting 2027-01-01 and 2027-01-02) and several "Judge of the Court of Appeals – District nn" pairs. Their `ObjectId`s differ.
 - **Selections:** `CandidateSelection` with one `CandidateId`, or two for Governor/Lieutenant Governor tickets. Candidate → `BallotName` and `PartyId`. 17 selections are write-ins (`IsWriteIn="true"`; party "Write-in", "Not Applicable - WI"). Parties have an `Abbreviation` (`DEM`, `REP`, `LIB`, `Indep`, `Nonprtycan`, `Other-part`, `Write-in`, `Non-partis`, and "None" for "Blank (General Election Only)").
-- **Ballot measure selections have no text**: only ObjectIds `_YES…` and `_NO…`.
+- **Ballot measure selections** carry `Selection="YES"`/`"NO"` and ObjectIds `_YES…`/`_NO…`. (Corrected 2026-11-24 after the whole-branch review: recon first recorded "no text, only ObjectIds"; the reader reads `Selection` and lists prefix disagreements.)
 - **County turnout (`SummaryCounts`):**
   - `Total BallotsCast` equals `VotersParticipated` (Adams 9,169).
   - `Provisional BallotsOutstanding` matches the canvass spreadsheet's "Outstanding Provisionals"; statewide 98,369.

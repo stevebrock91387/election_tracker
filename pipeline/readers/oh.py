@@ -12,15 +12,15 @@ A pass record lists one file, kind "xml": an ElectionReport in the namespace NS 
 - Each Contest (CandidateContest or BallotMeasureContest) names its own unit in
   JurisdictionalScopeId (the State unit or a district). Each BallotSelection has one VoteCounts
   for that unit plus one per county in it; for a district that splits a county, the county count
-  is the part inside the district. Ballot-measure selections have no text, only ObjectIds
-  starting _YES / _NO.
+  is the part inside the district. Ballot-measure selections carry Selection="YES"/"NO";
+  their ObjectIds also start _YES / _NO.
 
 Rows: one per (selection, VoteCounts). The own-unit count is level "state" (districts too, as in
 the other readers; the contest identifies the district); a County unit's count is level
 "county" with county_id = the GpUnit ObjectId. vote_type is "TOTAL" for Type="Total" counts;
 any other Type is kept under its own name and left out of the sums. contest_scope is
 "statewide" (every contest is in the state-level feed). choice is the candidates' ballot names
-joined with " and " (tickets), or "Yes"/"No" for ballot measures; party is the first
+joined with " and " (tickets), or "Yes"/"No" from a ballot measure's Selection attribute; party is the first
 candidate's party abbreviation as published.
 
 The turnout table has one row per County unit that some count refers to (TURNOUT_COLUMNS).
@@ -31,8 +31,10 @@ Nothing is corrected; the summary lists: county counts that don't sum to the own
 (only when exactly one numeric own-unit count and all county counts are numeric), selections
 with no own-unit count or more than one, counts for unknown GpUnits (level "") or for units
 that are neither a county nor the contest's own unit (level ""), non-integer counts (votes ""),
-unknown candidate ids (choice and party ""), candidates whose party id is unknown (party ""),
-ballot-measure ids without a _YES/_NO prefix (choice ""), duplicate (contest, selection, unit,
+unknown candidate ids (choice and party ""), candidate selections with no candidate ids,
+selection types other than CandidateSelection / BallotMeasureSelection (choice ""), candidates
+whose party id is unknown (party ""), ballot-measure selections whose Selection isn't YES/NO
+(choice ""), ballot-measure ids whose _YES/_NO prefix disagrees with Selection, duplicate (contest, selection, unit,
 type) counts, count types other than Total, counties whose absentee BallotsCast exceeds total
 ballots, the number of County units no count refers to, contests sharing a name, write-in
 selections, an ElectionReport root outside NS, and missing or unreadable files (a body that
@@ -55,7 +57,8 @@ TURNOUT_COLUMNS = ["state", "source_id", "source_sha256", "county_id", "county_n
                    "absentee_ballots_cast_as_published", "precincts_reported", "precincts_total"]
 CHECKS = ["contests", "selections", "counties", "bad_sums", "own_unit_count_missing", "own_unit_count_repeated",
           "unknown_gpunits", "counts_outside_contest", "non_numeric_votes", "unknown_candidates",
-          "unknown_parties", "bad_measure_ids", "duplicate_counts", "unexpected_count_types",
+          "unknown_parties", "bad_measure_ids", "measure_id_mismatches", "selections_without_candidates",
+          "unknown_selection_types", "duplicate_counts", "unexpected_count_types",
           "absentee_exceeds_total", "unreferenced_county_units", "same_named_contests", "write_ins"]
 COUNTS = {"contests", "selections", "counties", "unreferenced_county_units"}
 
@@ -145,7 +148,6 @@ def parse_pass(record_path, base_dir="."):
         names.setdefault(cname, []).append(cid)
         own = c.findtext(E + "JurisdictionalScopeId")
         ctype = next((k.get("Value", "") for k in c.findall(E + "Code") if k.get("OtherType") == "ContestType"), "")
-        is_measure = c.get(XSI_TYPE) == "BallotMeasureContest"
         crow = dict(base, contest_id=cid, contest_name=cname, contest_type=ctype, vote_for=c.get("VotesAllowed", ""))
         for s in c.findall(E + "BallotSelection"):
             sid = s.get("ObjectId", "")
@@ -153,18 +155,26 @@ def parse_pass(record_path, base_dir="."):
             if s.get("IsWriteIn") == "true":
                 summary["write_ins"].append((cid, sid))
             choice, party = "", ""
-            if is_measure:
-                choice = "Yes" if sid.startswith("_YES") else "No" if sid.startswith("_NO") else ""
+            stype = s.get(XSI_TYPE)
+            if stype == "BallotMeasureSelection":
+                sel = s.get("Selection")
+                choice = {"YES": "Yes", "NO": "No"}.get(sel, "")
                 if not choice:
-                    summary["bad_measure_ids"].append((cid, sid))
-            else:
+                    summary["bad_measure_ids"].append((cid, sid, sel))
+                elif not sid.startswith("_" + sel):
+                    summary["measure_id_mismatches"].append((cid, sid, sel))
+            elif stype == "CandidateSelection":
                 ids = [x.text for x in s.iter(E + "CandidateId")]
+                if not ids:
+                    summary["selections_without_candidates"].append((cid, sid))
                 unknown = [i for i in ids if i not in candidates]
                 for i in unknown:
                     summary["unknown_candidates"].append((cid, sid, i))
                 if ids and not unknown:
                     choice = " and ".join(candidates[i][0] for i in ids)
                     party = candidates[ids[0]][1]
+            else:
+                summary["unknown_selection_types"].append((cid, sid, stype))
             srow = dict(crow, choice=choice, choice_id=sid, party=party)
             own_counts, county_sum, sum_ok, seen = [], 0, True, set()
             for vc in s.iter(E + "VoteCounts"):

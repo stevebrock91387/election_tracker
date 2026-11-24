@@ -93,7 +93,8 @@ class RealFixtureTest(unittest.TestCase):
                                                "_BS576274EE440573A4E0633390EE0A591D")} <= set(s["write_ins"]))
         for k in ("bad_sums", "own_unit_count_missing", "own_unit_count_repeated", "unknown_gpunits",
                   "counts_outside_contest", "non_numeric_votes", "unknown_candidates", "unknown_parties",
-                  "bad_measure_ids", "duplicate_counts", "unexpected_count_types", "unexpected_namespace",
+                  "bad_measure_ids", "measure_id_mismatches", "selections_without_candidates",
+                  "unknown_selection_types", "duplicate_counts", "unexpected_count_types", "unexpected_namespace",
                   "unreadable_files", "missing_files"):
             self.assertEqual(s[k], [], k)
 
@@ -175,11 +176,41 @@ class SyntheticTest(unittest.TestCase):
         r, = find(rows, contest_id=SENATE, choice_id=BROWN, county_id=ADAMS)
         self.assertEqual((r["choice"], r["party"]), ("", ""))
 
+    YES_SEL = 'ObjectId="_YES' + ISSUE3[1:] + '" Selection="YES"'
+
+    def test_measure_choice_from_selection_attribute(self):
+        rows, s, _ = self.edit(self.YES_SEL, 'ObjectId="_X' + ISSUE3[1:] + '" Selection="YES"', anchor=None)
+        r, = find(rows, contest_id=ISSUE3, choice_id="_X" + ISSUE3[1:], level="state")
+        self.assertEqual(r["choice"], "Yes")
+        self.assertEqual(s["measure_id_mismatches"], [(ISSUE3, "_X" + ISSUE3[1:], "YES")])
+        self.assertEqual(s["bad_measure_ids"], [])
+
+    def test_measure_prefix_disagrees_listed(self):
+        rows, s, _ = self.edit(self.YES_SEL, self.YES_SEL.replace('"YES"', '"NO"'), anchor=None)
+        r, = find(rows, contest_id=ISSUE3, choice_id="_YES" + ISSUE3[1:], level="state")
+        self.assertEqual(r["choice"], "No")
+        self.assertEqual(s["measure_id_mismatches"], [(ISSUE3, "_YES" + ISSUE3[1:], "NO")])
+
     def test_bad_measure_id_listed(self):
-        rows, s, _ = self.edit('ObjectId="_YES' + ISSUE3[1:], 'ObjectId="_MAYBE' + ISSUE3[1:], anchor=None)
-        self.assertEqual(s["bad_measure_ids"], [(ISSUE3, "_MAYBE" + ISSUE3[1:])])
-        r, = find(rows, contest_id=ISSUE3, choice_id="_MAYBE" + ISSUE3[1:], level="state")
+        rows, s, _ = self.edit(self.YES_SEL, 'ObjectId="_YES' + ISSUE3[1:] + '"', anchor=None)
+        self.assertEqual(s["bad_measure_ids"], [(ISSUE3, "_YES" + ISSUE3[1:], None)])
+        r, = find(rows, contest_id=ISSUE3, choice_id="_YES" + ISSUE3[1:], level="state")
         self.assertEqual(r["choice"], "")
+
+    def test_selection_without_candidates_listed(self):
+        i = XML.index('ObjectId="' + BROWN + '"')
+        j = XML.index("<CandidateId>", i)
+        k = XML.index("</CandidateId>", j) + len("</CandidateId>")
+        self.assertNotIn("<CandidateId>", XML[k:XML.index("</BallotSelection>", i)])
+        rows, s, _ = self.parse(XML[:j] + XML[k:])
+        self.assertEqual(s["selections_without_candidates"], [(SENATE, BROWN)])
+
+    def test_unknown_selection_type_listed(self):
+        rows, s, _ = self.edit('xsi:type="CandidateSelection" ObjectId="' + BROWN + '"',
+                               'xsi:type="RetentionSelection" ObjectId="' + BROWN + '"', anchor=None)
+        self.assertEqual(s["unknown_selection_types"], [(SENATE, BROWN, "RetentionSelection")])
+        r, = find(rows, contest_id=SENATE, choice_id=BROWN, level="state")
+        self.assertEqual((r["choice"], r["party"]), ("", ""))
 
     def test_duplicate_count_listed(self):
         block = f"{BROWN_ADAMS}\n              <GpUnitId>{ADAMS}</GpUnitId>\n            </VoteCounts>"
