@@ -1,0 +1,20 @@
+{
+ "source_id": "nc-2026-general",
+ "state": "NC",
+ "started_utc": "20261124T150222Z",
+ "member": "results_pct_20261103.txt",
+ "files": [
+  {
+   "kind": "zip",
+   "path": "nc.zip"
+  },
+  {
+   "kind": "dashboard",
+   "path": "nc_dashboard.txt"
+  }
+ ],
+ "_fixture_source_sha256": {
+  "nc.zip": "4fcc5999bbafe8f6e3e350632fa9f7f6009e10b00e14df2d4f86d095cc90fc8c",
+  "nc_dashboard.txt": "eed5431876822758ae365ffce553e7418ceb6ad09f25b46ea472d5d2208381cf"
+ }
+}
