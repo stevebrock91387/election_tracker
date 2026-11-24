@@ -27,15 +27,21 @@ match (still emitted), type-S ZIP contests and choices the dashboard lacks, ZIP 
 methods don't sum to Total, non-integer counts (row kept with votes "", left out of the
 sums), lines with the wrong field count (skipped), a header that differs from the expected
 one (read by column name when every expected column is present, else the ZIP is not read),
-choice names with control characters (e.g. NUL; row kept), duplicate (county, precinct,
-contest, choice) keys, a ZIP without the expected member, and missing or unreadable files.
-A check that could not run (either file unusable) is None, not an empty list.
+fields with control characters (e.g. NUL in Choice or Choice Party; row kept), duplicate
+(county, precinct, contest, choice) keys in the ZIP and duplicate (contest, choice) rows in
+the dashboard, contest types other than S and C (their lines skipped), contest group ids
+marked S on some lines and C on others, Real Precinct values other than Y/N
+(precinct_is_virtual left empty), a ZIP without the expected member, and missing or
+unreadable files (a corrupt ZIP included). A check that could not run is None, not an empty
+list: the ZIP-only checks and counts when the ZIP wasn't read, the cross-checks when either
+file wasn't.
 """
 import hashlib
 import json
 import os
 import re
 import zipfile
+import zlib
 
 from pipeline.schema import COLUMNS
 
@@ -71,7 +77,7 @@ def _read_zip(path, member, summary):
                 return None
             info = z.getinfo(member)
             raw = z.read(info)
-    except zipfile.BadZipFile as e:
+    except (zipfile.BadZipFile, zlib.error, EOFError) as e:
         summary["unreadable_files"].append(("zip", str(e)))
         return None
     try:
@@ -93,8 +99,9 @@ def parse_pass(record_path, base_dir="."):
                "mismatches_dashboard_vs_zip": [], "dashboard_rows_without_zip_match": [],
                "zip_contests_missing_from_dashboard": [], "zip_choices_missing_from_dashboard": [],
                "bad_sums": [], "non_numeric_votes": [], "wrong_field_count": [], "unexpected_header": [],
-               "control_characters": [], "duplicate_keys": [], "missing_member": [], "unreadable_files": [],
-               "missing_files": []}
+               "control_characters": [], "duplicate_keys": [], "duplicate_dashboard_keys": [],
+               "unknown_contest_types": [], "mixed_contest_types": [], "unexpected_real_precinct": [],
+               "missing_member": [], "unreadable_files": [], "missing_files": []}
     paths = {}
     for x in rec["files"]:
         p = x["path"]
@@ -119,7 +126,7 @@ def parse_pass(record_path, base_dir="."):
         sha, stamp, header, lines = z
         summary["zip_member_timestamp"] = stamp
         if header != HEADER:
-            summary["unexpected_header"] = header
+            summary["unexpected_header"] = [tuple(header)]
         if set(HEADER) <= set(header):
             zip_ok = True
             col = {name: header.index(name) for name in HEADER}
@@ -135,6 +142,8 @@ def parse_pass(record_path, base_dir="."):
                 v = {name: f[i] for name, i in col.items()}
                 gid, ctype, choice = v["Contest Group ID"], v["Contest Type"], v["Choice"]
                 zip_types.setdefault(gid, set()).add(ctype)
+                if ctype not in ("S", "C") and (gid, ctype) not in summary["unknown_contest_types"]:
+                    summary["unknown_contest_types"].append((gid, ctype))
                 if ctype != "S":
                     continue
                 county, prec = v["County"], v["Precinct"]
@@ -143,8 +152,11 @@ def parse_pass(record_path, base_dir="."):
                 if key in seen:
                     summary["duplicate_keys"].append(key)
                 seen.add(key)
-                if _CONTROL.search(choice):
-                    summary["control_characters"].append((county, prec, gid, choice))
+                for name in HEADER:
+                    if _CONTROL.search(v[name]):
+                        summary["control_characters"].append((county, prec, gid, name, v[name]))
+                if v["Real Precinct"] not in ("Y", "N"):
+                    summary["unexpected_real_precinct"].append((county, prec, v["Real Precinct"]))
                 s_contests.add(gid)
                 zip_choices.add((gid, choice))
                 counties.add(county)
@@ -162,13 +174,14 @@ def parse_pass(record_path, base_dir="."):
                 if None not in m and counts["TOTAL"] is not None and sum(m) != counts["TOTAL"]:
                     summary["bad_sums"].append((county, prec, gid, choice, m, counts["TOTAL"]))
                 row = dict(common, election_date=v["Election Date"], county_name=county, precinct_id=prec,
-                           precinct_is_virtual="Y" if v["Real Precinct"] == "N" else "N", contest_id=gid,
+                           precinct_is_virtual={"N": "Y", "Y": "N"}.get(v["Real Precinct"], ""), contest_id=gid,
                            contest_name=v["Contest Name"], contest_type=ctype, vote_for=v["Vote For"],
                            choice=choice, party=v["Choice Party"].strip())
                 for vt in VOTE_TYPES:
                     rows.append(dict(row, vote_type=vt, votes="" if counts[vt] is None else counts[vt]))
             summary.update(contests=len(s_contests), choices=len(zip_choices), counties=len(counties),
                            precincts=len(precincts))
+            summary["mixed_contest_types"] = sorted((g, sorted(t)) for g, t in zip_types.items() if len(t) > 1)
 
     # State rows from the dashboard.
     dash = None
@@ -192,6 +205,8 @@ def parse_pass(record_path, base_dir="."):
                 summary["dashboard_rows_out_of_scope"] += 1
                 continue
             summary["dashboard_rows"] += 1
+            if (gid, choice) in seen:
+                summary["duplicate_dashboard_keys"].append((gid, choice))
             seen.add((gid, choice))
             if zip_ok and (gid, choice) not in zip_choices:
                 summary["dashboard_rows_without_zip_match"].append((gid, choice))
@@ -212,6 +227,11 @@ def parse_pass(record_path, base_dir="."):
             summary["zip_choices_missing_from_dashboard"] = sorted(
                 (g, c) for g, c in zip_choices - seen if g in dash_contests)
 
+    if not zip_ok:
+        for k in ("contests", "choices", "counties", "precincts", "bad_sums", "wrong_field_count",
+                  "control_characters", "duplicate_keys", "unknown_contest_types", "mixed_contest_types",
+                  "unexpected_real_precinct"):
+            summary[k] = None
     if not (zip_ok and dash is not None):
         for k in ("mismatches_dashboard_vs_zip", "dashboard_rows_without_zip_match",
                   "zip_contests_missing_from_dashboard", "zip_choices_missing_from_dashboard"):

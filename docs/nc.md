@@ -37,7 +37,13 @@ The dashboard keys are:
   - 3,005 state rows: 601 dashboard rows × 5.
 - **Coverage:** 395 contests, 601 choices, 100 counties, 2,842 precincts (county + precinct name pairs; administrative precincts included).
 - **Out of scope:** 76 dashboard rows are skipped because the ZIP marks their contests as type C. These are municipal contests with their own group ids (office group CCL).
-- **Clean checks:** no bad method sums, non-numeric counts, wrong field counts, header changes, duplicate keys or orphans in either direction. The NUL choice seen in recon is in a type-C contest (Hyde County commissioners), so it is out of scope here.
+- **Clean checks:** none of the following occur:
+  - bad method sums, non-numeric counts, wrong field counts or header changes;
+  - duplicate keys in either file;
+  - contest types other than S/C, or contests marked both S and C;
+  - Real Precinct values other than Y/N;
+  - orphans in either direction.
+- **Control characters:** 354 type-S lines have a NUL (`\x00`) as Choice Party. These are the two write-in choices in US House district 2 (contest 1370), "Write-In (Miscellaneous)" and "Brian McGinnis (Write-In)". They give 1,770 output rows with `party` = `"\x00"`, kept as published and listed under `control_characters`. The NUL choice seen in recon is in a type-C contest (Hyde County commissioners), so it is out of scope here.
 
 ### The dashboard and the ZIP disagree
 
@@ -63,9 +69,9 @@ The cause is unknown. The ZIP's member is dated 2026-11-13, but the dashboard fi
 - **No choice ids** in either file. The check joins on (contest group id, choice name as published); all 601 dashboard names match the ZIP exactly today. A spelling change in either file shows up as orphans.
 - **No county codes:** `county_id` is empty and `county_name` is as published (upper case). No FIPS mapping yet.
 - **Administrative precincts** (Real Precinct = N, `precinct_is_virtual` = "Y"): absentee, early-voting sites (e.g. "EV CRC") and transfers. 15,423 of 155,661 lines. Their votes are part of the county totals.
-- **Party** is blank (a single space in the ZIP) for nonpartisan choices; the reader stores it as "".
+- **Party** is a single space in the ZIP on 17,052 type-S lines (nonpartisan choices); the reader strips it to "". The NUL party above is not stripped.
 - **Election Date** is stored as published ("11/03/2026"). Neither file carries an election name.
-- **Local contests** in the ZIP all share contest group id `1` (type C). The dashboard gives municipal contests their own ids. Both are out of scope.
+- **Local contests** (type C, 68,456 lines) use contest group id `1` on 7,875 lines and 45 other ids on the rest, including the municipal contests the dashboard also carries. All are out of scope. (The design doc's "local contests share contest group id 1" is wrong.)
 
 ## Not done
 

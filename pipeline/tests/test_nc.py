@@ -174,7 +174,8 @@ class AnomalyTest(unittest.TestCase):
 
     def test_control_characters_listed(self):
         rows, s = Synthetic([line(choice="\x00"), line(choice="Ann\x07e")], [dash_row()]).parse()
-        self.assertEqual(s["control_characters"], [("BEAUFORT", "P1", "1383", "\x00"), ("BEAUFORT", "P1", "1383", "Ann\x07e")])
+        self.assertEqual(s["control_characters"], [("BEAUFORT", "P1", "1383", "Choice", "\x00"),
+                                                   ("BEAUFORT", "P1", "1383", "Choice", "Ann\x07e")])
         self.assertIn("\x00", {r["choice"] for r in rows})
         out = io.StringIO()
         w = csv.DictWriter(out, fieldnames=COLUMNS)
@@ -204,7 +205,7 @@ class AnomalyTest(unittest.TestCase):
 
     def test_unexpected_header_listed(self):
         rows, s = Synthetic([line()], [dash_row()], header=HEADER[:-1] + ["Real Pct"]).parse()
-        self.assertEqual(s["unexpected_header"], HEADER[:-1] + ["Real Pct"])
+        self.assertEqual(s["unexpected_header"], [tuple(HEADER[:-1] + ["Real Pct"])])
         self.assertFalse(any(r["level"] == "precinct" for r in rows))
         self.assertIsNone(s["mismatches_dashboard_vs_zip"])
         self.assertTrue(any(r["level"] == "state" for r in rows))
@@ -213,7 +214,7 @@ class AnomalyTest(unittest.TestCase):
         hdr = HEADER[1:] + HEADER[:1]
         l = line()
         rows, s = Synthetic([l[1:] + l[:1]], [dash_row()], header=hdr).parse()
-        self.assertEqual(s["unexpected_header"], hdr)
+        self.assertEqual(s["unexpected_header"], [tuple(hdr)])
         self.assertEqual({r["votes"] for r in rows if r["level"] == "precinct" and r["vote_type"] == "TOTAL"}, {10})
 
     def test_missing_member_listed(self):
@@ -246,6 +247,51 @@ class AnomalyTest(unittest.TestCase):
         self.assertIn(("dashboard", "", "", "1383", "Roy Cooper", "Absentee by Mail", ""), s["non_numeric_votes"])
         self.assertEqual(next(r["votes"] for r in rows if r["level"] == "state" and r["vote_type"] == "Absentee by Mail"), "")
         self.assertFalse(any(m[2] == "Absentee by Mail" for m in s["mismatches_dashboard_vs_zip"]))
+
+
+class ReviewFixTest(unittest.TestCase):
+    def test_nul_party_listed(self):
+        rows, s = Synthetic([line(party="\x00")], [dash_row()]).parse()
+        self.assertEqual(s["control_characters"], [("BEAUFORT", "P1", "1383", "Choice Party", "\x00")])
+        self.assertIn("\x00", {r["party"] for r in rows})
+
+    def test_zip_checks_not_checked_when_zip_unread(self):
+        for kw in ({"member": "other.txt"}, {"header": ["a", "b"]}):
+            _, s = Synthetic([line()], [dash_row()], **kw).parse()
+            for k in ("bad_sums", "wrong_field_count", "control_characters", "duplicate_keys", "contests",
+                      "choices", "counties", "precincts", "unknown_contest_types", "mixed_contest_types",
+                      "unexpected_real_precinct"):
+                self.assertIsNone(s[k], (kw, k))
+
+    def test_duplicate_dashboard_rows_listed(self):
+        _, s = Synthetic([line()], [dash_row(), dash_row()]).parse()
+        self.assertEqual(s["duplicate_dashboard_keys"], [("1383", "Roy Cooper")])
+
+    def test_corrupt_zip_stream_listed(self):
+        p = os.path.join(FX, "nc.zip")
+        with open(p, "rb") as f:
+            b = bytearray(f.read())
+        with zipfile.ZipFile(p) as z:
+            info = z.getinfo(MEMBER)
+        start = info.header_offset + 30 + len(info.filename.encode()) + len(info.extra)
+        b[start + 20:start + 80] = b"\xff" * 60  # inside the deflated member data
+        rows, s = Synthetic(None, [dash_row()], zip_bytes=bytes(b)).parse()
+        self.assertEqual([u[0] for u in s["unreadable_files"]], ["zip"])
+        self.assertIsNone(s["mismatches_dashboard_vs_zip"])
+        self.assertTrue(any(r["level"] == "state" for r in rows))
+
+    def test_unknown_and_mixed_contest_types_listed(self):
+        rows, s = Synthetic([line(), line(gid="5", ctype="F", choice="Q"),
+                             line(gid="7", choice="A"), line(gid="7", ctype="C", prec="P2", choice="A")],
+                            [dash_row(), dash_row(gid="5", choice="Q")]).parse()
+        self.assertEqual(s["unknown_contest_types"], [("5", "F")])
+        self.assertEqual(s["mixed_contest_types"], [("7", ["C", "S"])])
+        self.assertFalse(any(r["contest_id"] == "5" for r in rows))
+
+    def test_unexpected_real_precinct_listed(self):
+        rows, s = Synthetic([line(real_p="")], [dash_row()]).parse()
+        self.assertEqual(s["unexpected_real_precinct"], [("BEAUFORT", "P1", "")])
+        self.assertEqual({r["precinct_is_virtual"] for r in rows if r["level"] == "precinct"}, {""})
 
 
 if __name__ == "__main__":
