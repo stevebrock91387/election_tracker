@@ -1,4 +1,6 @@
 """Tally source list and the fetch pass (fake opener and sleep; no network)."""
+import csv
+import glob
 import json
 import os
 import tempfile
@@ -6,7 +8,10 @@ import unittest
 import urllib.parse
 
 from pipeline.fetch import FetchError
-from pipeline.run_tally import DEFAULT_SOURCES, fetch_pass, load_sources
+from pipeline.run_tally import DEFAULT_SOURCES, fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 ND_ID = "tally-ND-2026-general"
 ND_API = "https://api.resultsnd.sos.nd.gov/"
@@ -70,6 +75,16 @@ class FetchPassTest(unittest.TestCase):
             self.run_pass(self.src, opener_for([], fail=("GetContestSearchList",)))
         self.assertFalse([p for p in os.listdir(os.path.join(self.raw, ND_ID)) if p.startswith("pass-")]
                          if os.path.isdir(os.path.join(self.raw, ND_ID)) else [])
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        main(["parse", "tally-ND-2026-general", os.path.join(FX, "tally_nd_pass.json"),
+              "--base-dir", FX, "--parsed-dir", out])
+        (path,) = glob.glob(os.path.join(out, "tally-ND-2026-general", "*.csv"))
+        with open(path, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), COLUMNS)
 
 
 if __name__ == "__main__":
