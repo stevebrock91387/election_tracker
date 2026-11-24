@@ -21,8 +21,13 @@ Nothing is corrected; the summary lists: each file's isOfficial, the distinct ve
 (more than one means the files come from different moments), responses for another
 election, non-empty errorMessage, contests or choices missing from the list (rows kept
 with empty names), unknown party or county ids, county sums that differ from the
-contest's own statewide choice totals, write-in entries (listed, not emitted), and vote
-counts that aren't integers (row kept with votes "", left out of the sums).
+contest's own statewide choice totals, write-in entries in the writeInChoices arrays
+(listed, not emitted), write-ins published as an ordinary choice (North Dakota's "write-in",
+id 9901: rows kept, since they are part of the totals, and listed under write_in_choices),
+vote counts that aren't integers (row kept with votes "", left out of the sums), files that
+are missing from the pass or can't be read as a JSON object, results files with no contests,
+and contests with no county results (so an empty file never reads as a clean check). A file
+whose response is null (an error reply) is read as empty and its errorMessage listed.
 """
 import hashlib
 import json
@@ -56,16 +61,29 @@ def parse_pass(record_path, base_dir="."):
         p = p if os.path.isabs(p) else os.path.join(base_dir, p)
         with open(p, "rb") as f:
             body = f.read()
-        return json.loads(body.decode("utf-8-sig")), hashlib.sha256(body).hexdigest()
+        d = json.loads(body.decode("utf-8-sig"))
+        if not isinstance(d, dict):
+            raise ValueError(f"top level is {type(d).__name__}, not an object")
+        return d, hashlib.sha256(body).hexdigest()
 
     summary = {"contests": 0, "choices": 0, "counties": 0, "is_official": {}, "version_ids": [],
                "election_id_mismatches": [], "errors": [], "contests_missing_from_list": [],
                "choices_missing_from_list": [], "unknown_party_ids": [], "unknown_location_ids": [],
-               "mismatches_counties_vs_state": [], "write_ins": [], "non_numeric_votes": []}
+               "mismatches_counties_vs_state": [], "write_ins": [], "write_in_choices": [], "non_numeric_votes": [],
+               "unreadable_files": [], "missing_files": [], "contests_without_counties": [],
+               "results_files_without_contests": []}
     docs = []
     for x in rec["files"]:
         label = x["kind"] if x["kind"] != "results" else f"results-{x['type']}"
-        d, sha = load(x["path"])
+        try:
+            d, sha = load(x["path"])
+        except (OSError, ValueError) as e:
+            summary["unreadable_files"].append((label, f"{x['path']}: {e}"))
+            if x["kind"] == "results":
+                summary["results_files_without_contests"].append(label)
+            continue
+        if not isinstance(d.get("response"), dict):
+            d["response"] = {}
         docs.append((x, label, d, sha))
         summary["is_official"][label] = d.get("isOfficial")
         if d.get("versionID") not in summary["version_ids"]:
@@ -75,8 +93,10 @@ def parse_pass(record_path, base_dir="."):
         if d.get("errorMessage"):
             summary["errors"].append((label, d["errorMessage"]))
 
+    kinds = {x["kind"] for x in rec["files"]}
+    summary["missing_files"] = [k for k in ("info", "list", "results") if k not in kinds]
     info = next((d["response"] for x, _, d, _ in docs if x["kind"] == "info"), {}) or {}
-    names = next((d["response"]["contests"] for x, _, d, _ in docs if x["kind"] == "list"), {}) or {}
+    names = next((d["response"].get("contests") for x, _, d, _ in docs if x["kind"] == "list"), {}) or {}
     parties = info.get("parties") or {}
     places = info.get("locations") or {}
 
@@ -88,7 +108,11 @@ def parse_pass(record_path, base_dir="."):
     def emit(contest, ch, level, extra):
         cid, chid = contest["contestID"], str(ch.get("choiceID"))
         listed = names.get(cid)
-        name = ((listed or {}).get("choices") or {}).get(chid, {}).get("name", "")
+        entry = ((listed or {}).get("choices") or {}).get(chid, {})
+        name = entry.get("name", "")
+        if (entry.get("isWriteIn") or name.strip().lower() in ("write-in", "write-ins", "write in")) \
+                and (cid, chid) not in summary["write_in_choices"]:
+            summary["write_in_choices"].append((cid, chid))
         if listed and chid not in (listed.get("choices") or {}) and (cid, chid) not in summary["choices_missing_from_list"]:
             summary["choices_missing_from_list"].append((cid, chid))
         pid = (ch.get("partyID") or "").strip()
@@ -110,7 +134,10 @@ def parse_pass(record_path, base_dir="."):
         if x["kind"] != "results":
             continue
         common = {"source_sha256": sha, "source_created_at": d.get("lastUpdated") or ""}
-        for cid, c in (d["response"].get("contests") or {}).items():
+        contests = d["response"].get("contests") or {}
+        if not contests:
+            summary["results_files_without_contests"].append(label)
+        for cid, c in contests.items():
             summary["contests"] += 1
             if cid not in names:
                 summary["contests_missing_from_list"].append(cid)
@@ -122,6 +149,8 @@ def parse_pass(record_path, base_dir="."):
             for w in c.get("writeInChoices") or []:
                 summary["write_ins"].append((cid, "", w))
             sums = {}
+            if not c.get("locations"):
+                summary["contests_without_counties"].append(cid)
             for loc_id, loc in (c.get("locations") or {}).items():
                 counties.add(loc_id)
                 if loc_id not in places:

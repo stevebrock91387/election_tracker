@@ -69,17 +69,78 @@ class RealFixtureTest(unittest.TestCase):
         self.assertEqual(len({r["county_id"] for r in find(rows, level="county", contest_id=ND_HOUSE)}), 53)
         self.assertTrue(find(rows, level="state", contest_id=ND_HOUSE))
 
+    def test_nd_write_in_choice_kept_and_listed(self):
+        rows, s = self.res["nd"]
+        self.assertTrue(find(rows, level="state", contest_id=ND_HOUSE, choice_id="9901"))
+        self.assertIn((ND_HOUSE, "9901"), s["write_in_choices"])
+
     def test_no_anomalies_on_real_fixtures(self):
         for st, (_, s) in self.res.items():
             self.assertEqual(len(s["version_ids"]), 1, st)
             self.assertTrue(all(s["is_official"].values()), st)
             for k in ("election_id_mismatches", "errors", "contests_missing_from_list", "choices_missing_from_list",
                       "unknown_party_ids", "unknown_location_ids", "mismatches_counties_vs_state", "write_ins",
-                      "non_numeric_votes"):
+                      "non_numeric_votes", "unreadable_files", "missing_files", "contests_without_counties",
+                      "results_files_without_contests"):
                 self.assertEqual(s[k], [], (st, k))
 
 
+def write_text(st, name, text):
+    d = tempfile.mkdtemp()
+    for n in os.listdir(FX):
+        if n.startswith(f"tally_{st}_"):
+            shutil.copy(os.path.join(FX, n), d)
+    with open(os.path.join(d, name), "w") as f:
+        f.write(text)
+    return parse_pass(os.path.join(d, f"tally_{st}_pass.json"), base_dir=d)
+
+
 class AnomalyTest(unittest.TestCase):
+    def test_error_response_listed_not_fatal(self):
+        def err(d):
+            d.update(response=None, errorMessage="Election not found")
+        rows, s = variant("nd", "tally_nd_results_SW.json", err)
+        self.assertIn(("results-SW", "Election not found"), s["errors"])
+        self.assertIn("results-SW", s["results_files_without_contests"])
+        self.assertFalse(rows)
+        rows, s = variant("nd", "tally_nd_list.json", err)
+        self.assertIn(("list", "Election not found"), s["errors"])
+        self.assertTrue(rows)
+        self.assertEqual({r["contest_name"] for r in rows}, {""})
+
+    def test_non_json_file_listed(self):
+        rows, s = write_text("nd", "tally_nd_results_SW.json", "<html>bot check</html>")
+        self.assertEqual([f for f, _ in s["unreadable_files"]], ["results-SW"])
+        self.assertIn("results-SW", s["results_files_without_contests"])
+        _, s = write_text("nd", "tally_nd_info.json", "")
+        self.assertEqual([f for f, _ in s["unreadable_files"]], ["info"])
+
+    def test_missing_files_listed(self):
+        d = tempfile.mkdtemp()
+        for n in os.listdir(FX):
+            if n.startswith("tally_nd_"):
+                shutil.copy(os.path.join(FX, n), d)
+        p = os.path.join(d, "tally_nd_pass.json")
+        with open(p) as f:
+            rec = json.load(f)
+        rec["files"] = [x for x in rec["files"] if x["kind"] == "info"]
+        with open(p, "w") as f:
+            json.dump(rec, f)
+        rows, s = parse_pass(p, base_dir=d)
+        self.assertEqual(s["missing_files"], ["list", "results"])
+        self.assertFalse(rows)
+
+    def test_contest_without_counties_listed(self):
+        rows, s = variant("ar", "tally_ar_results_Federal.json", lambda d: senate(d).update(locations={}))
+        self.assertEqual(s["contests_without_counties"], [SEN])
+        self.assertFalse(find(rows, level="county", contest_id=SEN))
+        _, s = variant("ar", "tally_ar_results_Federal.json", lambda d: senate(d).pop("locations"))
+        self.assertEqual(s["contests_without_counties"], [SEN])
+
+    def test_empty_results_file_listed(self):
+        _, s = variant("ar", "tally_ar_results_Statewide.json", lambda d: d["response"].update(contests={}))
+        self.assertEqual(s["results_files_without_contests"], ["results-Statewide"])
+
     def test_version_mismatch_listed(self):
         _, s = variant("ar", "tally_ar_results_Statewide.json", lambda d: d.update(versionID="v999"))
         self.assertEqual(len(s["version_ids"]), 2)
