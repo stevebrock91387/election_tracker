@@ -1,11 +1,19 @@
 """TX source list and the fetch pass (fake opener and sleep; no network)."""
+import contextlib
+import csv
+import glob
+import io
 import json
 import os
 import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
-from pipeline.run_tx import DEFAULT_SOURCES, fetch_pass, load_sources
+from pipeline.readers.tx import TURNOUT_COLUMNS
+from pipeline.run_tx import DEFAULT_SOURCES, fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 TX_ID = "tx-2026-general"
 ELECTION_URL = "https://goelect.txelections.civixapps.com/api-ivis-system/api/s3/enr/election/53815"
@@ -63,6 +71,37 @@ class FetchPassTest(unittest.TestCase):
         self.assertEqual(seen, [ELECTION_URL, COUNTY_URL])
         d = os.path.join(self.raw, TX_ID)
         self.assertFalse(os.path.isdir(d) and [p for p in os.listdir(d) if p.startswith("pass-")])
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", TX_ID, os.path.join(FX, "tx_pass.json"), "--base-dir", FX, "--parsed-dir", out])
+        (results,) = glob.glob(os.path.join(out, TX_ID, "*Z.csv"))
+        (turnout,) = glob.glob(os.path.join(out, TX_ID, "*-turnout.csv"))
+        self.assertEqual(turnout, results[:-4] + "-turnout.csv")
+        with open(results, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), COLUMNS)
+        with open(turnout, newline="") as f:
+            r = csv.reader(f)
+            self.assertEqual(next(r), TURNOUT_COLUMNS)
+            self.assertEqual(sum(1 for _ in r), 3)
+        text = buf.getvalue()
+        self.assertIn("party_differences:", text)
+        self.assertIn("version: enr/53815/117/", text)
+
+    def test_parse_prints_not_checked(self):
+        d = tempfile.mkdtemp()
+        rec = os.path.join(d, "pass.json")
+        with open(rec, "w") as f:
+            json.dump({"source_id": TX_ID, "state": "TX",
+                       "files": [{"kind": "election", "path": os.path.join(FX, "tx_election.json")}]}, f)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", TX_ID, rec, "--parsed-dir", d])
+        self.assertIn("mismatches_state_vs_county: not checked", buf.getvalue())
 
 
 if __name__ == "__main__":
