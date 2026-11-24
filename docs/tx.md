@@ -25,7 +25,7 @@ Both are byte-identical to the recon downloads made about 40 minutes earlier.
 - **Output:** 36,970 rows: 1,834 state rows (917 choices × total and early) and 35,136 county rows. 254 turnout rows.
 - **Coverage:** 584 races (Federal 39, StateWide 14, Districted 531, propositions 0), 917 choices, 254 counties.
 - **The two files agree:** no differences between statewide values and county sums (total or early), and no race or choice in one file and not the other.
-- **Clean checks:** none of the following occur: county keys without a FIPS lookup, early votes above total, non-integer counts, duplicate choices, an office in two sections, undecodable sections.
+- **Clean checks:** none of the following occur: county keys without a FIPS lookup, counties with a missing or non-integer turnout Summary, early votes above total, non-integer counts, duplicate choices, an office in two sections, undecodable sections.
 - **Listed:**
   - `party_differences`: 16 choices whose party code differs between the files: LIB in the statewide file vs L in the county file (11), G vs GRE (3), I vs IND (2). Each file's code is kept as published.
   - `home_reported_exceeds_total`: precincts 202 of 200 in `Home`.

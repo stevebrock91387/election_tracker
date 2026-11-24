@@ -119,6 +119,7 @@ class RealFixtureTest(unittest.TestCase):
         self.assertEqual(s["party_codes"]["W"], 8)
         for k in ("state_choices_missing_from_county", "county_choices_missing_from_state", "unknown_counties",
                   "early_exceeds_total", "non_numeric_votes", "duplicate_choices", "office_in_two_sections",
+                  "county_summary_problems",
                   "unreadable_sections", "unreadable_files", "missing_files"):
             self.assertEqual(s[k], [], k)
 
@@ -210,6 +211,36 @@ class SyntheticTest(unittest.TestCase):
         self.el["Districted"]["Races"].append(copy.deepcopy(gov))
         rows, s, _ = parse_edited(self, self.el, self.cty)
         self.assertEqual(s["office_in_two_sections"], [(GOV, ["StateWide", "Districted"])])
+
+    def test_unreadable_election_file_not_checked(self):
+        rows, s, t = parse_edited(self, None, self.cty, election_raw="<!DOCTYPE html><html>Just a moment...</html>")
+        self.assertEqual([x[0] for x in s["unreadable_files"]], ["election"])
+        self.assertEqual({r["level"] for r in rows}, {"county"})
+        self.assertEqual(len(t), 3)
+        for k in ("unknown_counties", "mismatches_state_vs_county", "home_vs_county_summary", "contests"):
+            self.assertIsNone(s[k], k)
+
+    def test_bad_section_checks_not_run(self):
+        for name, dependent in (("Districted", "county_choices_missing_from_state"), ("Lookups", "unknown_counties"),
+                                ("Home", "home_vs_county_summary"), ("Home", "home_reported_exceeds_total")):
+            raw = {k: (v if k == "Version" else enc(v)) for k, v in self.el.items()}
+            raw[name] = "not base64 json!"
+            rows, s, _ = parse_edited(self, None, self.cty, election_raw=json.dumps(raw))
+            self.assertEqual([x[0] for x in s["unreadable_sections"]], [name])
+            self.assertIsNone(s[dependent], (name, dependent))
+
+    def test_absent_section_listed(self):
+        del self.el["Home"]
+        rows, s, _ = parse_edited(self, self.el, self.cty)
+        self.assertEqual(s["unreadable_sections"], [("Home", "absent")])
+        self.assertIsNone(s["home_reported_exceeds_total"])
+        self.assertIsNone(s["home_vs_county_summary"])
+
+    def test_county_summary_problems_listed(self):
+        del self.cty["2"]["Summary"]
+        self.cty["3"]["Summary"]["PRR"] = 43.5
+        rows, s, t = parse_edited(self, self.el, self.cty)
+        self.assertEqual(s["county_summary_problems"], [("48002", "Summary", None), ("48003", "PRR", 43.5)])
 
     def test_missing_file_listed(self):
         rows, s, t = parse_edited(self, self.el, self.cty, files=("election",))

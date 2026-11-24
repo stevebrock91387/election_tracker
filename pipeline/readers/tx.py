@@ -28,8 +28,12 @@ choices in one file and not the other (a race that some counties lack is normal;
 no county carries is listed), party codes that differ between the files (once per choice),
 county keys without a Lookups entry (county_id ""), early votes above total votes, non-integer
 counts (votes "", left out of the sums), duplicate choices, an office in two sections, Home
-counts with reported > total, county Summary sums that differ from Home, sections that can't
-be decoded, and missing or unreadable files. A check that could not run is None.
+counts with reported > total, county Summary sums that differ from Home, counties whose Summary
+is missing or has a missing or non-integer RV/VC/PRR/NPL/PLR (their sums, and the Home comparison
+for that field, are then skipped), sections that are absent or can't be decoded, and missing or
+unreadable files. A check that could not run is None, including checks that depend on an
+unreadable section: Home (the two Home checks), Lookups (unknown counties) and any result
+section (county choices missing from the statewide file).
 """
 import base64
 import binascii
@@ -47,7 +51,8 @@ CROSS = ["mismatches_state_vs_county", "state_choices_missing_from_county", "cou
          "party_differences", "home_vs_county_summary"]
 STATE_ONLY = ["contests", "choices", "null_choice_ids", "party_codes", "office_in_two_sections",
               "home_reported_exceeds_total"]
-COUNTY_ONLY = ["counties", "unknown_counties"]
+COUNTY_ONLY = ["counties", "unknown_counties", "county_summary_problems"]
+SUMMARY_FIELDS = ("RV", "VC", "PRR", "NPL", "PLR")
 
 
 def _int(v):
@@ -78,7 +83,7 @@ def parse_pass(record_path, base_dir="."):
         rec = json.load(f)
     summary = {"contests": 0, "choices": 0, "counties": 0, "version": "", "last_updated": "", "party_codes": {},
                "null_choice_ids": 0}
-    for k in CROSS + ["unknown_counties", "early_exceeds_total", "non_numeric_votes", "duplicate_choices",
+    for k in CROSS + ["unknown_counties", "county_summary_problems", "early_exceeds_total", "non_numeric_votes", "duplicate_choices",
                       "office_in_two_sections", "home_reported_exceeds_total", "unreadable_sections",
                       "unreadable_files", "missing_files"]:
         summary[k] = []
@@ -102,13 +107,18 @@ def parse_pass(record_path, base_dir="."):
             summary["unreadable_files"].append(("election", str(e)))
             el = None
 
+    bad_sections = set()
+
     def section(name):
         if name not in el:
+            summary["unreadable_sections"].append((name, "absent"))
+            bad_sections.add(name)
             return None
         try:
             return _dec(el[name])
         except (binascii.Error, ValueError, TypeError) as e:
             summary["unreadable_sections"].append((name, str(e)))
+            bad_sections.add(name)
             return None
 
     home, fips, off_type, state_choices = {}, {}, {}, {}
@@ -175,10 +185,17 @@ def parse_pass(record_path, base_dir="."):
         common = dict(base, level="county", source_sha256=csha)
         for ckey, c in cty.items():
             cname = c.get("N", "")
-            if el is not None and ckey not in fips:
+            if el is not None and "Lookups" not in bad_sections and ckey not in fips:
                 summary["unknown_counties"].append((ckey, cname))
             cfips = fips.get(ckey, "")
-            sm = c.get("Summary") or {}
+            sm = c.get("Summary")
+            if not isinstance(sm, dict):
+                summary["county_summary_problems"].append((cfips or ckey, "Summary", sm))
+                sm = {}
+            else:
+                for k in SUMMARY_FIELDS:
+                    if not isinstance(_num(sm.get(k)), int):
+                        summary["county_summary_problems"].append((cfips or ckey, k, sm.get(k)))
             for k in summary_sums:
                 v = _num(sm.get(k))
                 summary_sums[k] = summary_sums[k] + v if isinstance(v, int) and summary_sums[k] is not None else None
@@ -242,6 +259,15 @@ def parse_pass(record_path, base_dir="."):
     if el is None:
         for k in STATE_ONLY:
             summary[k] = None
+        summary["unknown_counties"] = None
+    else:
+        # A check that depends on a section that couldn't be read did not run.
+        if "Home" in bad_sections:
+            summary["home_reported_exceeds_total"] = summary["home_vs_county_summary"] = None
+        if "Lookups" in bad_sections:
+            summary["unknown_counties"] = None
+        if bad_sections & set(SECTIONS):
+            summary["county_choices_missing_from_state"] = None
     if cty is None:
         for k in COUNTY_ONLY:
             summary[k] = None
