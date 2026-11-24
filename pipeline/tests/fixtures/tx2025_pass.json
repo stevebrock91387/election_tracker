@@ -1,0 +1,5 @@
+{
+ "source_id": "tx-2025-amendment",
+ "state": "TX",
+ "files": [{"kind": "election", "path": "tx2025_election.json"}, {"kind": "county", "path": "tx2025_county.json"}]
+}

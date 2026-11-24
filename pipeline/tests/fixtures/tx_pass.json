@@ -1,0 +1,5 @@
+{
+ "source_id": "tx-2026-general",
+ "state": "TX",
+ "files": [{"kind": "election", "path": "tx_election.json"}, {"kind": "county", "path": "tx_county.json"}]
+}
