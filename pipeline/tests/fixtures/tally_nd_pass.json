@@ -1,0 +1,28 @@
+{
+ "source_id": "tally-ND-2026-general",
+ "state": "ND",
+ "started_utc": "20261124T003150Z",
+ "election_id": "348",
+ "files": [
+  {
+   "kind": "info",
+   "type": "",
+   "path": "tally_nd_info.json"
+  },
+  {
+   "kind": "list",
+   "type": "",
+   "path": "tally_nd_list.json"
+  },
+  {
+   "kind": "results",
+   "type": "SW",
+   "path": "tally_nd_results_SW.json"
+  }
+ ],
+ "_fixture_source_sha256": {
+  "tally_nd_list.json": "a972961fa96547d7fc68be46b49959dafff8963211cb1592eeeef1b24681652f",
+  "tally_nd_results_SW.json": "43e49a4cd8668e0c78ac7cd29512141d48c259da9fb23a2d896a0b2da46df537",
+  "tally_nd_info.json": "f9d8d0412ed2731c29aa0535ff0043d30da61ed220a6d36dfe40ecdf64f2b264"
+ }
+}

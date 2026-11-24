@@ -1,0 +1,34 @@
+{
+ "source_id": "tally-AR-2026-general",
+ "state": "AR",
+ "started_utc": "20261124T003118Z",
+ "election_id": "11b07106-031e-4d7c-911a-d01fb473d6dd",
+ "files": [
+  {
+   "kind": "info",
+   "type": "",
+   "path": "tally_ar_info.json"
+  },
+  {
+   "kind": "list",
+   "type": "",
+   "path": "tally_ar_list.json"
+  },
+  {
+   "kind": "results",
+   "type": "Federal",
+   "path": "tally_ar_results_Federal.json"
+  },
+  {
+   "kind": "results",
+   "type": "Statewide",
+   "path": "tally_ar_results_Statewide.json"
+  }
+ ],
+ "_fixture_source_sha256": {
+  "tally_ar_list.json": "574dae87b290b329a4e487c26688553bc099a188c5de63ae6bca04ab9b5afa76",
+  "tally_ar_results_Federal.json": "b10a56b900ef40dcad218a3c857e53e335eff614c2cac0795bbbaf99a0624227",
+  "tally_ar_results_Statewide.json": "9ae3887cec9c5f376bb73a34d7e2976290e4eaee9b5294e7b3124a22f200df22",
+  "tally_ar_info.json": "a2209d4c447966b5908edb5b4d824fb03242daa2d42a52866321b9c447a2c386"
+ }
+}
