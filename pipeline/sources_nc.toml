@@ -1,0 +1,15 @@
+# North Carolina State Board of Elections, 2026 general election. See
+# docs/superpowers/specs/2026-11-23-step2-nc-reader-design.md and sources/registry.csv.
+# A pass fetches the statewide precinct ZIP (every contest, by precinct and vote method),
+# then the results dashboard's statewide file, used as an independent check.
+# Both URLs change per election (date in the path); the ZIP member name too.
+# min_interval_s applies to each fetched file's source id; request_gap_s is the pause between
+# the two requests. The state publishes no limit.
+
+[nc-2026-general]
+state = "NC"
+zip_url = "https://s3.amazonaws.com/dl.ncsbe.gov/ENRS/2026_11_03/results_pct_20261103.zip"
+member = "results_pct_20261103.txt"
+dashboard_url = "https://er.ncsbe.gov/enr/20261103/data/results_0.txt"
+min_interval_s = 120
+request_gap_s = 10
