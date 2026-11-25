@@ -1,0 +1,57 @@
+{
+ "source_id": "in-2026-general",
+ "state": "IN",
+ "started_utc": "20261125T004040Z",
+ "version_type": "B",
+ "version_code": "20261119_100058",
+ "categories": [
+  "1005",
+  "1041",
+  "1047",
+  "1037",
+  "1018",
+  "1040"
+ ],
+ "files": [
+  {
+   "kind": "settings",
+   "path": "in_settings.json"
+  },
+  {
+   "kind": "elections",
+   "path": "in_elections.json"
+  },
+  {
+   "kind": "offcat-1005",
+   "path": "in_offcat-1005.json"
+  },
+  {
+   "kind": "offcat-1041",
+   "path": "in_offcat-1041.json"
+  },
+  {
+   "kind": "offcat-1047",
+   "path": "in_offcat-1047.json"
+  },
+  {
+   "kind": "offcat-1037",
+   "path": "in_offcat-1037.json"
+  },
+  {
+   "kind": "offcat-1018",
+   "path": "in_offcat-1018.json"
+  },
+  {
+   "kind": "offcat-1040",
+   "path": "in_offcat-1040.json"
+  },
+  {
+   "kind": "turnout",
+   "path": "in_turnout.json"
+  },
+  {
+   "kind": "csv",
+   "path": "in_csv.csv"
+  }
+ ]
+}
