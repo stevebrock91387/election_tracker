@@ -1,4 +1,8 @@
 """FL source list and the fetch pass (fake opener, sleep and clock; no network)."""
+import contextlib
+import csv
+import glob
+import io
 import json
 import os
 import tempfile
@@ -7,7 +11,10 @@ from unittest import mock
 
 import pipeline.run_fl as run_fl
 from pipeline.fetch import FetchError
-from pipeline.run_fl import DEFAULT_SOURCES, fetch_pass, load_sources
+from pipeline.run_fl import DEFAULT_SOURCES, fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 FL_ID = "fl-2026-general"
 B = "https://flelectionfiles.floridados.gov/enightfilespublic/"
@@ -71,6 +78,30 @@ class FetchPassTest(unittest.TestCase):
         for k in calls:
             self.assertTrue(k["cafile"].endswith("pipeline/certs/godaddy-tls-root-r1-cross-g2.pem"))
             self.assertTrue(os.path.isabs(k["cafile"]))
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", FL_ID, os.path.join(FX, "fl_pass.json"), "--base-dir", FX, "--parsed-dir", out])
+        (results,) = glob.glob(os.path.join(out, FL_ID, "*.csv"))
+        with open(results, newline="") as f:
+            r = csv.reader(f)
+            self.assertEqual(next(r), COLUMNS)
+            self.assertEqual(sum(1 for _ in r), 59)
+        self.assertIn("status_counts: {'I': 59}", buf.getvalue())
+
+    def test_parse_prints_not_checked(self):
+        d = tempfile.mkdtemp()
+        rec = os.path.join(d, "pass.json")
+        with open(rec, "w") as f:
+            json.dump({"source_id": FL_ID, "state": "FL", "files": [{"kind": "info", "path": os.path.join(FX, "fl_info.txt")}]}, f)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", FL_ID, rec, "--parsed-dir", d])
+        self.assertIn("pipe_vs_tab_differences: not checked", buf.getvalue())
 
 
 if __name__ == "__main__":
