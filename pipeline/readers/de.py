@@ -22,7 +22,9 @@ type), lines in the statewide file with no district lines and the reverse, count
 differ from statewide totals, county parts that don't add up (Wilmington + Rest = New Castle; New
 Castle + Kent + Sussex = State), county lines missing from or extra to the statewide file, contests
 whose number of districts with lines differs from Total Precincts, turnout ALL vs the district sums,
-contest sorting orders shared by two titles, duplicate lines, non-integer counts (votes ""),
+contest sorting orders shared by two titles and titles with two sorting orders, a contest whose
+lines disagree on Total Precincts (its district-count check is then skipped), duplicate lines (in any
+file; a repeated turnout district is skipped after the first), non-integer counts (votes ""),
 malformed entries, and missing or unreadable files. Checks that need a file that wasn't read are None.
 """
 import hashlib
@@ -40,7 +42,8 @@ DISTRICT_CHECKS = ["district_vs_state_mismatches", "state_lines_without_district
                    "district_count_mismatches"]
 COUNTY_CHECKS = ["county_vs_state_mismatches", "county_lines_without_state", "state_lines_without_county"]
 LISTS = DISTRICT_CHECKS + COUNTY_CHECKS + ["county_parts_mismatches", "turnout_total_mismatches", "shared_contest_orders",
-                                           "duplicate_entries", "non_numeric", "malformed_entries"]
+                                           "duplicate_entries", "non_numeric", "malformed_entries",
+                                           "precinct_total_conflicts", "contest_order_conflicts"]
 
 
 def _num(v):
@@ -98,7 +101,7 @@ def parse_pass(record_path, base_dir="."):
     rows = []
 
     # Statewide lines: ids, contest numbers, election name and date.
-    state, order_titles, precinct_totals = {}, {}, {}
+    state, order_titles, precinct_totals, title_orders, totals_seen = {}, {}, {}, {}, {}
     if "statewide" in data:
         for x in data["statewide"]:
             title, name = x.get("Contest Title"), x.get("Candidate Name")
@@ -108,13 +111,16 @@ def parse_pass(record_path, base_dir="."):
             order = str(x.get("Contest Sorting Order", ""))
             if order_titles.setdefault(order, title) != title and (order, title) not in summary["shared_contest_orders"]:
                 summary["shared_contest_orders"].append((order, title))
+            title_orders.setdefault(title, set()).add(order)
             if not in_scope(title):
                 continue
             key = (title, name)
             if key in state:
                 summary["duplicate_entries"].append(("statewide",) + key)
             state[key] = x
-            precinct_totals[title] = _num(x.get("Total Precincts"))
+            tp = count(x.get("Total Precincts"), ("statewide", title, name, "Total Precincts"))
+            totals_seen.setdefault(title, set()).add(tp)
+            precinct_totals[title] = tp
             base.update(election_name=x.get("Election Name") or "", election_date=x.get("Election Date") or "")
             summary["results_type"] = x.get("Results Type") or ""
             row = dict(base, level="state", source_sha256=sha["statewide"], source_created_at=x.get("ReportTime") or "",
@@ -126,6 +132,13 @@ def parse_pass(record_path, base_dir="."):
                 n = count(x.get(field), ("statewide", title, name, vt))
                 rows.append(dict(row, vote_type=vt, votes="" if n is None else n))
         summary["contests"] = len({t for t, _ in state})
+        summary["contest_order_conflicts"] = [(t, sorted(o)) for t, o in title_orders.items() if len(o) > 1]
+        for t, vals in totals_seen.items():
+            if len(vals) > 1:
+                summary["precinct_total_conflicts"].append((t, sorted(vals, key=lambda v: -1 if v is None else v)))
+                precinct_totals[t] = None
+    else:
+        summary["contest_order_conflicts"] = summary["precinct_total_conflicts"] = None
 
     def ids(title, name, x):
         s = state.get((title, name))
@@ -180,6 +193,7 @@ def parse_pass(record_path, base_dir="."):
     # County lines.
     if "county" in data:
         county_lines = set()
+        county_seen = set()
         for x in data["county"]:
             title, name = x.get("Contest Title"), x.get("Candidate Name")
             if not isinstance(title, str) or not isinstance(name, str):
@@ -187,6 +201,9 @@ def parse_pass(record_path, base_dir="."):
                 continue
             if not in_scope(title):
                 continue
+            if (title, name) in county_seen:
+                summary["duplicate_entries"].append(("county", title, name))
+            county_seen.add((title, name))
             county_lines.add((title, name))
             vals = {k: count(x.get(k), ("county", title, name, k)) for k in
                     ("Wilmington", "Rest of New Castle", "New Castle", "Kent", "Sussex", "State")}
@@ -217,9 +234,16 @@ def parse_pass(record_path, base_dir="."):
     # Turnout.
     turnout = []
     if "turnout" in data:
-        all_row, sums = None, {"Ballots Cast": 0, "Reg Voters": 0}
+        all_row, sums, seen_rd = None, {"Ballots Cast": 0, "Reg Voters": 0}, set()
         for x in data["turnout"]:
             rd = x.get("Representative District")
+            if not isinstance(rd, str) or not rd:
+                summary["malformed_entries"].append(("turnout", rd))
+                continue
+            if rd in seen_rd:
+                summary["duplicate_entries"].append(("turnout", rd))
+                continue
+            seen_rd.add(rd)
             if rd == "ALL":
                 all_row = x
                 continue

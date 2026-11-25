@@ -27,7 +27,7 @@ Only the statewide file has candidate ids, election date, report time and precin
 - **Counts are strings with thousands separators** ("140,838") except in the county file; the reader removes the separators (a format, not a correction).
 - **Per-contest precinct counts:** Attorney General, Auditor and Treasurer cover 527 of 530 districts (02-27, 31-16 and 41-16 have no lines for them).
 - **County rows** are New Castle (10003), Kent (10001) and Sussex (10005), for statewide contests only; Wilmington and the rest of New Castle are checked, not rows.
-- `contest_id` is the Contest Sorting Order (the only contest key; checked unique per title).
+- `contest_id` is the Contest Sorting Order (the only contest key). The reader lists an order shared by two titles and a title with two orders; neither occurs in 2026.
 - Election-district rows carry no reporting status or timestamp (not published per district).
 
 ## Not done

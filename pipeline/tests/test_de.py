@@ -76,6 +76,7 @@ class RealFixtureTest(unittest.TestCase):
     def test_summary_clean_parts(self):
         for k in ("state_lines_without_districts", "district_lines_without_state", "county_parts_mismatches",
                   "county_lines_without_state", "state_lines_without_county", "duplicate_entries", "shared_contest_orders",
+                  "precinct_total_conflicts", "contest_order_conflicts",
                   "non_numeric", "malformed_entries", "unreadable_files", "missing_files"):
             self.assertEqual(self.summary[k], [], k)
 
@@ -150,6 +151,95 @@ class SyntheticTest(unittest.TestCase):
         self.assertTrue(s["duplicate_entries"])
         self.assertTrue(s["malformed_entries"])
         self.assertIn("200", [x[0] for x in s["shared_contest_orders"]])
+
+    def _sw(self, title, name=None):
+        return [x for x in self.d["statewide"] if x["Contest Title"] == title and (name is None or x["Candidate Name"] == name)]
+
+    def test_precinct_total_problems(self):
+        for x in self._sw("U.S. Senator"):
+            x["Total Precincts"] = None
+        self._sw("Attorney General")[0]["Total Precincts"] = 999
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertTrue(any(n[1] == "U.S. Senator" for n in s["non_numeric"]))
+        self.assertIn("Attorney General", [c[0] for c in s["precinct_total_conflicts"]])
+
+    def test_district_count_exact(self):
+        for x in self._sw("Attorney General"):
+            x["Total Precincts"] = 2  # the fixture holds AG lines for 01-01 and 01-02 only
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertNotIn("Attorney General", [m[1] for m in s["district_count_mismatches"]])
+        self.assertIn("U.S. Senator", [m[1] for m in s["district_count_mismatches"]])
+
+    def test_county_duplicates_and_order_conflicts(self):
+        self.d["county"].append(copy.deepcopy(self.d["county"][0]))
+        self._sw("U.S. Senator")[1]["Contest Sorting Order"] = 201
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertTrue(any(d[0] == "county" for d in s["duplicate_entries"]))
+        self.assertIn("U.S. Senator", [c[0] for c in s["contest_order_conflicts"]])
+
+    def test_turnout_odd_rows(self):
+        self.d["turnout"].append({"Ballots Cast": "1", "Reg Voters": "1"})
+        self.d["turnout"].append(copy.deepcopy(self.d["turnout"][0]))
+        self.d["turnout"].append(copy.deepcopy(next(t for t in self.d["turnout"] if t["Representative District"] == "ALL")))
+        rows, s, t = parse_data(self, self.rec, self.d)
+        self.assertTrue(any(m[0] == "turnout" for m in s["malformed_entries"]))
+        self.assertTrue(any(d[0] == "turnout" for d in s["duplicate_entries"]))
+        self.assertNotIn("", [x["representative_district"] for x in t])
+        del self.d["turnout"][:]
+        rows, s, t = parse_data(self, self.rec, self.d)
+        self.assertEqual(s["turnout_total_mismatches"], [("ALL row absent", None, None)])
+
+    def test_county_checks_both_directions_and_none(self):
+        self.d["county"].append(dict(self.d["county"][0], **{"Candidate Name": "NOBODY"}))
+        gone = self.d["county"].pop(0)
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertIn(("U.S. Senator", "NOBODY"), s["county_lines_without_state"])
+        self.assertIn((gone["Contest Title"], gone["Candidate Name"]), s["state_lines_without_county"])
+        rows, s, _ = parse_data(self, self.rec, self.d, raw={"county": "<html>"})
+        for k in ("county_vs_state_mismatches", "county_lines_without_state", "state_lines_without_county",
+                  "county_parts_mismatches"):
+            self.assertIsNone(s[k], k)
+
+    def test_each_county_part_and_fips(self):
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        c = self.d["county"][0]
+        k, = find(rows, level="county", choice=c["Candidate Name"], contest_name=c["Contest Title"], county_id="10001")
+        x, = find(rows, level="county", choice=c["Candidate Name"], contest_name=c["Contest Title"], county_id="10005")
+        self.assertEqual((k["county_name"], k["votes"], x["county_name"], x["votes"]), ("Kent", c["Kent"], "Sussex", c["Sussex"]))
+        c["Wilmington"] += 1
+        c["Rest of New Castle"] -= 1
+        self.assertEqual(parse_data(self, self.rec, self.d)[1]["county_parts_mismatches"], [])
+        c["Kent"] += 1
+        self.assertEqual(len(parse_data(self, self.rec, self.d)[1]["county_parts_mismatches"]), 1)
+
+    def test_vote_type_mismatch_pinned(self):
+        sums = {}
+        for x in self.d["district"]:
+            for f in ("Total Votes", "Machine Votes", "Absentee Votes", "Early Voting Votes"):
+                k = (x["Contest Title"], x["Candidate Name"], f)
+                sums[k] = sums.get(k, 0) + int(x[f].replace(",", ""))
+        for x in self.d["statewide"]:
+            for f in ("Total Votes", "Machine Votes", "Absentee Votes", "Early Voting Votes"):
+                x[f] = str(sums.get((x["Contest Title"], x["Candidate Name"], f), 0))
+        self.d["statewide"][0]["Early Voting Votes"] = str(int(self.d["statewide"][0]["Early Voting Votes"]) + 1)
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertEqual([m[2] for m in s["district_vs_state_mismatches"]], ["Early Voting Votes"])
+
+    def test_malformed_dicts_and_bad_numbers(self):
+        self.d["statewide"].append({"Contest Title": 5})
+        self.d["district"].append({"Contest Title": "U.S. Senator"})
+        self.d["county"].append({"Candidate Name": None})
+        self.d["statewide"][0]["Total Votes"] = "12,34"
+        self.d["county"][0]["Kent"] = "x"
+        self.d["turnout"][0]["Ballots Cast"] = "x"
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertEqual({m[0] for m in s["malformed_entries"]}, {"statewide", "district", "county"})
+        self.assertEqual({n[0] for n in s["non_numeric"]}, {"statewide", "county", "turnout"})
+
+    def test_statewide_duplicate_listed(self):
+        self.d["statewide"].append(copy.deepcopy(self.d["statewide"][0]))
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertTrue(any(d[0] == "statewide" for d in s["duplicate_entries"]))
 
     def test_missing_file(self):
         rows, s, _ = parse_data(self, self.rec, self.d, kinds=["statewide", "district", "county"])
