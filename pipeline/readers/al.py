@@ -19,7 +19,8 @@ Nothing is corrected. The summary lists contests whose lines don't sum to the un
 partly empty blocks, cells that aren't numbers or aren't whole, repeated lines and unit headers,
 blank unit headers, real precincts that carry two districts of one office (split polling places:
 each district's lines then fall short of the unit's ballots cast), counties whose registered voters are all 0, missing header rows, unreadable or
-oversized workbooks, extra sheets and ZIP members that aren't county workbooks. A missing or
+oversized workbooks, repeated counties, empty registered/ballots cells, counties whose balance check
+couldn't run, out-of-scope titles that look state-level, extra sheets and ZIP members that aren't county workbooks. A missing or
 unreadable ZIP leaves every check None.
 """
 import hashlib
@@ -43,14 +44,22 @@ IN_SCOPE = re.compile(
     r"|STATE BOARD OF EDUCATION MEMBER DISTRICT \d+|STATE SENATOR, DISTRICT \d+"
     r"|STATE REPRESENTATIVE, DISTRICT \d+|PROPOSED STATEWIDE AMENDMENT \d+")
 DISTRICT_OFFICE = re.compile(r"UNITED STATES REPRESENTATIVE|STATE SENATOR|STATE REPRESENTATIVE|STATE BOARD OF EDUCATION MEMBER")
+# Out-of-scope titles that look state-level are listed, so a renamed or new contest (e.g. President in
+# 2028) is seen rather than silently dropped.
+STATE_LIKE = re.compile(r"UNITED STATES|PRESIDENT|GOVERNOR|SENAT|REPRESENTATIVE|SUPREME|APPEALS|STATEWIDE"
+                        r"|STATE BOARD|SECRETARY OF STATE|TREASURER|AUDITOR|ATTORNEY GENERAL|PUBLIC SERVICE"
+                        r"|AGRICULTURE|STRAIGHT", re.I)
 VIRTUAL = re.compile(r"\b(ABSENTEE|PROVISIONAL|PROVSIONAL)\b")
-MEMBER = re.compile(r"[^/]*-([A-Z][A-Z_.]*)\.xls")
+MEMBER = re.compile(r"(?:.*/)?[^/]*-([A-Z][A-Z_.]*)\.xls")
 MAX_MEMBER_BYTES = 50 * 1024 * 1024
 TURNOUT_COLUMNS = ["state", "source_id", "source_sha256", "county_id", "county_name", "precinct_id",
                    "registered_voters", "ballots_cast", "ballots_blank"]
 COUNTY_LISTS = ["ballot_balance_mismatches", "partial_blocks", "non_numeric", "non_integer", "duplicate_lines",
-                "duplicate_units", "blank_units", "multi_district_units", "missing_header_rows"]
-LISTS = COUNTY_LISTS + ["counties_registered_all_zero", "unreadable_workbooks", "extra_sheets", "other_members"]
+                "duplicate_units", "blank_units", "multi_district_units", "empty_header_cells", "missing_header_rows"]
+LISTS = COUNTY_LISTS + ["balance_not_checked_counties", "out_of_scope_state_like", "counties_registered_all_zero",
+                        "unreadable_workbooks", "duplicate_counties", "extra_sheets", "other_members"]
+NEEDS_A_COUNTY = COUNTY_LISTS + ["balance_not_checked_counties", "out_of_scope_state_like", "counties_registered_all_zero",
+                                 "extra_sheets", "units", "virtual_units", "contests", "contests_out_of_scope"]
 COUNTS = ["counties", "units", "virtual_units", "contests", "contests_out_of_scope"]
 
 
@@ -138,17 +147,20 @@ def parse_county(county, grid, base):
             lines.append((r, title, _text(cell(r, 1)), cand))
         else:
             f["out_of_scope"].add(title)
+    f["out_of_scope_state_like"] = sorted(n for n in f["out_of_scope"] - set(HEADER_ROWS) if STATE_LIKE.search(n))
     for name in HEADER_ROWS:
         if name not in header:
             f["missing_header_rows"].append((county, name))
 
-    unit_values = {}
-    for name in HEADER_ROWS:
-        r = header.get(name)
-        unit_values[name] = {j: ("" if r is None else _count(cell(r, j), county, r, j, f)) for j, _ in units}
-        for j, _ in units:
-            if unit_values[name][j] is None:
-                unit_values[name][j] = ""
+    unit_values = {name: {} for name in HEADER_ROWS}
+    for j, unit in units:
+        for name in HEADER_ROWS:
+            r = header.get(name)
+            v = "" if r is None else _count(cell(r, j), county, r, j, f)
+            if v is None:
+                f["empty_header_cells"].append((county, unit, name))
+                v = ""
+            unit_values[name][j] = v
     reg = unit_values[REGISTERED]
     f["registered_all_zero"] = REGISTERED in header and bool(units) and all(reg[j] == 0 for j, _ in units)
 
@@ -180,10 +192,12 @@ def parse_county(county, grid, base):
             for title in live:
                 m = DISTRICT_OFFICE.match(title)
                 if m:
-                    fams.setdefault(m.group(0), []).append(title)
-            for fam, titles in sorted(fams.items()):
-                if len(titles) > 1:
-                    f["multi_district_units"].append((county, unit, fam, sorted(titles)))
+                    vals = [counts[(r, j)] for r in blocks[title]]
+                    total = sum(vals) if all(isinstance(v, int) for v in vals) else None
+                    fams.setdefault(m.group(0), []).append((title, total))
+            for fam, entries in sorted(fams.items()):
+                if len(entries) > 1:
+                    f["multi_district_units"].append((county, unit, fam, sorted(entries)))
         for r, title, party, cand in lines:
             v = counts[(r, j)]
             if title in live and v is not None:
@@ -235,10 +249,10 @@ def parse_pass(record_path, base_dir="."):
         return unread("no county workbooks in the ZIP")
 
     base = {"state": rec["state"], "source_id": rec["source_id"], "source_sha256": hashlib.sha256(body).hexdigest()}
-    rows, turnout, contests, out, seen = [], [], set(), set(), set()
+    rows, turnout, contests, out, seen, state_like = [], [], set(), set(), set(), set()
     for info, county in members:
         if county in seen:
-            summary["unreadable_workbooks"].append((info.filename, f"second workbook for county {county}"))
+            summary["duplicate_counties"].append((info.filename, county))
             continue
         if info.file_size > MAX_MEMBER_BYTES:
             summary["unreadable_workbooks"].append((info.filename, f"too large: {info.file_size} bytes"))
@@ -261,11 +275,20 @@ def parse_pass(record_path, base_dir="."):
         for k in COUNTY_LISTS:
             if f[k] is not None:
                 summary[k] += f[k]
+        if f["ballot_balance_mismatches"] is None:
+            summary["balance_not_checked_counties"].append(county)
         if f["registered_all_zero"]:
             summary["counties_registered_all_zero"].append(county)
         summary["units"] += f["units"]
         summary["virtual_units"] += f["virtual_units"]
         contests |= f["contests"]
+        state_like |= set(f["out_of_scope_state_like"])
         out |= f["out_of_scope"]
-    summary.update(counties=len(seen), contests=len(contests), contests_out_of_scope=len(out - set(HEADER_ROWS)))
+    if not seen:  # no county could be read: no check ran
+        for k in NEEDS_A_COUNTY:
+            summary[k] = None
+        return rows, summary, turnout
+    out -= set(HEADER_ROWS)
+    summary["out_of_scope_state_like"] = sorted(state_like)
+    summary.update(counties=len(seen), contests=len(contests), contests_out_of_scope=len(out))
     return rows, summary, turnout

@@ -17,7 +17,8 @@ if HAVE_XLRD:
     from pipeline.readers import al
     from pipeline.readers.al import TURNOUT_COLUMNS, parse_county, parse_pass
 CHECKS = ["ballot_balance_mismatches", "partial_blocks", "non_numeric", "non_integer", "duplicate_lines",
-          "duplicate_units", "blank_units", "multi_district_units", "counties_registered_all_zero", "missing_header_rows", "unreadable_workbooks",
+          "duplicate_units", "blank_units", "multi_district_units", "empty_header_cells",
+          "balance_not_checked_counties", "out_of_scope_state_like", "counties_registered_all_zero", "missing_header_rows", "unreadable_workbooks",
           "extra_sheets", "other_members"]
 
 
@@ -93,7 +94,7 @@ class RealFixtureTest(unittest.TestCase):
         self.assertIn(("JACKSON", "WOODVILLE BOB JONES COMM", "STATE REPRESENTATIVE, DISTRICT 22", 407, 418),
                       self.summary["ballot_balance_mismatches"])
         self.assertIn(("JACKSON", "WOODVILLE BOB JONES COMM", "STATE REPRESENTATIVE",
-                       ["STATE REPRESENTATIVE, DISTRICT 22", "STATE REPRESENTATIVE, DISTRICT 23"]),
+                       [("STATE REPRESENTATIVE, DISTRICT 22", 407), ("STATE REPRESENTATIVE, DISTRICT 23", 11)]),
                       self.summary["multi_district_units"])
         self.assertNotIn("ABSENTEE", [u[1] for u in self.summary["multi_district_units"]])
 
@@ -112,7 +113,12 @@ class RealFixtureTest(unittest.TestCase):
                   "missing_header_rows", "unreadable_workbooks", "extra_sheets", "other_members",
                   "unreadable_files", "missing_files"):
             self.assertEqual(s[k], [], k)
-        self.assertGreater(s["contests_out_of_scope"], 0)
+        self.assertEqual((s["virtual_units"], s["contests"], s["contests_out_of_scope"]), (6, 32, 27))
+        self.assertEqual((s["empty_header_cells"], s["balance_not_checked_counties"], s["out_of_scope_state_like"]), ([], [], []))
+        import hashlib
+        with open(os.path.join(FX, "al_results.zip"), "rb") as f:
+            self.assertEqual({r["source_sha256"] for r in self.rows}, {hashlib.sha256(f.read()).hexdigest()})
+        self.assertIn(("BULLOCK", "PROVISIONAL", "ASSOCIATE JUSTICE OF THE SUPREME COURT, PLACE 7"), [m[:3] for m in s["ballot_balance_mismatches"]])
 
     def test_every_row(self):
         self.assertTrue(self.rows)
@@ -143,10 +149,52 @@ class GridTest(unittest.TestCase):
         g[9][4], g[10][4], g[13][4] = 50.0, 0.0, 0.0  # PROVIDENCE now also in district 9
         _, _, f = pc(g)
         self.assertEqual(f["multi_district_units"], [("TOWN", "PROVIDENCE BAPT CH", "STATE REPRESENTATIVE",
-                                                      ["STATE REPRESENTATIVE, DISTRICT 10", "STATE REPRESENTATIVE, DISTRICT 9"])])
+                                                      [("STATE REPRESENTATIVE, DISTRICT 10", 30),
+                                                       ("STATE REPRESENTATIVE, DISTRICT 9", 50)])])
         g[11][5], g[12][5] = 1.0, 0.0  # ABSENTEE (virtual) in both: not listed
         _, _, f = pc(g)
         self.assertEqual([u[1] for u in f["multi_district_units"]], ["PROVIDENCE BAPT CH"])
+
+    def test_empty_header_cells(self):
+        g = grid()
+        g[2][4] = None
+        g[1][5] = None
+        _, turnout, f = pc(g)
+        self.assertEqual(f["empty_header_cells"], [("TOWN", "PROVIDENCE BAPT CH", "BALLOTS CAST - TOTAL"),
+                                                   ("TOWN", "ABSENTEE", "REGISTERED VOTERS - TOTAL")])
+
+    def test_virtual_units_balanced_too(self):
+        g = grid()
+        g[4][5] = 9.0
+        _, _, f = pc(g)
+        self.assertEqual(f["ballot_balance_mismatches"], [("TOWN", "ABSENTEE", "UNITED STATES SENATOR", 15, 10)])
+
+    def test_scope_is_exact(self):
+        g = grid()
+        for r in g[4:9]:
+            r[0] = "UNITED STATES SENATOR, SPECIAL"
+        g.append(["United States  Senator", "REP", "X", 1.0, 1.0, 1.0])
+        g.append(["PRESIDENT AND VICE PRESIDENT OF THE UNITED STATES", "REP", "X", 1.0, 1.0, 1.0])
+        rows, _, f = pc(g)
+        self.assertNotIn("UNITED STATES SENATOR, SPECIAL", {r["contest_id"] for r in rows})
+        self.assertEqual(sorted(f["out_of_scope_state_like"]), ["PRESIDENT AND VICE PRESIDENT OF THE UNITED STATES",
+                                                               "UNITED STATES SENATOR, SPECIAL", "United States  Senator"])
+
+    def test_first_header_row_wins_and_headers_stripped(self):
+        g = grid()
+        g[0][3] = "  1 TOWN HALL  "
+        g.insert(4, ["BALLOTS CAST - TOTAL", "   ", "Ballots Cast - Total ", 1.0, 1.0, 1.0])
+        rows, turnout, f = pc(g)
+        t, = [x for x in turnout if x["precinct_id"] == "1 TOWN HALL"]
+        self.assertEqual(t["ballots_cast"], 50)
+        self.assertEqual(f["duplicate_lines"], [("TOWN", "BALLOTS CAST - TOTAL", "Ballots Cast - Total")])
+
+    def test_registered_missing_is_not_all_zero(self):
+        g = grid()
+        g[1][3:] = [0.0, 0.0, 0.0]
+        del g[1]
+        _, _, f = pc(g)
+        self.assertFalse(f["registered_all_zero"])
 
     def test_balance(self):
         _, _, f = pc(grid())
@@ -293,6 +341,35 @@ class PassTest(unittest.TestCase):
         rows, s, _ = self.run_zip(members={"2026_GENERAL_ELECTION-COOSA.xls": self.real_member()})
         self.assertEqual(s["extra_sheets"], [("2026_GENERAL_ELECTION-COOSA.xls", ["Notes"])])
         self.assertTrue(rows)
+
+    def test_duplicate_county_and_members(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d)
+        m = self.real_member()
+        rows, s, _ = self.run_zip(members={"2026_GENERAL_ELECTION-COOSA.xls": m, "other/2026_GENERAL_ELECTION-COOSA.xls": m,
+                                           "COOSA.xls": b"x", "2026_GENERAL_ELECTION-COOSA.xlsx": b"x", "sub/": b"",
+                                           "notes-read me.xls": b"x"})
+        self.assertEqual(s["duplicate_counties"], [("other/2026_GENERAL_ELECTION-COOSA.xls", "COOSA")])
+        self.assertEqual(sorted(s["other_members"]), ["2026_GENERAL_ELECTION-COOSA.xlsx", "COOSA.xls", "notes-read me.xls"])
+        self.assertEqual(s["counties"], 1)
+
+    def test_balance_not_checked_reaches_summary(self):
+        orig = al.read_workbook
+        def fake(data):
+            g, names = orig(data)
+            return [r for r in g if not (r[0] or "").startswith("BALLOTS CAST - TOTAL")], names
+        al.read_workbook = fake
+        self.addCleanup(setattr, al, "read_workbook", orig)
+        rows, s, _ = self.run_zip(members={"2026_GENERAL_ELECTION-COOSA.xls": self.real_member()})
+        self.assertEqual(s["missing_header_rows"], [("COOSA", "BALLOTS CAST - TOTAL")])
+        self.assertEqual(s["balance_not_checked_counties"], ["COOSA"])
+
+    def test_no_county_read_means_not_checked(self):
+        rows, s, _ = self.run_zip(members={"2026_GENERAL_ELECTION-BAD.xls": b"not a workbook"})
+        self.assertEqual(len(s["unreadable_workbooks"]), 1)
+        self.assertEqual(s["counties"], 0)
+        self.assertIsNone(s["ballot_balance_mismatches"])
+        self.assertIsNone(s["counties_registered_all_zero"])
 
     def test_county_name_from_token(self):
         rows, s, _ = self.run_zip(members={"2026_GENERAL_ELECTION-ST._CLAIR.xls": self.real_member()})

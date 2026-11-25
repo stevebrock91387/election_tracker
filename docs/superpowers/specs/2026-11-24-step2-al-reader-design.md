@@ -27,15 +27,16 @@ Layout (all 67 surveyed):
 - Then one row per (contest, choice). Choices include party-labelled candidates, `Write-In`
   (party NON), `Over Votes` and `Under Votes` (party blank), `Yes`/`No` for amendments. Cells are
   padded with trailing spaces.
-- Cells are floats (all integral) or empty. Empty cells appear only for whole (contest, unit)
-  blocks: the contest is not on that unit's ballot.
+- Cells are floats (all integral) or empty. In contest rows, empty cells appear only for whole
+  (contest, unit) blocks: the contest is not on that unit's ballot. Two header-row cells are empty
+  (registered voters for Jefferson PROVISIONAL ABSENTEE and Wilcox PROVISIONAL; found in review).
 - No ids anywhere (contest, choice, precinct, county). No county or statewide totals. No vote types:
   absentee and provisional ballots are separate units.
 - Registered voters are 0 for every unit in 31 counties (e.g. Autauga, Mobile). Published that way;
   not corrected.
 - For most units, a contest's lines (choices + over + under) sum to the unit's ballots cast. The
   exceptions are concentrated in absentee and provisional units (e.g. Autauga PROVISIONAL: ballots
-  cast 0, contest lines 24–38).
+  cast 0, contest lines 3–38).
 
 ## Approaches
 
@@ -84,10 +85,18 @@ Layout (all 67 surveyed):
   - `non_integer`: same for a float with a fraction.
   - `duplicate_lines`: (county, contest, choice) repeated within a county; the later line is dropped.
   - `duplicate_units`: (county, header) repeated; that county's second column is dropped.
-  - `multi_district_units`: (county, unit, office, [contests]) for a real precinct whose ballot
+  - `multi_district_units`: (county, unit, office, [(contest, lines sum)]) for a real precinct whose ballot
     carries two or more districts of one office (US House, State Senate, State House, State Board of
     Education). Seen in 2026: Jackson's Woodville carries House 22 (407) and 23 (11) of its 418
-    ballots. Each such block also appears in `ballot_balance_mismatches`.
+    ballots. A block whose district has votes also appears in `ballot_balance_mismatches`; all-zero
+    blocks don't (106 pairs in 2026).
+  - `empty_header_cells`: (county, unit, row) for an empty registered/ballots/blank cell (the
+    unit's balance check can't run when it's ballots cast).
+  - `balance_not_checked_counties`: counties with no BALLOTS CAST - TOTAL row.
+  - `out_of_scope_state_like`: out-of-scope titles that look state-level (case-insensitive keywords),
+    so a renamed or new contest such as President is seen.
+  - `duplicate_counties`: (member, county) for a second workbook of a county; skipped.
+  - With no county read, every per-county check is `None`.
   - `blank_units`: (county, column index) for a unit column with a blank header; dropped.
   - `counties_registered_all_zero`: counties whose registered-voter row is 0 for every unit.
   - `missing_header_rows`: (county, name) when REGISTERED VOTERS - TOTAL or BALLOTS CAST - TOTAL is

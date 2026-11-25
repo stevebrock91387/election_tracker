@@ -23,11 +23,13 @@ Run the reader and the tests with `.venv/bin/python`. Under the bare interpreter
 
 - **Output:** 233,594 rows (one per unit × contest line, vote type TOTAL); 2,071 turnout rows.
 - **Coverage:** 67 counties; 2,071 units: 1,933 precinct columns and 138 absentee/provisional units; 172 state-level contests. 529 other contest names (county offices, circuit and district judges, local amendments and referendums) are out of scope and counted.
-- **Clean:** no unreadable workbooks, extra sheets, stray ZIP members, partly empty blocks, non-numeric or fractional cells, repeated lines or unit headers, blank headers or missing header rows.
+- **Clean:** no unreadable workbooks, repeated counties, extra sheets, stray ZIP members, partly empty blocks, non-numeric or fractional cells, repeated lines or unit headers, blank headers or missing header rows; the balance check ran in every county.
+- **Empty header cells:** 2 units have no registered-voter figure (Jefferson PROVISIONAL ABSENTEE, Wilcox PROVISIONAL); `""` in the turnout table.
+- **Out of scope but state-like name:** 1, `PRESIDENT, DEKALB COUNTY COMMISSION` (a county office; correctly out).
 - **Listed:**
   - 31 counties publish 0 registered voters for every unit (e.g. Autauga, Mobile, Jackson). Kept as 0 in the turnout table.
-  - 425 split polling places: a real precinct column carrying two or more districts of one office (269 State House, 99 State Senate, 57 US House). Example: Jackson's Woodville carries House 22 (407 lines) and 23 (11) of 418 ballots cast. **For the House, these units have to be split by district, not taken whole.**
-  - 2,276 (unit, contest) blocks whose lines (choices + over + under) don't sum to the unit's ballots cast: 1,432 in absentee/provisional units (e.g. Autauga PROVISIONAL: ballots cast 0, contest lines 24–38), 793 in split polling places (expected: each district holds part of the ballots), and 51 elsewhere, in six counties (Tuscaloosa 26, Houston 20; e.g. Houston's Calvary Bapt Ch: 872 lines against 871 ballots in 20 of its 25 contests). Causes not investigated.
+  - Split polling places: 352 real precinct columns carry two or more districts of one office (425 unit-office pairs: 269 State House, 99 State Senate, 57 US House). In 106 of those pairs every district but one has all-zero lines; **268 units have votes in two or more districts** (319 pairs: 212 State House, 82 State Senate, 25 US House). Each entry lists every district's line sum. Example: Jackson's Woodville carries House 22 (407) and 23 (11) of 418 ballots cast. **For the House, these units have to be split by district, not taken whole.** State Board of Education splits where only one district is on the ballot aren't detected; they show up only as balance mismatches (e.g. Jefferson PREC 4120: District 4 lines 0 of 1,836 ballots).
+  - 2,276 (unit, contest) blocks whose lines (choices + over + under) don't sum to the unit's ballots cast: 1,432 in absentee/provisional units (e.g. Autauga PROVISIONAL: ballots cast 0, contest lines 3–38), 771 that are the district blocks of split polling places (expected: each district holds part of the ballots), and 73 others in eight counties (Tuscaloosa 28, Houston 20, Jefferson 15, Clarke 5, Greene 2, Lauderdale, Marshall and Talladega 1 each; they include the undetected Board of Education splits; e.g. Houston's Calvary Bapt Ch: 872 lines against 871 ballots in 20 of its 25 contests). Causes not investigated.
 - **Example, U.S. Senator (sum of the file's precinct rows; not checked against a certified statewide figure):** Moore (REP) 918,207; Wess (DEM) 759,018; write-in 2,042; over 196; under 14,825. Ballots cast over all units: 1,694,618.
 
 ## Quirks
@@ -40,6 +42,8 @@ Run the reader and the tests with `.venv/bin/python`. Under the bare interpreter
 
 ## Not done
 
+- No presidential contest in the scope list: a 2028 file needs it added (it would show up in `out_of_scope_state_like` until then).
+- `sources/registry.csv` still describes the election-night page as it was on 2026-11-20 (not updated: `sources/` is outside this work).
 - No statewide check: the files carry no totals; the certified statewide canvass wasn't read.
-- The 51 unexplained balance differences, and why provisional units show 0 ballots cast in some counties.
+- The 73 unexplained balance differences, and why provisional units show 0 ballots cast in some counties.
 - County FIPS codes; the 2028 election-night reader (the page is empty between elections).
