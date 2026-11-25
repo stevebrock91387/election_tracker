@@ -16,7 +16,8 @@ Files under `https://elections.delaware.gov/results/enr/` (the page adds `?t=<ti
 - **`Election_VoterTurnout_ID_GE2026.json`** (8,166 B, 42 lines): per Representative District: Ballots Cast, Reg Voters, Percentage.
 - Also `Election_ByRepresentativeDistrict_ID_…json`, a data.delaware.gov CSV (statewide lines only), a write-in PDF.
 - **Agreement:** for all four vote counts, election-district sums equal the statewide values on every one of 124 (contest, candidate name) lines; the county file's State column equals the statewide totals, New Castle + Sussex + Kent = State and Wilmington + Rest of New Castle = New Castle on every line. (Contest, name) is unique.
-- Contests: U.S. Senator, Representative in Congress, Attorney General, Auditor, Treasurer, state senate and house districts.
+- Contests (77): U.S. Senator, Representative In Congress (at-large), Attorney General, Auditor of Accounts, State Treasurer, state senate and house districts, and 24 county-office lines (New Castle/Kent/Sussex council, Levy Court, sheriff, recorder, register). Precinct counts are per contest (Attorney General, Auditor and Treasurer 527/527: districts 02-27, 31-16 and 41-16 have no lines for them; U.S. Senator 530/530).
+- The turnout file has 41 representative districts plus an "ALL" row (384,862 ballots, 810,407 registered). Election date, report time, precinct counts and ids are only in the statewide file.
 
 ## Approaches considered
 
@@ -25,7 +26,7 @@ Files under `https://elections.delaware.gov/results/enr/` (the page adds `?t=<ti
 
 ## Scope
 
-Every contest in the statewide file (federal, statewide, legislative).
+Contests in the statewide file except county offices: titles starting "New Castle County", "Kent County" or "Sussex County" are out (config `exclude_title_prefixes`; my call, as in the other readers).
 
 ## Design
 
@@ -33,12 +34,12 @@ Every contest in the statewide file (federal, statewide, legislative).
 - **Fetch pass:** the four files in the order statewide, district, county, turnout (kinds `statewide`, `district`, `county`, `turnout`), each URL with `?t=<unix ms>` as the page does (my call), 10 s apart.
 - **Reader** `pipeline/readers/de.py` → `(rows, summary, turnout)`:
   - Vote types: `TOTAL`, `Machine Votes`, `Absentee Votes`, `Early Voting Votes` (the source's names); numbers parsed after removing thousands separators (format, not correction; a value that still isn't an integer is listed).
-  - **State rows** from the statewide file (`choice_id` = Candidate Id, `party` = Party Name, `reporting_status` "Precincts Reported/Total Precincts precincts", `source_created_at` = ReportTime).
-  - **County rows** from the county file, TOTAL only: New Castle (`county_id` "10003"), Kent ("10001"), Sussex ("10005") (FIPS; my call); Wilmington and Rest of New Castle aren't counties and aren't rows (they are checked).
-  - **Precinct rows** from the district file: `precinct_id` = the district code ("01-01"), `precinct_name` as published, four vote types.
+  - **State rows** from the statewide file (`choice_id` = Candidate Id, `party` = Party Name, `reporting_status` "<Precincts Reported>/<Total Precincts> precincts, <Results Type>" ("OFFICIAL RESULTS" as published), `source_created_at` = ReportTime).
+  - **County rows** from the county file, TOTAL only, for statewide contests (not titles starting "State Senator" or "State Representative", config `district_title_prefixes`; a district contest's other counties would read as real zeros): New Castle (`county_id` "10003"), Kent ("10001"), Sussex ("10005") (FIPS; my call); Wilmington and Rest of New Castle aren't counties and aren't rows (they are checked).
+  - **Precinct rows** from the district file: `precinct_id` = the district code ("01-01"), `precinct_name` as published, four vote types; `reporting_status` and `source_created_at` empty (not published per district).
   - `choice_id` on county and precinct rows from the statewide file by (contest, name); `contest_id` = Contest Sorting Order (my call: the only contest key; unique per contest in 2026, checked); `election_name`, `election_date`, `contest_scope "statewide"`.
-  - **Turnout table:** one row per representative district: ballots cast, registered.
-  - **Checks, listed:** district sums ≠ statewide per vote type; county columns ≠ statewide and parts ≠ wholes; lines in one file and not another (all directions); duplicate (contest, name) or (district, contest, name); a contest sorting order shared by two titles; non-integer counts; malformed entries; unreadable or missing files (checks needing them `None`).
+  - **Turnout table:** one row per representative district (not "ALL"): ballots cast, registered; the ALL row is a check (district sums).
+  - **Checks, listed:** district sums ≠ statewide per vote type; county columns ≠ statewide and parts ≠ wholes; lines in one file and not another (all directions); duplicate (contest, name) or (district, contest, name); a contest sorting order shared by two titles; a contest whose number of districts with lines differs from its Total Precincts; the turnout ALL row ≠ district sums; non-integer counts; malformed entries; unreadable or missing files (checks needing them `None`).
 
 ## Not done / later
 
