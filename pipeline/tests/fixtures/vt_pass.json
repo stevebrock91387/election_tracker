@@ -1,0 +1,31 @@
+{
+ "source_id": "vt-2026-general",
+ "state": "VT",
+ "snapshot": "20261117185828",
+ "files": [
+  {
+   "kind": "election",
+   "path": "vt_election.json"
+  },
+  {
+   "kind": "federal",
+   "path": "vt_federal.json"
+  },
+  {
+   "kind": "stateWide",
+   "path": "vt_stateWide.json"
+  },
+  {
+   "kind": "senate",
+   "path": "vt_senate.json"
+  },
+  {
+   "kind": "house",
+   "path": "vt_house.json"
+  },
+  {
+   "kind": "turnOut",
+   "path": "vt_turnOut.json"
+  }
+ ]
+}
