@@ -1,0 +1,15 @@
+# Vermont Secretary of State election results (static JSON behind electionresults.vermont.gov),
+# 2026 general election. See docs/superpowers/specs/2026-11-24-step2-vt-reader-design.md and
+# sources/registry.csv. Elections are listed in <base_url>elections/elections.json. A pass reads
+# elections/<election_guid>.json, which names one timestamped file per tab (one snapshot), then the
+# files for `kinds` (federal, statewide, state senate, state house, turnout). County and town
+# offices are out of scope. min_interval_s applies to each file's source id; request_gap_s is the
+# pause between requests. The state publishes no limit.
+
+[vt-2026-general]
+state = "VT"
+base_url = "https://static.electionresults.vermont.gov/"
+election_guid = "68d61e96-1d28-4210-8c1d-8e90512ae105"
+kinds = ["federal", "stateWide", "senate", "house", "turnOut"]
+min_interval_s = 120
+request_gap_s = 10

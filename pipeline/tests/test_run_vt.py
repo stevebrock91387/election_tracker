@@ -1,0 +1,81 @@
+"""VT source list and the fetch pass (fake opener and sleep; no network)."""
+import json
+import os
+import tempfile
+import unittest
+
+from pipeline.fetch import FetchError
+from pipeline.run_vt import DEFAULT_SOURCES, fetch_pass, load_sources
+
+VT_ID = "vt-2026-general"
+BASE = "https://static.electionresults.vermont.gov/"
+GUID = "68d61e96-1d28-4210-8c1d-8e90512ae105"
+SUFFIX = {"federal": "f", "stateWide": "s", "senate": "sn", "house": "h", "turnOut": "turnout"}
+
+
+def election_body(stamp="20261117185828", odd=None):
+    body = {k: {"isEnable": True, "path": f"elections\\{GUID}-{v}-{stamp}.json"} for k, v in SUFFIX.items()}
+    if odd:
+        body.update(odd)
+    return json.dumps(body).encode()
+
+
+def opener_for(record, body, fail=()):
+    def opener(url):
+        record.append(url)
+        if any(f in url for f in fail):
+            return 403, b"no"
+        return 200, body if url.endswith(GUID + ".json") else b"{}"
+    return opener
+
+
+class SourcesTest(unittest.TestCase):
+    def test_sources_complete(self):
+        src = load_sources(DEFAULT_SOURCES)
+        self.assertEqual(list(src), [VT_ID])
+        s = src[VT_ID]
+        self.assertEqual((s["state"], s["base_url"], s["election_guid"]), ("VT", BASE, GUID))
+        self.assertEqual(s["kinds"], list(SUFFIX))
+        self.assertEqual((s["min_interval_s"], s["request_gap_s"]), (120, 10))
+
+
+class FetchPassTest(unittest.TestCase):
+    def setUp(self):
+        self.raw = tempfile.mkdtemp()
+        self.slept = []
+        self.src = load_sources(DEFAULT_SOURCES)[VT_ID]
+
+    def run_pass(self, opener):
+        return fetch_pass(VT_ID, self.src, raw_dir=self.raw, opener=opener, sleep=self.slept.append)
+
+    def no_record(self):
+        d = os.path.join(self.raw, VT_ID)
+        return not (os.path.isdir(d) and [p for p in os.listdir(d) if p.startswith("pass-")])
+
+    def test_pass_urls_in_order(self):
+        seen = []
+        rec = self.run_pass(opener_for(seen, election_body()))
+        self.assertEqual(seen, [f"{BASE}elections/{GUID}.json"] +
+                         [f"{BASE}elections/{GUID}-{v}-20261117185828.json" for v in SUFFIX.values()])
+        with open(rec) as f:
+            r = json.load(f)
+        self.assertEqual((r["snapshot"], r["state"]), ("20261117185828", "VT"))
+        self.assertEqual([x["kind"] for x in r["files"]], ["election"] + list(SUFFIX))
+        self.assertEqual(self.slept, [10] * 5)
+
+    def test_mixed_snapshot_stops_pass(self):
+        for odd in ({"house": {"isEnable": True, "path": f"elections\\{GUID}-h-20261118000000.json"}},
+                    {"house": {"isEnable": True, "path": "..\\other\\x.json"}},
+                    {"house": {"isEnable": False}}):
+            with self.assertRaises(ValueError):
+                self.run_pass(opener_for([], election_body(odd=odd)))
+            self.assertTrue(self.no_record())
+
+    def test_failure_stops_pass(self):
+        with self.assertRaises(FetchError):
+            self.run_pass(opener_for([], election_body(), fail=("-sn-",)))
+        self.assertTrue(self.no_record())
+
+
+if __name__ == "__main__":
+    unittest.main()
