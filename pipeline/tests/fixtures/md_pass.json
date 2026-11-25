@@ -28,7 +28,8 @@
  "office_pages": {
   "1": "Governor / Lt. Governor",
   "4": "Representative in Congress",
-  "9": "Judge, Appellate Court of Maryland At Large"
+  "9": "Judge, Appellate Court of Maryland At Large",
+  "5": "State Senator"
  },
  "question_pages": {
   "1": "Question 1: Constitutional Amendment"
@@ -53,6 +54,11 @@
    "kind": "office",
    "number": "4",
    "path": "md_office_4.html"
+  },
+  {
+   "kind": "office",
+   "number": "5",
+   "path": "md_office_5.html"
   },
   {
    "kind": "office",

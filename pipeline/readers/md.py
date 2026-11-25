@@ -13,12 +13,15 @@ office, an optional h3 district (or, for judicial retention, an h3 "<judge><br>V
 Rows: county pages at level "county" (county_id the page number), office and question pages at
 level "state". contest_id = office plus district or judge. One row per vote type and TOTAL;
 reporting_status is the reporting phrase as published. No ids are published: the county-vs-state
-check joins on contest and choice names. No turnout table (the pages carry none).
+check joins on contest and choice names. source_sha256 is the page's hash and source_created_at its
+"Last refreshed" time as published, so rows from one pass can be told apart if the site was rebuilt
+mid-pass. No turnout table (the pages carry none).
 
 Nothing is corrected; the summary lists the anomalies (see the design). The county-vs-state check
 runs per contest only when the county pages' precinct counts add up to the state page's; otherwise
 the contest is listed as not checked, with the reason.
 """
+import hashlib
 import json
 import os
 import re
@@ -33,11 +36,12 @@ TITLE = re.compile(r"Results for (.+)$")
 LISTS = ["vote_type_sum_mismatches", "totals_row_mismatches", "county_state_mismatches", "contests_one_side",
          "contests_not_checked", "reporting_mismatches", "county_title_mismatches", "non_numeric",
          "duplicate_choices", "duplicate_contests", "unexpected_columns", "malformed_rows",
-         "contests_without_reporting", "page_problems", "out_of_scope_titles", "mixed_refresh"]
+         "contests_without_reporting", "page_problems", "out_of_scope_titles", "mixed_refresh",
+         "totals_row_not_checked", "empty_contests", "offices_not_found", "pages_without_refresh"]
 
 
 class _Events(HTMLParser):
-    """Flattens a page into ("h1".."h4", text), ("text", text) and ("table", headers, rows) events.
+    """Flattens a page into ("h1".."h5", text), ("text", text) and ("table", headers, rows) events.
     Header rows are those inside <thead>; question tables put a <th> row header in body rows."""
 
     def __init__(self):
@@ -47,7 +51,7 @@ class _Events(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag in ("script", "style"):
             self.skip += 1
-        elif tag in ("h1", "h2", "h3", "h4"):
+        elif tag in ("h1", "h2", "h3", "h4", "h5"):
             self.head = (tag, [])
         elif tag == "br" and self.head:
             self.head[1].append("\n")
@@ -184,7 +188,7 @@ def parse_pass(record_path, base_dir="."):
     s["missing_files"] = sorted(f"county {n}" for n in counties if ("county", n) not in listed)
     base = dict.fromkeys(COLUMNS, "")
     base.update(state=rec["state"], source_id=rec["source_id"], contest_scope="statewide")
-    rows, out_titles, read_state_pages = [], set(), set()
+    rows, out_titles, read_state_pages, found = [], set(), set(), set()
     county_vals, state_vals, county_rep, state_rep, seen_c, seen_s = {}, {}, {}, {}, {}, {}
     read_counties = 0
     for f in rec["files"]:
@@ -193,7 +197,8 @@ def parse_pass(record_path, base_dir="."):
         path = f["path"] if os.path.isabs(f["path"]) else os.path.join(base_dir, f["path"])
         try:
             with open(path, "rb") as fh:
-                text = fh.read().decode("utf-8")
+                body = fh.read()
+            text = body.decode("utf-8")
             page = parse_page(text)
             if not page["contests"]:
                 raise ValueError("no contest tables")
@@ -208,6 +213,9 @@ def parse_pass(record_path, base_dir="."):
         else:
             read_state_pages.add((kind, n))
         s["refresh_times"][page["refreshed"]] = s["refresh_times"].get(page["refreshed"], 0) + 1
+        if page["refreshed"] is None:
+            s["pages_without_refresh"].append(label)
+        page_base = dict(base, source_sha256=hashlib.sha256(body).hexdigest(), source_created_at=page["refreshed"] or "")
         s["page_problems"] += [(label, p) for p in page["problems"]]
         level = "county" if kind == "county" else "state"
         seen_ids = set()
@@ -216,6 +224,7 @@ def parse_pass(record_path, base_dir="."):
             if office not in scope:
                 out_titles.add(office)
                 continue
+            found.add(office)
             cid = f"{office} {c['district']}" if c["district"] else office
             if kind == "county" and office in per_county:
                 cid = f"{cid} {counties.get(n, '')}".strip()
@@ -234,7 +243,7 @@ def parse_pass(record_path, base_dir="."):
                 s["contests_without_reporting"].append((label, cid))
             rep = "" if c["reporting"] is None else f"{c['reporting'][0]} of {c['reporting'][1]} election day precincts reported"
             ctype = "question" if office in question_titles else "retention" if c["retention"] else "candidate"
-            row0 = dict(base, level=level, contest_id=cid, contest_name=cid, contest_type=ctype, vote_for=c["vote_for"] or "",
+            row0 = dict(page_base, level=level, contest_id=cid, contest_name=cid, contest_type=ctype, vote_for=c["vote_for"] or "",
                         reporting_status=rep)
             if level == "county":
                 row0.update(county_id=n, county_name=counties.get(n, ""))
@@ -271,10 +280,20 @@ def parse_pass(record_path, base_dir="."):
                     if v != "":
                         key = (cid, choice, vt)
                         vals[key] = vals.get(key, 0) + v
-            if c["totals"] is not None and len(c["totals"]) == len(cols):
+            if not names:
+                s["empty_contests"].append((label, cid))
+            if c["totals"] is None:
+                s["totals_row_not_checked"].append((label, cid, "no Totals row"))
+            elif len(c["totals"]) != len(cols):
+                s["totals_row_not_checked"].append((label, cid, f"Totals row has {len(c['totals'])} cells, header {len(cols)}"))
+            else:
                 for i, (x, col) in enumerate(zip(c["totals"][first:-1], types + ["Total"])):
                     t = x.replace(",", "").strip()
-                    if sum_ok[i] and t.isdigit() and int(t) != sums[i]:
+                    if not t.isdigit():
+                        s["totals_row_not_checked"].append((label, cid, f"{col}: Totals cell {x!r}"))
+                    elif not sum_ok[i]:
+                        s["totals_row_not_checked"].append((label, cid, f"{col}: NR or non-numeric cells"))
+                    elif int(t) != sums[i]:
                         s["totals_row_mismatches"].append((level, n if level == "county" else "", cid, col, int(t), sums[i]))
             (seen_c if level == "county" else seen_s).setdefault(cid, office)
     s["counties"] = read_counties
@@ -283,6 +302,7 @@ def parse_pass(record_path, base_dir="."):
             s[k] = None
         return [], s, []
     s["out_of_scope_titles"] = sorted(out_titles)
+    s["offices_not_found"] = sorted(scope - found)  # e.g. a retitled office: it would otherwise vanish
     times = s["refresh_times"]
     s["mixed_refresh"] = sorted(times.items(), key=lambda x: str(x[0])) if len(times) > 1 else []
 

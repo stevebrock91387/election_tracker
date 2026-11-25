@@ -94,5 +94,5 @@ Gubernatorial General Election Results" and "Last refreshed: 11/23/2026 07:40:42
 - Certified precinct CSVs (post-certification) as a later reader.
 - Whether the pages change URL scheme for 2028 (`2028`, `pres` instead of `gen`): config per election.
 - Write-in candidates appear as named choices with "(Write-In)" in the name plus "Other Write-Ins".
-- Fixture: Montgomery and Kent county pages, office pages 1, 4 and 9 and question page 1, saved as
-  published.
+- Fixture: Montgomery and Kent county pages, office pages 1, 4, 5 and 9 and question page 1, saved
+  as published (office 5 lets Montgomery's eight own Senate districts be checked against real data).

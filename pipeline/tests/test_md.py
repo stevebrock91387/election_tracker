@@ -12,7 +12,8 @@ FX = os.path.join(os.path.dirname(__file__), "fixtures")
 CHECKS = ["vote_type_sum_mismatches", "totals_row_mismatches", "county_state_mismatches", "contests_one_side",
           "contests_not_checked", "reporting_mismatches", "county_title_mismatches", "non_numeric",
           "duplicate_choices", "duplicate_contests", "unexpected_columns", "malformed_rows",
-          "contests_without_reporting", "page_problems", "out_of_scope_titles", "mixed_refresh"]
+          "contests_without_reporting", "page_problems", "out_of_scope_titles", "mixed_refresh",
+          "totals_row_not_checked", "empty_contests", "offices_not_found", "pages_without_refresh"]
 TYPES = ["Early Voting", "Election Day", "Mail-In Ballot", "Provisional"]
 
 
@@ -95,6 +96,30 @@ class PageTest(unittest.TestCase):
         self.assertEqual((c["district"], c["vote_for"], c["retention"]), ("Dan Friedman", "1", True))
         self.assertEqual([r[0] for r in c["rows"]], ["Yes", "No"])
 
+    def test_multi_line_heading_not_retention(self):
+        sec = ("<h2>State Senator</h2><h3>District 1<br>Special Election</h3><h4>Vote for 1</h4>(1 of 1 election day precincts reported)"
+               + table("Name", [("A", "Democratic", 1, 1, 1, 1, 4)]))
+        c, = parse_page(page("Allegany County", [sec]))["contests"]
+        self.assertEqual((c["district"], c["retention"], c["vote_for"]), ("District 1", False, "1"))
+
+    def test_name_header_required_with_party(self):
+        sec = gov().replace("<th>Name</th>", "<th>Candidate</th>", 1)
+        rows, s, _ = run(self, {("county", "1"): page("Allegany County", [sec])}, counties={"1": "Allegany County"})
+        self.assertEqual([u[:2] for u in s["unexpected_columns"]], [("county 1", "Governor / Lt. Governor")])
+
+    def test_second_table_not_attached(self):
+        p = parse_page(page("Allegany County", [gov() + table("Name", [("X", "Democratic", 1, 1, 1, 1, 4)])]))
+        self.assertEqual(len(p["contests"]), 1)
+        self.assertEqual(len(p["problems"]), 1)
+
+    def test_resets(self):
+        sec = gov() + "<h2>Question 1: Constitutional Amendment</h2>" + table("Question 1", [("For", None, 1, 1, 1, 1, 4)], party=False)
+        sec += senate(3, "") + "<h3>District 4</h3>" + table("Name", [("Y", "Democratic", 1, 1, 1, 1, 4)])
+        c = parse_page(page("Allegany County", [sec]))["contests"]
+        self.assertEqual([(x["office"], x["vote_for"], x["reporting"]) for x in c],
+                         [("Governor / Lt. Governor", "1", (5, 5)), ("Question 1: Constitutional Amendment", None, None),
+                          ("State Senator", "1", None), ("State Senator", None, None)])
+
     def test_table_without_heading_and_heading_without_table(self):
         p = parse_page(page("Allegany County", [table("Name", [("X", "Democratic", 1, 1, 1, 1, 4)]),
                                                 "<h2>Sheriff</h2><h3>Vote for 1</h3>", gov()]))
@@ -107,7 +132,7 @@ class HierarchyTest(unittest.TestCase):
 
     def circuit_office_page(self):
         return page("Judge of the Circuit Court", [
-            "<h2>Judge of the Circuit Court</h2><h3>Circuit 2</h3><h4>Cecil County</h4>" + self.R +
+            "<h2>Judge of the Circuit Court</h2><h3>Circuit 2</h3><h4>Cecil County</h4><h5>Vote for up to 9</h5>" + self.R +
             table("Name", [("C Judge", "", 1, 1, 1, 1, 4)]) +
             "<h4>Talbot County</h4>" + self.R + table("Name", [("T Judge", "", 2, 2, 2, 2, 8)])])
 
@@ -117,6 +142,7 @@ class HierarchyTest(unittest.TestCase):
                          [("Judge of the Circuit Court", "Circuit 2 Cecil County"),
                           ("Judge of the Circuit Court", "Circuit 2 Talbot County")])
         self.assertEqual(p["problems"], [])
+        self.assertEqual([c["vote_for"] for c in p["contests"]], ["9", None])
 
     def test_retention_under_district(self):
         sec = ("<h2>Justice, Supreme Court of Maryland</h2><h3>Circuit 4</h3>"
@@ -189,9 +215,26 @@ class RealFixtureTest(unittest.TestCase):
         nc = dict((c, why) for c, why in s["contests_not_checked"])
         self.assertEqual(nc["Governor / Lt. Governor"], "county pages cover 267 of 1979 precincts")
         self.assertEqual(nc["Representative in Congress District 8"], "county pages cover 198 of 199 precincts")
-        self.assertEqual(nc["State Senator District 36"], "office page not in the pass")
-        self.assertEqual(s["refresh_times"], {"11/23/2026 07:40:42 PM": 6})
+        self.assertEqual(nc["State Senator District 36"], "county pages cover 10 of 36 precincts")
+        self.assertEqual(nc["House of Delegates District 36"], "office page not in the pass")
+        # Montgomery's own Senate districts are checked against the real office page, value by value.
+        self.assertEqual(s["contests_checked"], 8)
+        self.assertEqual(s["county_state_mismatches"], [])
+        self.assertEqual((s["totals_row_not_checked"], s["empty_contests"], s["offices_not_found"],
+                          s["pages_without_refresh"]), ([], [], ["Justice, Supreme Court of Maryland"], []))
+        self.assertEqual(s["refresh_times"], {"11/23/2026 07:40:42 PM": 7})
         self.assertEqual(s["not_reported"], 0)
+
+    def test_provenance(self):
+        import hashlib
+        with open(os.path.join(FX, "md_county_16.html"), "rb") as f:
+            sha = hashlib.sha256(f.read()).hexdigest()
+        r = find(self.rows, county_id="16")
+        self.assertEqual({(x["source_sha256"], x["source_created_at"]) for x in r}, {(sha, "11/23/2026 07:40:42 PM")})
+        self.assertTrue(all(x["source_sha256"] for x in self.rows))
+
+    def test_vote_for_from_h5(self):
+        self.assertEqual({x["vote_for"] for x in find(self.rows, level="state", contest_id="Representative in Congress District 8")}, {"1"})
 
     def test_every_row(self):
         for r in self.rows:
@@ -299,6 +342,54 @@ class SyntheticPassTest(unittest.TestCase):
         self.assertEqual(s["duplicate_choices"], [("county 1", "Governor / Lt. Governor", "Dan Cox and Rob Krop")])
         self.assertEqual(len(s["malformed_rows"]), 1)
         self.assertEqual(len(find(rows, choice="Dan Cox and Rob Krop", vote_type="TOTAL")), 1)
+
+    def test_duplicate_contest_not_double_counted(self):
+        rows, s, _ = run(self, {("county", "1"): page("Allegany County", [gov() + gov()])}, counties={"1": "Allegany County"})
+        self.assertEqual(len(find(rows, choice="Dan Cox and Rob Krop", vote_type="TOTAL")), 1)
+
+    def test_skipped_tables_and_rows_emit_nothing(self):
+        bad = gov().replace("<th>Percentage</th>", "<th>Pct</th>")
+        short = gov().replace("</tbody>", "<tr><td>short</td></tr></tbody>")
+        rows, s, _ = run(self, {("county", "1"): page("Allegany County", [bad])}, counties={"1": "Allegany County"})
+        self.assertEqual(rows, [])
+        rows, s, _ = run(self, {("county", "1"): page("Allegany County", [short])}, counties={"1": "Allegany County"})
+        self.assertEqual({r["choice"] for r in rows}, {"Wes Moore and Aruna Miller", "Dan Cox and Rob Krop"})
+
+    def test_totals_check_not_run_is_listed(self):
+        nr = gov(moore=("NR", 20, 30, 5, 55))
+        rows, s, _ = run(self, {("county", "1"): page("Allegany County", [nr])}, counties={"1": "Allegany County"})
+        self.assertEqual(s["totals_row_mismatches"], [])
+        self.assertEqual(s["totals_row_not_checked"], [("county 1", "Governor / Lt. Governor", "Early Voting: NR or non-numeric cells")])
+        no_totals = gov().replace("<b>Totals</b>", "<b>Sum</b>")
+        rows, s, _ = run(self, {("county", "1"): page("Allegany County", [no_totals])}, counties={"1": "Allegany County"})
+        self.assertIn(("county 1", "Governor / Lt. Governor", "no Totals row"), s["totals_row_not_checked"])
+        bad_cell = gov().replace("<b>72</b>", "<b>x</b>").replace("<b>11</b>", "<b>x</b>")
+        rows, s, _ = run(self, {("county", "1"): page("Allegany County", [bad_cell])}, counties={"1": "Allegany County"})
+        self.assertTrue(any("Totals cell" in x[2] for x in s["totals_row_not_checked"]))
+
+    def test_empty_contest_listed(self):
+        empty = "<h2>Governor / Lt. Governor</h2><h3>Vote for 1</h3>" + self.R + table("Name", [], totals=False)
+        rows, s, _ = run(self, {("county", "1"): page("Allegany County", [empty])}, counties={"1": "Allegany County"})
+        self.assertEqual(s["empty_contests"], [("county 1", "Governor / Lt. Governor")])
+
+    def test_offices_not_found(self):
+        sec = gov().replace("Governor / Lt. Governor", "Governor/Lt. Governor")
+        rows, s, _ = run(self, {("county", "1"): page("Allegany County", [sec])}, counties={"1": "Allegany County"})
+        self.assertEqual(s["offices_not_found"], ["Governor / Lt. Governor", "House of Delegates", "State Senator"])
+
+    def test_pages_without_refresh(self):
+        p = page("Allegany County", [gov()]).replace("Last refreshed", "Updated")
+        rows, s, _ = run(self, {("county", "1"): p}, counties={"1": "Allegany County"})
+        self.assertEqual(s["pages_without_refresh"], ["county 1"])
+        self.assertEqual({r["source_created_at"] for r in rows}, {""})
+
+    def test_missing_county_file_and_no_reporting_reason(self):
+        pages = self.clean()
+        rows, s, _ = run(self, pages, counties={"1": "Allegany County", "2": "Anne Arundel County", "3": "Baltimore City"})
+        self.assertEqual(s["missing_files"], ["county 3"])
+        o = page("Governor / Lt. Governor", [gov(rep="")])
+        rows, s, _ = run(self, self.clean({("office", "1"): o}))
+        self.assertEqual(s["contests_not_checked"], [("Governor / Lt. Governor", "no precinct counts to compare")])
 
     def test_missing_reporting(self):
         rows, s, _ = run(self, {("county", "1"): page("Allegany County", [gov(rep="")])}, counties={"1": "Allegany County"})
