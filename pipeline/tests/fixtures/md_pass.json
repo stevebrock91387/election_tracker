@@ -1,0 +1,65 @@
+{
+ "source_id": "md-2026-general",
+ "state": "MD",
+ "started_utc": "20261124T000000Z",
+ "counties": {
+  "15": "Kent County",
+  "16": "Montgomery County"
+ },
+ "offices": [
+  "Governor / Lt. Governor",
+  "Comptroller",
+  "Attorney General",
+  "Representative in Congress",
+  "State Senator",
+  "House of Delegates",
+  "Judge of the Circuit Court",
+  "Justice, Supreme Court of Maryland",
+  "Judge, Appellate Court of Maryland At Large"
+ ],
+ "questions": [
+  "Question 1: Constitutional Amendment",
+  "Question 2: Constitutional Amendment",
+  "Question 3: Constitutional Amendment"
+ ],
+ "office_pages": {
+  "1": "Governor / Lt. Governor",
+  "4": "Representative in Congress",
+  "9": "Judge, Appellate Court of Maryland At Large"
+ },
+ "question_pages": {
+  "1": "Question 1: Constitutional Amendment"
+ },
+ "files": [
+  {
+   "kind": "county",
+   "number": "15",
+   "path": "md_county_15.html"
+  },
+  {
+   "kind": "county",
+   "number": "16",
+   "path": "md_county_16.html"
+  },
+  {
+   "kind": "office",
+   "number": "1",
+   "path": "md_office_1.html"
+  },
+  {
+   "kind": "office",
+   "number": "4",
+   "path": "md_office_4.html"
+  },
+  {
+   "kind": "office",
+   "number": "9",
+   "path": "md_office_9.html"
+  },
+  {
+   "kind": "question",
+   "number": "1",
+   "path": "md_question_1.html"
+  }
+ ]
+}

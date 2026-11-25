@@ -1,0 +1,64 @@
+# Maryland State Board of Elections live results pages, 2026 general election. See
+# docs/superpowers/specs/2026-11-24-step2-md-reader-design.md and sources/registry.csv.
+# A pass reads the 24 county pages (every contest on the county's ballot, statewide questions
+# included), then the office pages and statewide question pages as an independent check.
+# counties: page number -> name as linked from index.html (seen 2026-11-24). offices and questions:
+# the h2 titles read (everything else on the county pages is out of scope). office_pages /
+# question_pages: page number -> the title it holds. min_interval_s applies per file;
+# request_gap_s between requests (36 requests, about 3 minutes).
+
+[md-2026-general]
+state = "MD"
+base_url = "https://elections.maryland.gov/elections/2026/general_results/"
+county_page = "gen_results_2026_by_county_{n}.html"
+office_page = "gen_results_2026_{n}.html"
+question_page = "gen_qresults_2026_{n}.html"
+min_interval_s = 120
+request_gap_s = 5
+offices = ["Governor / Lt. Governor", "Comptroller", "Attorney General", "Representative in Congress",
+           "State Senator", "House of Delegates", "Judge of the Circuit Court",
+           "Justice, Supreme Court of Maryland", "Judge, Appellate Court of Maryland At Large"]
+questions = ["Question 1: Constitutional Amendment", "Question 2: Constitutional Amendment",
+             "Question 3: Constitutional Amendment"]
+
+[md-2026-general.counties]
+1 = "Allegany County"
+2 = "Anne Arundel County"
+3 = "Baltimore City"
+4 = "Baltimore County"
+5 = "Calvert County"
+6 = "Caroline County"
+7 = "Carroll County"
+8 = "Cecil County"
+9 = "Charles County"
+10 = "Dorchester County"
+11 = "Frederick County"
+12 = "Garrett County"
+13 = "Harford County"
+14 = "Howard County"
+15 = "Kent County"
+16 = "Montgomery County"
+17 = "Prince George's County"
+18 = "Queen Anne's County"
+19 = "Saint Mary's County"
+20 = "Somerset County"
+21 = "Talbot County"
+22 = "Washington County"
+23 = "Wicomico County"
+24 = "Worcester County"
+
+[md-2026-general.office_pages]
+1 = "Governor / Lt. Governor"
+2 = "Comptroller"
+3 = "Attorney General"
+4 = "Representative in Congress"
+5 = "State Senator"
+6 = "House of Delegates"
+7 = "Judge of the Circuit Court"
+8 = "Justice, Supreme Court of Maryland"
+9 = "Judge, Appellate Court of Maryland At Large"
+
+[md-2026-general.question_pages]
+1 = "Question 1: Constitutional Amendment"
+2 = "Question 2: Constitutional Amendment"
+3 = "Question 3: Constitutional Amendment"
