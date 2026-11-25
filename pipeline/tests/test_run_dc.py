@@ -1,11 +1,19 @@
 """DC source list and the fetch pass (fake opener and sleep; no network)."""
+import contextlib
+import csv
+import glob
+import io
 import json
 import os
 import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
-from pipeline.run_dc import DEFAULT_SOURCES, fetch_pass, load_sources
+from pipeline.readers.dc import TURNOUT_COLUMNS
+from pipeline.run_dc import DEFAULT_SOURCES, fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 DC_ID = "dc-2026-general"
 B = "https://electionresults.dcboe.org/"
@@ -63,6 +71,31 @@ class FetchPassTest(unittest.TestCase):
         with self.assertRaises(FetchError):
             self.run_pass(opener_for([], fail=("getCityWide",)))
         self.assertTrue(self.no_record())
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", DC_ID, os.path.join(FX, "dc_pass.json"), "--base-dir", FX, "--parsed-dir", out])
+        (results,) = glob.glob(os.path.join(out, DC_ID, "*Z.csv"))
+        (turnout,) = glob.glob(os.path.join(out, DC_ID, "*-turnout.csv"))
+        with open(results, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), COLUMNS)
+        with open(turnout, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), TURNOUT_COLUMNS)
+        self.assertIn("results_type: Pre-certified Results", buf.getvalue())
+
+    def test_parse_prints_not_checked(self):
+        d = tempfile.mkdtemp()
+        rec = os.path.join(d, "pass.json")
+        with open(rec, "w") as f:
+            json.dump({"source_id": DC_ID, "state": "DC", "files": [{"kind": "csv", "path": os.path.join(FX, "dc_csv.csv")}]}, f)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", DC_ID, rec, "--parsed-dir", d])
+        self.assertIn("precinct_vs_citywide_mismatches: not checked", buf.getvalue())
 
 
 if __name__ == "__main__":
