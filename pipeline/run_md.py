@@ -22,7 +22,7 @@ from pipeline.readers.md import parse_pass
 from pipeline.schema import write_csv
 
 DEFAULT_SOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sources_md.toml")
-CONFIG_KEYS = ["counties", "offices", "questions", "office_pages", "question_pages"]
+CONFIG_KEYS = ["counties", "offices", "questions", "per_county_offices", "office_pages", "question_pages"]
 
 
 def load_sources(path=DEFAULT_SOURCES):

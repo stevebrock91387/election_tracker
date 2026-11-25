@@ -27,6 +27,7 @@ class SourcesTest(unittest.TestCase):
         self.assertEqual(sorted(s["office_pages"], key=int), [str(i) for i in range(1, 10)])
         self.assertEqual(set(s["office_pages"].values()), set(s["offices"]))
         self.assertEqual(set(s["question_pages"].values()), set(s["questions"]))
+        self.assertEqual(s["per_county_offices"], ["Judge of the Circuit Court"])
 
 
 class FetchPassTest(unittest.TestCase):
@@ -48,7 +49,7 @@ class FetchPassTest(unittest.TestCase):
             r = json.load(f)
         self.assertEqual([(x["kind"], x["number"]) for x in r["files"]][:2], [("county", "1"), ("county", "2")])
         self.assertTrue(all(x["path"].endswith(".html") for x in r["files"]))
-        for k in ("counties", "offices", "questions", "office_pages", "question_pages"):
+        for k in ("counties", "offices", "questions", "per_county_offices", "office_pages", "question_pages"):
             self.assertEqual(r[k], self.src[k], k)
 
     def test_failure_stops_pass(self):

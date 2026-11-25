@@ -99,34 +99,42 @@ def parse_page(text):
     p.feed(text)
     p.close()
     out = {"title": None, "refreshed": None, "contests": [], "problems": []}
-    office = district = vote_for = reporting = None
-    retention, open_heading = False, None
+    office = vote_for = reporting = None
+    quals = {}  # heading level (3, 4, ...) -> qualifier: a district, a county or a retention judge
+    retention, pending = False, None  # pending: (level, label) of the last heading with no table yet
+
+    def close(level):
+        # A heading at `level` arrives: the pending one was a leaf without a table unless it is a parent.
+        if pending and pending[0] >= level:
+            out["problems"].append(f"heading without a table: {pending[1]}")
+
+    def label():
+        return " ".join([office] + [quals[k] for k in sorted(quals)])
+
     for ev in p.events:
         kind = ev[0]
         if kind == "h1":
             m = TITLE.search(" ".join(ev[1].split()))
             out["title"] = m.group(1).strip() if m else " ".join(ev[1].split())
         elif kind == "h2":
-            if open_heading:
-                out["problems"].append(f"heading without a table: {open_heading}")
-            office, district, vote_for, reporting, retention = " ".join(ev[1].split()), None, None, None, False
-            open_heading = office
-        elif kind in ("h3", "h4"):
+            close(2)
+            office, vote_for, reporting, retention, quals = " ".join(ev[1].split()), None, None, False, {}
+            pending = (2, office)
+        elif kind in ("h3", "h4", "h5"):
             lines = [" ".join(x.split()) for x in ev[1].split("\n") if x.strip()]
             if not lines:
                 continue
             m = VOTE_FOR.match(lines[0])
             if m:
                 vote_for = m.group(1)
-            elif len(lines) > 1 and lines[1] == "Vote Yes or No":
-                if open_heading and district:
-                    out["problems"].append(f"heading without a table: {office} {district}")
-                district, vote_for, retention, reporting = lines[0], "1", True, None
-            else:
-                if open_heading and district:
-                    out["problems"].append(f"heading without a table: {office} {district}")
-                district, vote_for, retention, reporting = lines[0], None, False, None
-            open_heading = f"{office} {district}" if district else office
+                continue
+            level = int(kind[1])
+            close(level)
+            quals = {k: v for k, v in quals.items() if k < level}
+            quals[level] = lines[0]
+            retention = len(lines) > 1 and lines[1] == "Vote Yes or No"
+            vote_for, reporting = ("1" if retention else None), None
+            pending = (level, label())
         elif kind == "text":
             m = REFRESHED.search(ev[1])
             if m and out["refreshed"] is None:
@@ -135,18 +143,18 @@ def parse_page(text):
             if m:
                 reporting = (int(m.group(1)), int(m.group(2)))
         elif kind == "table":
-            if office is None or open_heading is None:
+            if office is None or pending is None:
                 out["problems"].append(f"table without a contest heading (first header {ev[1][:1]})")
                 continue
             heads, body = ev[1], ev[2]
             totals = [r for r in body if r and r[0] == "Totals"]
+            district = " ".join(quals[k] for k in sorted(quals)) or None
             out["contests"].append({"office": office, "district": district, "vote_for": vote_for, "reporting": reporting,
                                     "retention": retention, "columns": heads,
                                     "rows": [r for r in body if not (r and r[0] == "Totals")],
                                     "totals": totals[-1] if totals else None})
-            open_heading, reporting = None, None
-    if open_heading:
-        out["problems"].append(f"heading without a table: {open_heading}")
+            pending, reporting = None, None
+    close(2)
     return out
 
 
@@ -165,10 +173,11 @@ def parse_pass(record_path, base_dir="."):
     with open(record_path) as fh:
         rec = json.load(fh)
     s = {k: [] for k in LISTS}
-    s.update(unreadable_files=[], missing_files=[], refresh_times={}, not_reported=0, counties=0)
+    s.update(unreadable_files=[], missing_files=[], refresh_times={}, not_reported=0, counties=0, contests_checked=0)
     counties = rec.get("counties", {})
     question_titles = set(rec.get("questions", []))
     scope = set(rec.get("offices", [])) | question_titles
+    per_county = set(rec.get("per_county_offices", []))  # one contest per county (circuit judges): county pages add the county
     pages_by_title = {t: (k, n) for k, d in (("office", rec.get("office_pages", {})), ("question", rec.get("question_pages", {})))
                       for n, t in d.items()}
     listed = {(f["kind"], str(f["number"])) for f in rec["files"]}
@@ -208,6 +217,8 @@ def parse_pass(record_path, base_dir="."):
                 out_titles.add(office)
                 continue
             cid = f"{office} {c['district']}" if c["district"] else office
+            if kind == "county" and office in per_county:
+                cid = f"{cid} {counties.get(n, '')}".strip()
             if cid in seen_ids:
                 s["duplicate_contests"].append((label, cid))
                 continue
@@ -296,12 +307,13 @@ def parse_pass(record_path, base_dir="."):
             continue
         if co[0] != st[0]:
             s["reporting_mismatches"].append((cid, f"{st[0]} of {st[1]}", f"{co[0]} of {co[1]}"))
+        s["contests_checked"] += 1
         keys = {k for k in state_vals if k[0] == cid} | {k for k in county_vals if k[0] == cid}
         for k in sorted(keys):
             a, b = state_vals.get(k), county_vals.get(k)
             if a != b:
                 s["county_state_mismatches"].append((cid, k[1], k[2], a, b))
     if not read_state_pages:  # no office or question page read: only the not-checked reasons stand
-        for k in ("county_state_mismatches", "contests_one_side", "reporting_mismatches"):
+        for k in ("county_state_mismatches", "contests_one_side", "reporting_mismatches", "contests_checked"):
             s[k] = None
     return rows, s, []

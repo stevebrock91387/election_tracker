@@ -20,6 +20,9 @@ offices = ["Governor / Lt. Governor", "Comptroller", "Attorney General", "Repres
            "Justice, Supreme Court of Maryland", "Judge, Appellate Court of Maryland At Large"]
 questions = ["Question 1: Constitutional Amendment", "Question 2: Constitutional Amendment",
              "Question 3: Constitutional Amendment"]
+# Circuit judges are elected county by county: the office page heads them "Circuit 2" / "Cecil
+# County"; a county page only "Circuit 2". County pages add the county name to these contest ids.
+per_county_offices = ["Judge of the Circuit Court"]
 
 [md-2026-general.counties]
 1 = "Allegany County"

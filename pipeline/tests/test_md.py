@@ -56,7 +56,7 @@ def delegates(d, rep, a=(2, 2, 2, 2, 8)):
             table("Name", [("B Person", "Republican") + tuple(a)]))
 
 
-def run(test, pages, counties=None, office_pages=None, question_pages=None, missing=(), offices=None):
+def run(test, pages, counties=None, office_pages=None, question_pages=None, missing=(), offices=None, per_county=None):
     d = tempfile.mkdtemp()
     test.addCleanup(shutil.rmtree, d)
     files = []
@@ -69,7 +69,8 @@ def run(test, pages, counties=None, office_pages=None, question_pages=None, miss
     rec = {"source_id": "md-test", "state": "MD", "counties": counties or {"1": "Allegany County", "2": "Anne Arundel County"},
            "office_pages": office_pages or {"1": "Governor / Lt. Governor", "5": "State Senator", "6": "House of Delegates"},
            "question_pages": question_pages or {}, "files": files,
-           "offices": offices or ["Governor / Lt. Governor", "State Senator", "House of Delegates"], "questions": []}
+           "offices": offices or ["Governor / Lt. Governor", "State Senator", "House of Delegates"], "questions": [],
+           "per_county_offices": per_county or []}
     with open(os.path.join(d, "pass.json"), "w") as f:
         json.dump(rec, f)
     return parse_pass(os.path.join(d, "pass.json"), base_dir=d)
@@ -99,6 +100,47 @@ class PageTest(unittest.TestCase):
                                                 "<h2>Sheriff</h2><h3>Vote for 1</h3>", gov()]))
         self.assertEqual([c["office"] for c in p["contests"]], ["Governor / Lt. Governor"])
         self.assertEqual(len(p["problems"]), 2)
+
+
+class HierarchyTest(unittest.TestCase):
+    R = "(4 of 4 election day precincts reported)"
+
+    def circuit_office_page(self):
+        return page("Judge of the Circuit Court", [
+            "<h2>Judge of the Circuit Court</h2><h3>Circuit 2</h3><h4>Cecil County</h4>" + self.R +
+            table("Name", [("C Judge", "", 1, 1, 1, 1, 4)]) +
+            "<h4>Talbot County</h4>" + self.R + table("Name", [("T Judge", "", 2, 2, 2, 2, 8)])])
+
+    def test_nested_district_headings(self):
+        p = parse_page(self.circuit_office_page())
+        self.assertEqual([(c["office"], c["district"]) for c in p["contests"]],
+                         [("Judge of the Circuit Court", "Circuit 2 Cecil County"),
+                          ("Judge of the Circuit Court", "Circuit 2 Talbot County")])
+        self.assertEqual(p["problems"], [])
+
+    def test_retention_under_district(self):
+        sec = ("<h2>Justice, Supreme Court of Maryland</h2><h3>Circuit 4</h3>"
+               "<h4>Peter Killough<br>Vote Yes or No<br>For continuance in office</h4>" + self.R +
+               table("Peter Killough", [("Yes", None, 1, 1, 1, 1, 4)], party=False))
+        c, = parse_page(page("Prince George's County", [sec]))["contests"]
+        self.assertEqual((c["district"], c["vote_for"], c["retention"]), ("Circuit 4 Peter Killough", "1", True))
+
+    def test_leaf_without_table_still_listed(self):
+        sec = ("<h2>Judge of the Circuit Court</h2><h3>Circuit 2</h3><h4>Cecil County</h4>" + self.R +
+               "<h4>Talbot County</h4>" + self.R + table("Name", [("T Judge", "", 2, 2, 2, 2, 8)]))
+        p = parse_page(page("Judge of the Circuit Court", [sec]))
+        self.assertEqual(p["problems"], ["heading without a table: Judge of the Circuit Court Circuit 2 Cecil County"])
+
+    def test_per_county_office_joins_county_and_office_pages(self):
+        county = page("Cecil County", ["<h2>Judge of the Circuit Court</h2><h3>Circuit 2</h3><h4>Vote for up to 2</h4>" + self.R +
+                                       table("Name", [("C Judge", "", 1, 1, 1, 1, 4)])])
+        rows, s, _ = run(self, {("county", "8"): county, ("office", "7"): self.circuit_office_page()},
+                         counties={"8": "Cecil County"}, office_pages={"7": "Judge of the Circuit Court"},
+                         offices=["Judge of the Circuit Court"], per_county=["Judge of the Circuit Court"])
+        self.assertEqual({r["contest_id"] for r in rows if r["level"] == "county"}, {"Judge of the Circuit Court Circuit 2 Cecil County"})
+        self.assertEqual({r["vote_for"] for r in rows if r["level"] == "county"}, {"2"})
+        self.assertEqual(s["county_state_mismatches"], [])
+        self.assertEqual(s["contests_one_side"], [("Judge of the Circuit Court Circuit 2 Talbot County", "office page only")])
 
 
 class RealFixtureTest(unittest.TestCase):
@@ -172,6 +214,7 @@ class SyntheticPassTest(unittest.TestCase):
     def test_clean_cross_check(self):
         rows, s, _ = run(self, self.clean())
         self.assertEqual((s["county_state_mismatches"], s["contests_not_checked"], s["reporting_mismatches"]), ([], [], []))
+        self.assertEqual(s["contests_checked"], 1)
 
     def test_county_state_mismatch_both_directions(self):
         o = page("Governor / Lt. Governor", [gov(moore=(10, 20, 30, 5, 65), cox=(1, 2, 3, 0, 6)).replace(
@@ -206,6 +249,7 @@ class SyntheticPassTest(unittest.TestCase):
         rows, s, _ = run(self, pages)
         self.assertIsNone(s["county_state_mismatches"])
         self.assertIsNone(s["reporting_mismatches"])
+        self.assertIsNone(s["contests_checked"])
 
     def test_nothing_read(self):
         rows, s, _ = run(self, {("county", "1"): "<html>blocked</html>"})

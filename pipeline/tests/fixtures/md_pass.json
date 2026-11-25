@@ -22,6 +22,9 @@
   "Question 2: Constitutional Amendment",
   "Question 3: Constitutional Amendment"
  ],
+ "per_county_offices": [
+  "Judge of the Circuit Court"
+ ],
  "office_pages": {
   "1": "Governor / Lt. Governor",
   "4": "Representative in Congress",
