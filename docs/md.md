@@ -38,5 +38,5 @@ The question-only county pages (`gen_qresults_2026_by_county_<n>`) repeat the co
 ## Not done
 
 - Tested only on final pages: NR cells and partial reporting are covered by synthetic tests, not seen live. Whether the pages are rebuilt in place during the count (and how often) is unverified.
-- A failed page stops the pass (project convention); on election night a retry may be wanted.
+- A failed page stops the pass, like the other readers (Steve's call, 2026-11-24: "Maryland works like the other readers"). Skipping and listing a failed page was considered and declined.
 - Certified precinct CSVs (after certification) as a separate reader; 2028 needs new page names in the config.
