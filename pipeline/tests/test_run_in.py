@@ -1,11 +1,19 @@
 """IN source list and the fetch pass (fake opener and sleep; no network)."""
+import contextlib
+import csv
+import glob
+import io
 import json
 import os
 import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
-from pipeline.run_in import DEFAULT_SOURCES, fetch_pass, load_sources
+from pipeline.readers.in_ import TURNOUT_COLUMNS
+from pipeline.run_in import DEFAULT_SOURCES, fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 IN_ID = "in-2026-general"
 BASE = "https://enr.indianavoters.in.gov/site/"
@@ -66,6 +74,32 @@ class FetchPassTest(unittest.TestCase):
         with self.assertRaises(FetchError):
             self.run_pass(opener_for([], fail=("OffCatC_1018",)))
         self.assertTrue(self.no_record())
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", IN_ID, os.path.join(FX, "in_pass.json"), "--base-dir", FX, "--parsed-dir", out])
+        (results,) = glob.glob(os.path.join(out, IN_ID, "*Z.csv"))
+        (turnout,) = glob.glob(os.path.join(out, IN_ID, "*-turnout.csv"))
+        with open(results, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), COLUMNS)
+        with open(turnout, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), TURNOUT_COLUMNS)
+        self.assertIn("version_type: B", buf.getvalue())
+
+    def test_parse_prints_not_checked(self):
+        d = tempfile.mkdtemp()
+        rec = os.path.join(d, "pass.json")
+        with open(rec, "w") as f:
+            json.dump({"source_id": IN_ID, "state": "IN", "version_type": "B", "categories": CATS,
+                       "files": [{"kind": "settings", "path": os.path.join(FX, "in_settings.json")}]}, f)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", IN_ID, rec, "--parsed-dir", d])
+        self.assertIn("precinct_vs_county_mismatches: not checked", buf.getvalue())
 
 
 if __name__ == "__main__":
