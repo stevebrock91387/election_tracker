@@ -67,6 +67,7 @@ class FetchPassTest(unittest.TestCase):
         for odd in ({"house": {"isEnable": True, "path": f"elections\\{GUID}-h-20261118000000.json"}},
                     {"house": {"isEnable": True, "path": "..\\other\\x.json"}},
                     {"house": {"isEnable": False}}):
+            self.raw = tempfile.mkdtemp()  # a fresh folder: the fetch interval applies per raw dir
             with self.assertRaises(ValueError):
                 self.run_pass(opener_for([], election_body(odd=odd)))
             self.assertTrue(self.no_record())
