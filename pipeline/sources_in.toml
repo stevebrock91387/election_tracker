@@ -1,0 +1,15 @@
+# Indiana election-night results (enr.indianavoters.in.gov), 2026 general election. See
+# docs/superpowers/specs/2026-11-24-step2-in-reader-design.md and sources/registry.csv.
+# A pass reads data/settings.json (VersionType: the app's data files carry the suffix _<letter>,
+# A and B alternating), the category index, one OffCatC file per category in `categories` (county
+# and statewide totals with ids), the county turnout file, and the precinct-level CSV of every
+# office (download/AllOfficeResults.csv, not versioned). Categories: 1005 US Representative,
+# 1041 Secretary of State, 1047 State Comptroller, 1037 Treasurer of State, 1018 State Senator,
+# 1040 State Representative. min_interval_s applies per file; request_gap_s between requests.
+
+[in-2026-general]
+state = "IN"
+base_url = "https://enr.indianavoters.in.gov/site/"
+categories = ["1005", "1041", "1047", "1037", "1018", "1040"]
+min_interval_s = 120
+request_gap_s = 10
