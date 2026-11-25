@@ -235,5 +235,124 @@ class SyntheticTest(unittest.TestCase):
         self.assertEqual({r["reporting_status"] for r in find(rows, level="precinct")}, {""})
 
 
+def damaged(prefix, name, fn):
+    """Parse a copy of a fixture pass after fn edits one file's JSON (fn returns the new document)."""
+    d, path, rec = copy_fixture(prefix)
+    target = os.path.join(d, name)
+    with open(target) as f:
+        doc = json.load(f)
+    doc = fn(doc)
+    with open(target, "w") as f:
+        f.write(doc if isinstance(doc, str) else json.dumps(doc))
+    return parse_county_json(path, base_dir=d)
+
+
+class ReviewFindingsTest(unittest.TestCase):
+    """Damaged input from the whole-branch review: listed or not checked, never a crash or a false clean."""
+
+    def assert_all_file_not_checked(self, s, label, contest_ids):
+        for k in contest_ids:
+            self.assertIn((label, k, "1"), s["precinct_sum_not_checked"])
+            self.assertIn((label, k, "1"), s["total_area_not_checked"])
+            self.assertIn((label, "", k), s["area_total_not_checked"])
+
+    def test_missing_all_with_protected_cells_does_not_crash(self):
+        d, path, rec = copy_fixture("nj_morris")
+        os.remove(os.path.join(d, "nj_morris_all.json"))
+        rows, s, _ = parse_county_json(path, base_dir=d)
+        self.assertEqual(len(s["unreadable"]), 1)
+        self.assert_all_file_not_checked(s, "ALL", ["0004", "0005"])
+        self.assertIsNone(s["precinct_vote_types_checked"])
+
+    def test_wrong_shape_all_is_not_clean(self):
+        for body in ([1, 2], {}, "<html>busy</html>"):
+            rows, s, _ = damaged("nj_cumberland", "nj_cumberland_all.json", lambda doc: body)
+            self.assertEqual(len(s["unreadable"]), 1, body)
+            self.assert_all_file_not_checked(s, "ALL", ["1", "43"])
+            self.assertIsNone(s["precinct_vote_types_checked"], body)
+
+    def test_wrong_shape_type_file_is_not_clean(self):
+        rows, s, _ = damaged("nj_cumberland", "nj_cumberland_type_0.json", lambda doc: {})
+        self.assert_all_file_not_checked(s, "Early Voting", ["1", "43"])
+        self.assertIsNone(s["precinct_vote_types_checked"])
+
+    def test_missing_county_area_is_not_checked(self):
+        def drop(doc):
+            doc["Contests"] = [a for a in doc["Contests"] if a["A"] != "-1"]
+            return doc
+        rows, s, _ = damaged("nj_cumberland", "nj_cumberland_all.json", drop)
+        self.assertIn(("ALL", "1", "1"), s["total_area_not_checked"])
+        self.assertEqual(s["precinct_sum_not_checked"], [])
+
+    def test_skipped_county_area_does_not_taint_precinct_sums(self):
+        def bad(doc):
+            for a in doc["Contests"]:
+                if a["A"] == "-1":
+                    a["T"] = []
+            return doc
+        rows, s, _ = damaged("nj_cumberland", "nj_cumberland_all.json", bad)
+        self.assertEqual(s["skipped_areas"], [("ALL", "-1", "C/V/T lengths differ")])
+        self.assertIn(("ALL", "1", "1"), s["total_area_not_checked"])
+        self.assertEqual(s["precinct_sum_not_checked"], [])
+        self.assertEqual(s["mismatches_precincts_vs_county"], [])
+
+    def test_type_file_without_a_contest_is_listed(self):
+        def drop(doc):
+            for a in doc["Contests"]:
+                idx = [i for i, k in enumerate(a["C"]) if k != "1"]
+                a["C"], a["V"], a["T"] = [a["C"][i] for i in idx], [a["V"][i] for i in idx], [a["T"][i] for i in idx]
+            return doc
+        rows, s, _ = damaged("nj_cumberland", "nj_cumberland_type_0.json", drop)
+        self.assertIn(("Early Voting", "1"), s["contests_without_precincts"])
+        self.assertIn(("Early Voting", "1", "1"), s["precinct_sum_not_checked"])
+
+    def test_area_without_string_name_is_skipped_and_taints_sums(self):
+        for name in (None, 7, ["x"]):
+            def bad(doc):
+                if name is None:
+                    del doc["Contests"][0]["A"]
+                else:
+                    doc["Contests"][0]["A"] = name
+                return doc
+            rows, s, _ = damaged("nj_cumberland", "nj_cumberland_all.json", bad)
+            self.assertEqual(len(s["skipped_areas"]), 1, name)
+            self.assertEqual(s["mismatches_precincts_vs_county"], [], name)
+            self.assertIn(("ALL", "1", "1"), s["precinct_sum_not_checked"])
+            self.assertTrue(all(isinstance(r["precinct_id"], str) for r in rows))
+
+    def test_malformed_shapes_are_listed_not_crashes(self):
+        cases = [
+            ("nj_cumberland_sum.json", lambda d: (d["Contests"].append("x"), d)[1]),
+            ("nj_cumberland_sum.json", lambda d: (d["Contests"][1].__setitem__("CH", 5), d)[1]),
+            ("nj_cumberland_sum.json", lambda d: (d["Contests"].append({"K": "77", "C": "x"}), d)[1]),
+            ("nj_cumberland_sum.json", lambda d: (d["Contests"].append(
+                {"K": "78", "CH": None, "CHAggId": None, "P": None, "V": None}), d)[1]),
+            ("nj_cumberland_vt.json", lambda d: (d["Contests"].append("x"), d)[1]),
+            ("nj_cumberland_all.json", lambda d: (d["Contests"].insert(0, 5), d)[1]),
+            ("nj_cumberland_status.json", lambda d: (d["P"].__setitem__(0, ["x"]), d)[1]),
+        ]
+        for name, fn in cases:
+            rows, s, _ = damaged("nj_cumberland", name, fn)
+            listed = sum(len(s[k]) for k in ("skipped_contest_length_mismatch", "skipped_length_mismatch",
+                                             "skipped_areas", "unreadable") if s[k])
+            self.assertGreaterEqual(listed, 1, name)
+
+    def test_duplicate_vt_contest_is_a_duplicate(self):
+        rows, s, _ = damaged("nj_cumberland", "nj_cumberland_vt.json",
+                             lambda d: (d["Contests"].append(d["Contests"][0]), d)[1])
+        self.assertIn(("vt.json", "1"), s["duplicate_contests"])
+        self.assertEqual(s["contests_only_in_areas"], [])
+
+    def test_partial_means_fewer_reported(self):
+        rows, s, _ = damaged("nj_cumberland", "nj_cumberland_sum.json",
+                             lambda d: (d["Contests"][0].__setitem__("PR", 93), d)[1])
+        self.assertEqual(s["partial_contests"], [])
+
+    def test_null_status_code_is_empty(self):
+        rows, s, t = damaged("nj_cumberland", "nj_cumberland_status.json",
+                             lambda d: (d["S"].__setitem__(0, None), d)[1])
+        self.assertEqual(t[0]["percent_reporting"], "")
+
+
 if __name__ == "__main__":
     unittest.main()

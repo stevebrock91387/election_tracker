@@ -117,7 +117,8 @@ class CountyJsonFetchTest(unittest.TestCase):
         self.assertEqual(len(seen), 5)
 
     def test_unreadable_vt_stops_pass(self):
-        for body in (b"<html>busy</html>", b'{"Contests": []}', b'{"Types": "Early Voting"}', b'{"Types": [""]}'):
+        for body in (b"<html>busy</html>", b'{"Contests": []}', b'{"Types": "Early Voting"}', b'{"Types": [""]}',
+                     b'{"Types": ["A/B", "A B"]}', b'{"Types": ["Early", "Early"]}', b"\x1f\x8b truncated gzip"):
             seen = []
             with self.assertRaises(FetchError, msg=body):
                 fetch_pass(self.sid, self.s, raw_dir=tempfile.mkdtemp(), opener=json_opener(seen, body))

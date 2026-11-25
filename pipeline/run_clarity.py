@@ -25,6 +25,7 @@ import os
 import re
 import time
 import tomllib
+import zlib
 
 from pipeline.fetch import FetchError, fetch
 from pipeline.readers.clarity import (COUNTY_TURNOUT_COLUMNS, TURNOUT_COLUMNS, parse_county_json, parse_county_xml,
@@ -48,10 +49,12 @@ def _vote_types(path, source_id):
     """vt.json's Types: a list of non-empty strings, else the pass stops (the type files depend on it)."""
     try:
         types = json.loads(read_body(path))["Types"]
-    except (ValueError, KeyError, TypeError) as e:
+    except (ValueError, KeyError, TypeError, OSError, EOFError, zlib.error) as e:
         raise FetchError(f"{source_id}: vt.json has no readable Types ({e!r}; saved to {path})")
     if not isinstance(types, list) or not all(isinstance(t, str) and t for t in types):
         raise FetchError(f"{source_id}: vt.json Types is not a list of names: {str(types)[:80]!r} (saved to {path})")
+    if len({type_file_name(t) for t in types}) != len(types):
+        raise FetchError(f"{source_id}: vt.json Types repeat a name or a file name: {types!r} (saved to {path})")
     return types
 
 
