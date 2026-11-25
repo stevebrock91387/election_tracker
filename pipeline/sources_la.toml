@@ -1,0 +1,83 @@
+# Louisiana Secretary of State live election results (voterportal.sos.la.gov/graphical), 2026
+# general election (11/03/2026). See docs/superpowers/specs/2026-11-24-step2-la-reader-design.md and
+# sources/registry.csv. A pass reads <date>/RacesCandidates_Multiparish.htm and
+# <date>/Votes_Multiparish.htm, then VotesRaceByParish/Votes_<race>.htm and VotesEarly/Votes_<race>.htm
+# for each race whose OfficeLevel is in office_levels (140 U.S. Senator, 145 U.S. Representative,
+# 160 PSC, 165 BESE, 205 State Representative, 998 Constitutional Amendment). Each election date is
+# its own source (the 12/12/2026 runoff would be another entry). parishes: code -> name, copied from
+# the parishList in the site's JavaScript bundle (/bundles/graphicalresults) on 2026-11-24; no data
+# blob carries parish names. min_interval_s applies per file; request_gap_s between requests.
+
+[la-2026-general]
+state = "LA"
+base_url = "https://voterportal.sos.la.gov/ElectionResults/ElectionResults/Data?blob="
+election_date = "20261103"
+office_levels = ["140", "145", "160", "165", "205", "998"]
+min_interval_s = 120
+request_gap_s = 10
+
+[la-2026-general.parishes]
+"01" = "Acadia"
+"02" = "Allen"
+"03" = "Ascension"
+"04" = "Assumption"
+"05" = "Avoyelles"
+"06" = "Beauregard"
+"07" = "Bienville"
+"08" = "Bossier"
+"09" = "Caddo"
+"10" = "Calcasieu"
+"11" = "Caldwell"
+"12" = "Cameron"
+"13" = "Catahoula"
+"14" = "Claiborne"
+"15" = "Concordia"
+"16" = "De Soto"
+"17" = "East Baton Rouge"
+"18" = "East Carroll"
+"19" = "East Feliciana"
+"20" = "Evangeline"
+"21" = "Franklin"
+"22" = "Grant"
+"23" = "Iberia"
+"24" = "Iberville"
+"25" = "Jackson"
+"26" = "Jefferson"
+"27" = "Jefferson Davis"
+"28" = "Lafayette"
+"29" = "Lafourche"
+"30" = "Lasalle"
+"31" = "Lincoln"
+"32" = "Livingston"
+"33" = "Madison"
+"34" = "Morehouse"
+"35" = "Natchitoches"
+"36" = "Orleans"
+"37" = "Ouachita"
+"38" = "Plaquemines"
+"39" = "Pointe Coupee"
+"40" = "Rapides"
+"41" = "Red River"
+"42" = "Richland"
+"43" = "Sabine"
+"44" = "St. Bernard"
+"45" = "St. Charles"
+"46" = "St. Helena"
+"47" = "St. James"
+"48" = "St. John The Baptist"
+"49" = "St. Landry"
+"50" = "St. Martin"
+"51" = "St. Mary"
+"52" = "St. Tammany"
+"53" = "Tangipahoa"
+"54" = "Tensas"
+"55" = "Terrebonne"
+"56" = "Union"
+"57" = "Vermilion"
+"58" = "Vernon"
+"59" = "Washington"
+"60" = "Webster"
+"61" = "West Baton Rouge"
+"62" = "West Carroll"
+"63" = "West Feliciana"
+"64" = "Winn"
