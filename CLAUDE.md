@@ -81,7 +81,7 @@ Every registry row was looked at in the built-in browser. **48 verified, 3 parti
 
 ### Step 2: Enhanced Voting reader (built 2026-11-20)
 
-`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (405 with Clarity, ResultsAjax, Tally, NC, OH, TX, CT, FL, VT, IN, LA, DC, DE and AK). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
+`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (414 with Clarity, ResultsAjax, Tally, NC, OH, TX, CT, FL, VT, IN, LA, DC, DE and AK). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
 
 ### Step 2: Clarity reader (built 2026-11-20, county level)
 
@@ -141,7 +141,7 @@ Department of Elections ENR JSON: statewide (ids, vote types), 530 election dist
 
 ### Step 2: Alaska reader (built 2026-11-24, precinct level, first choice)
 
-Division of Elections precinct CSV (one request): ids, five vote types, registered voters, under/over votes. `pipeline/readers/ak.py`, `pipeline/sources_ak.toml`, CLI `python3 -m pipeline.run_ak fetch|parse|fetch-parse SOURCE_ID`. **First-choice (round 1) counts only**; ranked-choice rounds are separate. No state rows (statewide only as PDF). 2026: 120,276 rows, 523 units (402 precincts + district counting units), every check clean; a ballots-minus-votes gap (likely write-ins, unverified) is reported per contest. Details in `docs/ak.md`.
+Division of Elections precinct CSV (one request): ids, five vote types, registered voters, under/over votes. `pipeline/readers/ak.py`, `pipeline/sources_ak.toml`, CLI `python3 -m pipeline.run_ak fetch|parse|fetch-parse SOURCE_ID`. **First-choice (round 1) counts only**; ranked-choice rounds are separate. No state rows (statewide only as PDF). 2026: 120,276 rows, 523 units (402 precincts + district counting units); checks clean except 12 counting units whose ballots differ by contest (listed); a ballots-minus-votes gap (likely write-ins, unverified) is reported per contest. Details in `docs/ak.md`.
 
 ### Parked (2026-11-24, Steve's call pending)
 

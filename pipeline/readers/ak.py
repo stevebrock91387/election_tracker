@@ -20,8 +20,11 @@ votes, under, over), duplicate (unit, contest, candidate) lines, unit names with
 Reg_voters and real precincts whose Pct_Id differs from the name's prefix, units whose ballots differ
 between contests and units with no U.S. Senator line, non-integer counts (votes ""), malformed lines
 (wrong field count), and a missing or unreadable file (including a changed header: nothing is read).
-Informational: per contest, the statewide sum of ballots - votes - under - over over its units (the
-file has no write-in lines; the gap is most likely write-ins, unverified).
+Also listed: (unit, contest) pairs whose candidate lines disagree on ballots, under or over votes, and
+pairs where votes + under + over exceed ballots (a negative gap). Informational: per contest, the
+statewide sum of ballots - votes - under - over over its units (None when a unit's count isn't an
+integer; the file has no write-in lines, so the gap is most likely write-ins, unverified). A file
+with a header and no data lines counts as unreadable.
 """
 import csv
 import hashlib
@@ -41,7 +44,7 @@ HEADER = (["Precinct_name", "Reporting_flag", "Pct_Id", "Pct_seq_nbr", "Reg_vote
 TURNOUT_COLUMNS = ["state", "source_id", "source_sha256", "precinct_id", "precinct_name", "registered_voters", "ballots"]
 REAL = re.compile(r"(\d\d-\d{3}) ")
 LISTS = ["vote_type_sum_mismatches", "duplicate_entries", "unit_id_conflicts", "units_ballots_vary_by_contest",
-         "units_without_senate_line", "non_numeric", "malformed_lines"]
+         "units_without_senate_line", "non_numeric", "malformed_lines", "negative_gaps", "inconsistent_contest_totals"]
 
 
 def _int(v):
@@ -64,7 +67,11 @@ def parse_pass(record_path, base_dir="."):
                 body = f.read()
             lines = list(csv.reader(io.StringIO(body.decode("utf-8-sig"))))
             if not lines or lines[0] != HEADER:
-                raise ValueError("header differs from the expected one")
+                got = lines[0] if lines else []
+                diff = [(i, e, g) for i, (e, g) in enumerate(zip(HEADER, got)) if e != g][:3]
+                raise ValueError(f"header differs from the expected one: {diff or (len(HEADER), len(got))}")
+            if not any(f and f != [""] for f in lines[1:]):
+                raise ValueError("no data lines")
             sha = hashlib.sha256(body).hexdigest()
         except (OSError, ValueError, UnicodeDecodeError, csv.Error) as e:
             summary["unreadable_files"].append(("csv", str(e)))
@@ -79,7 +86,7 @@ def parse_pass(record_path, base_dir="."):
     base.update(state=rec["state"], source_id=rec["source_id"], source_sha256=sha, level="precinct",
                 contest_scope="statewide", contest_type="first choice")
     rows, seen = [], set()
-    ids, regs, ballots_by_unit, senate_ballots, units_order = {}, {}, {}, {}, []
+    ids, regs, senate_ballots, units_order = {}, {}, {}, []
     per_unit_contest = {}  # (unit, contest) -> {"ballots", "under", "over", "votes"}
     for n, f in enumerate(lines[1:], start=2):
         if not f or f == [""]:
@@ -111,11 +118,16 @@ def parse_pass(record_path, base_dir="."):
                 summary["vote_type_sum_mismatches"].append((pct or name, cid, cand, m.replace("_votes", "") if m != "votes" else "votes",
                                                             counts[f"total_{m}"], sum(parts)))
         b = counts["total_ballots"]
-        ballots_by_unit.setdefault(name, set()).add(b)
         if v["Contest_title"] == "U.S. Senator" and b is not None:
             senate_ballots[name] = b
-        uc = per_unit_contest.setdefault((name, cid), {"ballots": b, "under": counts["total_under_votes"],
-                                                       "over": counts["total_over_votes"], "votes": 0})
+        first = {"ballots": b, "under": counts["total_under_votes"], "over": counts["total_over_votes"]}
+        uc = per_unit_contest.setdefault((name, cid), dict(first, votes=0, unit=pct or name))
+        for k_, val in first.items():
+            if val is None:
+                uc[k_] = None  # listed under non_numeric; the gap for this contest can't be computed
+            elif uc[k_] is not None and uc[k_] != val and (name, cid, k_) not in seen:
+                seen.add((name, cid, k_))
+                summary["inconsistent_contest_totals"].append((pct or name, cid, k_, uc[k_], val))
         uc["votes"] = None if uc["votes"] is None or counts["total_votes"] is None else uc["votes"] + counts["total_votes"]
         row = dict(base, precinct_id=pct or name, precinct_name=name,
                    precinct_is_virtual="N" if REAL.match(name) else "Y", contest_id=cid,
@@ -130,19 +142,27 @@ def parse_pass(record_path, base_dir="."):
             summary["unit_id_conflicts"].append((name, sorted(ids[name]), sorted(regs[name])))
         elif m and next(iter(ids[name])) != m.group(1):
             summary["unit_id_conflicts"].append((name, sorted(ids[name]), sorted(regs[name])))
-        vals = ballots_by_unit[name]
+        vals = {uc["ballots"] for (n_, _), uc in per_unit_contest.items() if n_ == name}
         if len(vals) > 1:
             summary["units_ballots_vary_by_contest"].append((name, sorted(x for x in vals if x is not None)))
         if name not in senate_ballots:
             summary["units_without_senate_line"].append(name)
-    turnout = [dict(state=rec["state"], source_id=rec["source_id"], source_sha256=sha, precinct_id=next(iter(ids[n])) or n,
-                    precinct_name=n, registered_voters=_int(next(iter(regs[n]))) if _int(next(iter(regs[n]))) is not None else next(iter(regs[n])),
+    def first(values):
+        return sorted(values)[0]  # deterministic when a conflict was listed
+
+    turnout = [dict(state=rec["state"], source_id=rec["source_id"], source_sha256=sha, precinct_id=first(ids[n]) or n,
+                    precinct_name=n, registered_voters=_int(first(regs[n])) if _int(first(regs[n])) is not None else first(regs[n]),
                     ballots=senate_ballots.get(n, "")) for n in units_order]
+    gaps = summary["writein_gap_by_contest"]
     for (name, cid), uc in per_unit_contest.items():
-        if None in uc.values():
+        if any(uc[k_] is None for k_ in ("ballots", "votes", "under", "over")):
+            gaps[cid] = None  # a unit's count isn't an integer: the contest's gap can't be computed
             continue
-        summary["writein_gap_by_contest"][cid] = summary["writein_gap_by_contest"].get(cid, 0) + (
-            uc["ballots"] - uc["votes"] - uc["under"] - uc["over"])
+        gap = uc["ballots"] - uc["votes"] - uc["under"] - uc["over"]
+        if gap < 0:
+            summary["negative_gaps"].append((uc["unit"], cid, gap))
+        if cid not in gaps or gaps[cid] is not None:
+            gaps[cid] = gaps.get(cid, 0) + gap
     summary.update(contests=len({c for _, c in per_unit_contest}), units=len(units_order),
                    real_precincts=sum(1 for n in units_order if REAL.match(n)))
     return rows, summary, turnout

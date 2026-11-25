@@ -113,10 +113,86 @@ class SyntheticTest(unittest.TestCase):
         self.assertTrue(any(c[0] == "01-610 Ketchikan No. 2" for c in s["unit_id_conflicts"]))
 
     def test_gap_and_varying_ballots(self):
-        t = edit_line(raw(), ['01-600 Ketchikan No. 1', 'Taylor/English'], "total_ballots", "999")
-        t = edit_line(t, ['01-600 Ketchikan No. 1', 'Taylor/English'], "Election Day_ballots", "999")
+        t = raw()
+        for cand in ("Taylor/English", "Bronson/Church", "Kreiss-Tomkins", "Wilson/Shower"):
+            t = edit_line(t, ['01-600 Ketchikan No. 1', cand], "total_ballots", "999")
+            t = edit_line(t, ['01-600 Ketchikan No. 1', cand], "Election Day_ballots", "999")
         rows, s, _ = parse_text(self, t)
         self.assertIn("01-600 Ketchikan No. 1", [u[0] for u in s["units_ballots_vary_by_contest"]])
+
+    def test_each_measure_sum_pinned(self):
+        for field, label in (("Election Day_ballots", "ballots"), ("Election Day_under_votes", "under"),
+                             ("Election Day_over_votes", "over")):
+            t = edit_line(raw(), ['01-600 Ketchikan No. 1', 'Peltola, Mary'], field, "777")
+            rows, s, _ = parse_text(self, t)
+            self.assertIn(label, [m[3] for m in s["vote_type_sum_mismatches"]], field)
+
+    def test_prefix_mismatch_alone(self):
+        t = raw()
+        for cand in ("Heikes", "Peltola", "Sullivan, Daniel", "Sullivan, Dan S", "Taylor", "Bronson", "Kreiss", "Wilson", "YES", "NO"):
+            try:
+                t = edit_line(t, ['01-610 Ketchikan No. 2', cand], "Pct_Id", "01-999")
+            except StopIteration:
+                pass
+        rows, s, _ = parse_text(self, t)
+        self.assertEqual([c[0] for c in s["unit_id_conflicts"]], ["01-610 Ketchikan No. 2"])
+
+    def test_reg_voters_conflict(self):
+        t = edit_line(raw(), ['01-600 Ketchikan No. 1', 'Peltola, Mary'], "Reg_voters", "1")
+        rows, s, _ = parse_text(self, t)
+        self.assertEqual([c[0] for c in s["unit_id_conflicts"]], ["01-600 Ketchikan No. 1"])
+
+    def test_gap_exact_and_negative_listed(self):
+        import csv as _csv
+        import io as _io
+        units = {}
+        for r in _csv.DictReader(_io.StringIO(raw())):
+            if r["Contest_Id"] == "6":
+                u = units.setdefault(r["Precinct_name"], [int(r["total_ballots"]), 0, int(r["total_under_votes"]), int(r["total_over_votes"])])
+                u[1] += int(r["total_votes"])
+        expected = sum(b - v - un - ov for b, v, un, ov in units.values())
+        self.assertEqual(parse_text(self, raw())[1]["writein_gap_by_contest"]["6"], expected)
+        t = raw()
+        for cand in ("Heikes", "Peltola", "Sullivan, Daniel", "Sullivan, Dan S"):
+            t = edit_line(t, ['01-600 Ketchikan No. 1', cand], "total_ballots", "1")
+            t = edit_line(t, ['01-600 Ketchikan No. 1', cand], "Election Day_ballots", "1")
+        rows, s, _ = parse_text(self, t)
+        self.assertIn(("01-600", "6"), [n[:2] for n in s["negative_gaps"]])
+
+    def test_gap_none_when_counts_bad(self):
+        t = edit_line(raw(), ['01-600 Ketchikan No. 1', 'Peltola, Mary'], "total_under_votes", "x")
+        rows, s, _ = parse_text(self, t)
+        self.assertIsNone(s["writein_gap_by_contest"]["6"])
+
+    def test_inconsistent_contest_totals(self):
+        t = edit_line(raw(), ['01-600 Ketchikan No. 1', 'Peltola, Mary'], "total_under_votes", "8")
+        t = edit_line(t, ['01-600 Ketchikan No. 1', 'Peltola, Mary'], "Election Day_under_votes", "8")
+        rows, s, _ = parse_text(self, t)
+        self.assertIn(("01-600", "6"), [c[:2] for c in s["inconsistent_contest_totals"]])
+        self.assertNotIn("01-600 Ketchikan No. 1", [u[0] for u in s["units_ballots_vary_by_contest"]])
+
+    def test_unreadable_all_none_and_header_only(self):
+        rows, s, _ = parse_text(self, "<html>blocked</html>")
+        for k in ("vote_type_sum_mismatches", "duplicate_entries", "unit_id_conflicts", "units_ballots_vary_by_contest",
+                  "units_without_senate_line", "non_numeric", "malformed_lines", "negative_gaps", "inconsistent_contest_totals"):
+            self.assertIsNone(s[k], k)
+        rows, s, _ = parse_text(self, raw().splitlines(keepends=True)[0])
+        self.assertEqual(rows, [])
+        self.assertIn("no data lines", str(s["unreadable_files"]))
+        self.assertIsNone(s["vote_type_sum_mismatches"])
+
+    def test_turnout_uses_senate_and_lists_missing(self):
+        lines = raw().splitlines(keepends=True)
+        t = "".join([lines[0]] + [l for l in lines[1:] if not ("01-610 Ketchikan No. 2" in l and '"U.S. Senator"' in l)])
+        rows, s, tt = parse_text(self, t)
+        self.assertEqual(s["units_without_senate_line"], ["01-610 Ketchikan No. 2"])
+        self.assertEqual([x["ballots"] for x in tt if x["precinct_name"] == "01-610 Ketchikan No. 2"], [""])
+
+    def test_duplicate_rows_not_emitted(self):
+        lines = raw().splitlines(keepends=True)
+        before = len(parse_text(self, raw())[0])
+        rows, s, _ = parse_text(self, "".join(lines + [lines[1]]))
+        self.assertEqual(len(rows), before)
 
     def test_duplicate_nonnumeric_malformed(self):
         lines = raw().splitlines(keepends=True)
