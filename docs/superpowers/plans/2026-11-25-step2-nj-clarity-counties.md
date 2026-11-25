@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans. Steps use checkbox (`- [ ]`) syntax.
 
-**Goal:** Read the 15 New Jersey Clarity counties' detail XML at precinct level with vote types.
+**Goal:** Read the New Jersey Clarity counties' detail XML at precinct level with vote types (8 counties publish it; the other 7 are JSON only, a later step).
 
-**Architecture:** `parse_county_xml(zip_path, state, county, source_id) -> (rows, summary, turnout)` in `pipeline/readers/clarity.py`; `format = "county_xml"` in `run_clarity.py` (fetch as `xml`); 15 config entries.
+**Architecture:** `parse_county_xml(zip_path, state, county, source_id) -> (rows, summary, turnout)` in `pipeline/readers/clarity.py`; `format = "county_xml"` in `run_clarity.py` (fetch as `xml`); 8 config entries.
 
 **Tech Stack:** Python 3.14 stdlib.
 
@@ -17,7 +17,7 @@
 
 ## Review Focus
 
-- A contest-level `VoteType` (regVotersCounty) must not become a choice or a row.
+- A contest-level `VoteType`: regVotersCounty never becomes a row; Overvotes/Undervotes become rows (ruling after the first real run).
 - A non-integer `votes` attribute: listed, row votes "", sums not checked (not a crash).
 - A precinct in results but not in the turnout table, and the reverse.
 - A file whose `Region` isn't the configured county.
@@ -31,7 +31,7 @@
 
 - [ ] Fixture tests: Senate precinct `Absecon W1 D1` Election Day rows; county TOTAL Murphy 38,951; vote types; turnout 145 precincts, county total 206,628 / 95,945; `contest_vote_types`; clean checks.
 - [ ] Synthetic tests (edited XML): one per summary list, non-integer votes, choice without vote types.
-- [ ] Config: 15 counties; runner `county_xml` parse path; test the config entries and the runner dispatch.
+- [ ] Config: the 8 detail-XML counties; runner `county_xml` parse path; test the config entries and the runner dispatch.
 - [ ] Watch fail, implement, watch pass. Commit.
 
 ### Task 2: 2026 run and docs

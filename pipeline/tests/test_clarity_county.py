@@ -81,11 +81,13 @@ class FixtureTest(unittest.TestCase):
 
     def test_summary(self):
         s = self.summary
+        self.assertEqual(s["turnout_table"], "present")
         self.assertEqual((s["contests"], s["precincts"], s["region"], s["vote_types"]),
                          (65, 145, "Atlantic", ["Early Voting", "Election Day", "Provisional", "Vote by Mail"]))
         for k in ("mismatches_vote_types_vs_total", "mismatches_precincts_vs_vote_type", "region_mismatch",
                   "unknown_elements", "precincts_not_in_turnout", "turnout_precincts_without_results",
-                  "duplicate_precincts", "non_numeric", "vote_type_sum_not_checked"):
+                  "duplicate_precincts", "non_numeric", "vote_type_sum_not_checked", "precinct_sum_not_checked",
+                  "unnamed_vote_types", "choices_without_vote_types"):
             self.assertEqual(s[k], [], k)
 
 
@@ -143,6 +145,92 @@ class CheckTest(unittest.TestCase):
         self.assertEqual((rows, t), ([], []))
         self.assertTrue(s["unreadable"])
         self.assertIsNone(s["mismatches_precincts_vs_vote_type"])
+
+
+def nth(text, old, new, n):
+    """Replace the n-th (0-based) occurrence of old."""
+    i = -1
+    for _ in range(n + 1):
+        i = text.index(old, i + 1)
+    return text[:i] + new + text[i + len(old):]
+
+
+class ReviewFixTest(unittest.TestCase):
+    def test_choice_level_precinct_sum_mismatch(self):
+        # occurrence 0 is the contest-level regVotersCounty; 1 is Murphy's Election Day
+        t = nth(xml(), '<Precinct name="Absecon W1 D1" votes="', '<Precinct name="Absecon W1 D1" votes="1', 1)
+        _, s, _ = parse_text(self, t)
+        self.assertEqual([m[:3] for m in s["mismatches_precincts_vs_vote_type"]], [(SEN, "001", "Election Day")])
+
+    def test_precinct_non_numeric_not_checked(self):
+        t = nth(xml(), '<Precinct name="Absecon W1 D1" votes="', '<Precinct name="Absecon W1 D1" votes="x', 1)
+        rows, s, _ = parse_text(self, t)
+        self.assertIn((SEN, "001", "Election Day"), s["precinct_sum_not_checked"])
+        self.assertEqual(s["mismatches_precincts_vs_vote_type"], [])
+        r = find(rows, level="precinct", contest_id=SEN, choice_id="001", precinct_id="Absecon W1 D1", vote_type="Election Day")
+        self.assertEqual(r[0]["votes"], "")
+
+    def test_unicode_digit_listed_not_crash(self):
+        t = nth(xml(), '<Precinct name="Absecon W1 D1" votes="', '<Precinct name="Absecon W1 D1" votes="\u00b3', 1)
+        _, s, _ = parse_text(self, t)
+        self.assertTrue(any(n[4] and n[4].startswith("\u00b3") for n in s["non_numeric"]))
+
+    def test_unnamed_vote_type_listed_not_crash(self):
+        t = xml().replace('<VoteType name="Provisional" votes="353">', '<VoteType votes="353">', 1)
+        rows, s, _ = parse_text(self, t)
+        self.assertEqual(s["unnamed_vote_types"], [(SEN, "001")])
+        self.assertFalse([r for r in rows if r["vote_type"] is None or r["choice"] is None])
+        self.assertIn((SEN, "001"), s["vote_type_sum_not_checked"])
+
+    def test_choice_without_vote_types_listed(self):
+        t = xml()
+        start = t.index('<Choice key="001"')
+        head_end = t.index(">", start) + 1
+        end = t.index("</Choice>", start)
+        t = t[:head_end] + t[end:]
+        rows, s, _ = parse_text(self, t)
+        self.assertEqual(s["choices_without_vote_types"], [(SEN, "001")])
+        self.assertEqual([r["vote_type"] for r in find(rows, contest_id=SEN, choice_id="001")], ["TOTAL"])
+
+    def test_vote_type_without_precincts_not_checked(self):
+        t = xml()
+        start = t.index('<VoteType name="Election Day" votes="26565">')
+        end = t.index("</VoteType>", start)
+        t = t[:start] + '<VoteType name="Election Day" votes="26565">' + t[end:]
+        _, s, _ = parse_text(self, t)
+        self.assertIn((SEN, "001", "Election Day"), s["precinct_sum_not_checked"])
+        self.assertEqual(s["mismatches_precincts_vs_vote_type"], [])
+
+    def test_no_turnout_table_checks_none(self):
+        t = xml()
+        start, end = t.index("<VoterTurnout"), t.index("</VoterTurnout>") + len("</VoterTurnout>")
+        _, s, turnout = parse_text(self, t[:start] + t[end:])
+        self.assertEqual((turnout, s["turnout_table"]), ([], "missing"))
+        self.assertIsNone(s["precincts_not_in_turnout"])
+        self.assertIsNone(s["turnout_precincts_without_results"])
+
+    def test_duplicate_precinct_choice_level(self):
+        t = nth(xml(), '<Precinct name="Absecon W1 D2" votes="', '<Precinct name="Absecon W1 D1" votes="', 1)
+        rows, s, _ = parse_text(self, t)
+        self.assertEqual(s["duplicate_precincts"], [(SEN, "001", "Election Day", "Absecon W1 D1")])
+        got = find(rows, level="precinct", contest_id=SEN, choice_id="001", precinct_id="Absecon W1 D1", vote_type="Election Day")
+        self.assertEqual(len(got), 1)
+
+    def test_rows_carry_configured_county(self):
+        rows, s, _ = parse_text(self, xml(), county="Bergen")
+        self.assertEqual({r["county_name"] for r in rows}, {"Bergen"})
+
+    def test_corrupt_zip_listed(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d)
+        data = open(ATL, "rb").read()
+        bad = data[:300] + bytes(b ^ 0xFF for b in data[300:900]) + data[900:]
+        path = os.path.join(d, "x.zip")
+        with open(path, "wb") as f:
+            f.write(bad)
+        rows, s, _ = parse_county_xml(path, "NJ", "Atlantic", "nj-test")
+        self.assertEqual(rows, [])
+        self.assertTrue(s["unreadable"])
 
 
 class ConfigTest(unittest.TestCase):

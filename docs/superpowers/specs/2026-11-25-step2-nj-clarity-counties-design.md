@@ -7,8 +7,9 @@ under the standing approval for the remaining state readers (2026-11-24).
 
 New Jersey has no statewide results feed: the Division of Elections links each county's own site
 (`https://nj.gov/state/elections/election-night-results.shtml`). 15 of the 21 counties use Clarity
-(Scytl), which the project already reads at state level (CO, SC, WV). Read those 15 counties'
-election-night files at precinct level with vote types, live as counts come in. The other six
+(Scytl), which the project already reads at state level (CO, SC, WV). Read the counties' election-night
+files at precinct level with vote types, live as counts come in: the 8 that publish detail XML in this
+step (see the first-run findings below). The other six
 (Bergen, Camden, Hunterdon, Salem, Sussex, Warren) run their own sites: a separate job.
 
 ## Source (seen 2026-11-24/25, script download works with the project fetcher; Clarity's CDN
