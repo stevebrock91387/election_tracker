@@ -81,7 +81,8 @@ class RealFixtureTest(unittest.TestCase):
         s = self.summary
         for k in ("early_exceeds_total", "early_not_reported", "early_choices_unknown", "races_missing",
                   "unknown_parishes", "non_numeric", "duplicate_entries", "malformed_entries", "unreadable_files",
-                  "missing_files", "choices_not_in_parishes", "choices_only_in_parishes"):
+                  "missing_files", "choices_not_in_parishes", "choices_only_in_parishes", "choices_not_in_races",
+                  "choices_not_in_votes", "early_parishes_missing", "early_choices_missing", "state_counts_missing"):
             self.assertEqual(s[k], [], k)
 
     def test_every_row(self):
@@ -139,6 +140,88 @@ class SyntheticTest(unittest.TestCase):
         p.append(copy.deepcopy(p[0]))
         rows, s, _ = parse_data(self, self.rec, self.d)
         self.assertTrue(s["duplicate_entries"])
+
+    def _race(self, kind, rid):
+        return next(r for r in self.d[kind]["Races"]["Race"] if r["ID"] == rid)
+
+    def test_votes_missing_race_not_checked(self):
+        self.d["votes"]["Races"]["Race"] = [r for r in self.d["votes"]["Races"]["Race"] if r["ID"] != "70199"]
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertIn(("votes", "70199"), s["races_missing"])
+        self.assertIsNone(s["parish_vs_state_mismatches"])
+        self.assertIsNone(s["runoff_races"])
+
+    def test_races_vs_votes_choices_listed(self):
+        self._race("votes", "67997")["Choice"].append({"ID": "777", "VoteTotal": "0", "Outcome": None})
+        self._race("races", "67997")["Choice"].append({"ID": "888", "Desc": "Zero Votes (IND)"})
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertEqual(s["choices_not_in_races"], [("67997", "777")])
+        self.assertEqual(s["choices_not_in_votes"], [("67997", "888")])
+
+    def test_early_missing_parish_and_choice_listed(self):
+        e = self.d["early-67997"]["EarlyVoting"]["Parish"]
+        gone = e.pop(0)["ParishValue"]
+        e[0]["Choice"].pop(0)
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertIn(("67997", gone), s["early_parishes_missing"])
+        self.assertEqual(len([x for x in s["early_choices_missing"] if x[0] == "67997"]), 1)
+
+    def test_state_counts_bad_listed(self):
+        v = self._race("votes", "67997")
+        v["VoterCountVoted"] = "n/a"
+        del v["PrecinctsExpected"]
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertTrue(any(x[0] == "state" and x[-1] == "n/a" for x in s["non_numeric"]))
+        self.assertIn(("67997", "PrecinctsExpected"), s["state_counts_missing"])
+
+    def test_each_check_lists(self):
+        # choice only in parishes / missing from parishes
+        p0 = self.d["parish-67997"]["Parishes"]["Parish"][0]
+        p0["Choice"].append({"ID": "555", "VoteTotal": "1", "Outcome": None})
+        v = self._race("votes", "70199")
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertIn(("67997", "555"), s["choices_only_in_parishes"])
+        self.assertTrue(s["parish_count_mismatches"])  # three-parish fixture: counts can't sum to the state's
+        self.d["parish-70199"]["Parishes"]["Parish"] = [
+            dict(p, Choice=[c for c in p["Choice"] if c["ID"] != v["Choice"][0]["ID"]])
+            for p in self.d["parish-70199"]["Parishes"]["Parish"]]
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertIn(("70199", v["Choice"][0]["ID"]), s["choices_not_in_parishes"])
+
+    def test_early_unknown_choice_and_not_reported(self):
+        e = self.d["early-67997"]["EarlyVoting"]["Parish"]
+        e[0]["Choice"].append({"ID": "666", "VoteTotal": "1"})
+        e[1]["HasReported"] = "0"
+        code = e[1]["ParishValue"]
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertIn(("67997", e[0]["ParishValue"], "666"), s["early_choices_unknown"])
+        self.assertIn(("67997", code), s["early_not_reported"])
+        self.assertFalse(find(rows, contest_id="67997", county_id=code, vote_type="EarlyVoting"))
+
+    def test_early_duplicate_listed(self):
+        e = self.d["early-67997"]["EarlyVoting"]["Parish"]
+        e.append(copy.deepcopy(e[0]))
+        rows, s, _ = parse_data(self, self.rec, self.d)
+        self.assertTrue(any(k[3] == "EarlyVoting" for k in s["duplicate_entries"]))
+
+    def test_row_fields_pinned(self):
+        rows, s, t = parse_data(self, self.rec, self.d)
+        p = self.d["parish-67997"]["Parishes"]["Parish"][0]
+        code = p["ParishValue"]
+        r = find(rows, level="county", contest_id="67997", county_id=code, vote_type="TOTAL")[0]
+        self.assertEqual(r["reporting_status"], f"{p['PrecinctsReporting']}/{p['PrecinctsExpected']} precincts, "
+                                                f"{p['NumAbsenteeReporting']}/{p['NumAbsenteeExpected']} absentee")
+        self.assertEqual((r["vote_for"], r["contest_name"]), ("1", "U. S. Senator"))
+        tr, = find(t, contest_id="67997", county_id=code)
+        self.assertEqual((tr["voters_qualified"], tr["voters_voted"]),
+                         (int(p["VoterCountQualified"]), int(p["VoterCountVoted"])))
+        e = find(rows, level="county", contest_id="67997", county_id=code, vote_type="EarlyVoting")[0]
+        self.assertNotEqual(e["source_sha256"], r["source_sha256"])
+        a = find(rows, level="state", contest_id="13833", choice_id="3")[0]["choice"]
+        b = find(rows, level="state", contest_id="13836", choice_id="3")[0]["choice"]
+        own = {c["ID"]: c["Desc"] for c in self._race("races", "13836")["Choice"]}
+        self.assertEqual(b, own["3"])
+        self.assertTrue(a)
 
     def test_missing_file_listed(self):
         rows, s, _ = parse_data(self, self.rec, self.d, drop=("early-13836",))

@@ -19,15 +19,16 @@ Seen 2026-11-24 in the built-in browser and with single recon downloads. Downloa
 
 - **Output:** 4,163 rows (state totals, parish totals and parish early votes); 822 turnout rows (one per race and parish).
 - **Coverage:** 21 races, 64 parishes.
-- **Every check is clean:** parish sums equal the state value for every choice and for qualified, voted, precinct and absentee counts; early votes never exceed totals; every parish reported early votes; no unknown parishes, duplicates, non-integer counts or malformed entries.
+- **Every check is clean:** parish sums equal the state value for every choice and for qualified, voted, precinct and absentee counts; the races, votes, parish and early files list the same choices and parishes (each pair checked both ways); early votes never exceed totals; every parish reported early votes; no unknown parishes, duplicates, non-integer counts or malformed entries.
 - **Runoffs:** House 5 and House 6 have `Runoff` outcomes (the 12/12/2026 runoff is a separate election date).
-- **Example, US Senator (official):** Letlow (REP) 746,466 Elected; "Jamie" Davis (DEM) 720,516; 3,722 precincts; 2,975,700 qualified, 1,493,171 voted.
+- **Example, US Senator** (`ElectionDates.htm`, read in recon, marks 11/03/2026 official): Letlow (REP) 746,466 Elected; "Jamie" Davis (DEM) 720,516; 3,722 precincts; 2,975,700 qualified, 1,493,171 voted.
 
 ## Quirks
 
 - **Choice ids repeat across races:** every amendment uses 3 (YES) and 4 (NO). Join on (contest_id, choice_id).
 - **Party** is taken from the trailing code in the choice label ("(REP)"); amendment choices have none.
-- **Outcomes** (Elected, Runoff, Approved, Defeated) have no schema column; the summary lists them per race.
+- **Outcomes** (Elected, Runoff, Approved, Defeated, and null for 10 choices, the losing side of amendments) have no schema column; the summary lists them per race.
+- **No usable version stamp:** `VersionDateTime` is 1900-01-01 in every file, and the votes file is fetched about 7 minutes before the last parish file. On election night a parish-vs-state difference may be timing, not a source fault.
 - **Early votes** are vote type "EarlyVoting" (the file's key); whether they include mail absentee isn't stated.
 - **Turnout counts are per race:** each race has its own qualified and voted counts per parish.
 - **Parish ids are the site's codes** ("01".."64"), not FIPS.

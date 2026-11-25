@@ -22,8 +22,11 @@ The turnout table has one row per (race, parish): qualified, voted, precincts an
 
 Nothing is corrected; the summary lists: parish sums that differ from the state value per (race,
 choice) and per count (qualified, voted, precincts, absentee), early votes above the parish total,
-choices in one file and not the other, in-scope races missing from the races or votes file or
-without a parish or early file, early parishes not reported, parish codes not in the list, non-integer
+choices in one file and not the other (races vs votes, votes vs parishes, parishes vs early, in both
+directions), parishes in the parish file missing from the early file, state counts missing or
+non-integer, in-scope races missing from the races or votes file or without a parish or early file
+(a race missing from the votes file makes the parish checks and runoff list None), early parishes
+not reported, parish codes not in the list, non-integer
 counts (votes ""), duplicate (race, parish, choice), malformed entries, each race's outcomes and the
 races with a Runoff outcome, and missing or unreadable files. Checks that need a file that wasn't
 read are None (for any race: the lists are not per race).
@@ -42,9 +45,12 @@ TURNOUT_COLUMNS = ["state", "source_id", "source_sha256", "contest_id", "county_
                    "absentee_reporting", "absentee_expected"]
 PARISH_LISTS = ["parish_vs_state_mismatches", "parish_count_mismatches", "choices_not_in_parishes",
                 "choices_only_in_parishes"]
-EARLY_LISTS = ["early_exceeds_total", "early_not_reported", "early_choices_unknown"]
-LISTS = PARISH_LISTS + EARLY_LISTS + ["races_missing", "unknown_parishes", "non_numeric", "duplicate_entries",
-                                      "malformed_entries", "runoff_races"]
+EARLY_LISTS = ["early_exceeds_total", "early_not_reported", "early_choices_unknown", "early_parishes_missing",
+               "early_choices_missing"]
+RACE_LISTS = ["choices_not_in_races", "choices_not_in_votes"]
+LISTS = PARISH_LISTS + EARLY_LISTS + RACE_LISTS + ["races_missing", "unknown_parishes", "non_numeric",
+                                                   "duplicate_entries", "malformed_entries", "runoff_races",
+                                                   "state_counts_missing"]
 PARTY = re.compile(r"\(([A-Z]{1,6})\)\s*$")
 
 
@@ -144,7 +150,17 @@ def parse_pass(record_path, base_dir="."):
         summary["contests"] += 1
         state_votes, outcomes = {}, []
         v = votes.get(rid)
+        if v is not None and r:
+            race_ids = {str(c.get("ID")) for c in _dicts(r.get("Choice"), ("races", rid), summary)}
+            vote_ids = {str(c.get("ID")) for c in _dicts(v.get("Choice"), ("votes", rid), summary)}
+            summary["choices_not_in_races"] += [(rid, c) for c in sorted(vote_ids - race_ids)]
+            summary["choices_not_in_votes"] += [(rid, c) for c in sorted(race_ids - vote_ids)]
         if v is not None:
+            for f_ in COUNTS:
+                if f_ not in v:
+                    summary["state_counts_missing"].append((rid, f_))
+                elif _int(v.get(f_)) is None:
+                    summary["non_numeric"].append(("state", rid, "", f_, v.get(f_)))
             for c in _dicts(v.get("Choice"), ("votes", rid), summary):
                 cid = str(c.get("ID"))
                 n = count(c.get("VoteTotal"), ("state", rid, "", cid))
@@ -203,8 +219,17 @@ def parse_pass(record_path, base_dir="."):
         elif rid in races_in_scope:
             summary["races_missing"].append(("parish", rid))
         if ek in data:
+            early_codes = set()
             for p in data[ek]:
                 code = str(p.get("ParishValue", ""))
+                early_codes.add(code)
+                if code not in parish_names and code not in summary["unknown_parishes"]:
+                    summary["unknown_parishes"].append(code)
+                if pk in data:
+                    early_ids = {str(c.get("ID")) for c in p.get("Choice") or [] if isinstance(c, dict)}
+                    summary["early_choices_missing"] += [(rid, code, c) for (pc, c) in sorted(totals)
+                                                         if pc == code and c not in early_ids
+                                                         and str(p.get("HasReported")) == "1"]
                 if str(p.get("HasReported")) != "1":
                     summary["early_not_reported"].append((rid, code))
                     continue
@@ -226,17 +251,23 @@ def parse_pass(record_path, base_dir="."):
                     desc, party = choice_info(rid, cid)
                     rows.append(dict(prow, choice_id=cid, choice=desc, party=party, vote_type="EarlyVoting",
                                      votes="" if n is None else n))
+            if pk in data:
+                summary["early_parishes_missing"] += [(rid, c) for c in sorted({pc for pc, _ in totals} - early_codes)]
         elif rid in races_in_scope:
             summary["races_missing"].append(("early", rid))
     summary["parishes"] = len({t["county_id"] for t in turnout})
 
-    parish_read = all(f"parish-{r}" in data for r in races_in_scope) and "votes" in data
+    in_votes = "votes" in data and all(r in votes for r in races_in_scope)
+    parish_read = all(f"parish-{r}" in data for r in races_in_scope) and in_votes
     if not parish_read:
         for k in PARISH_LISTS:
             summary[k] = None
     if not all(f"early-{r}" in data for r in races_in_scope) or not all(f"parish-{r}" in data for r in races_in_scope):
         for k in EARLY_LISTS:
             summary[k] = None
-    if "votes" not in data:
+    if not in_votes:
         summary["runoff_races"] = None
+    if "votes" not in data or "races" not in data:
+        for k in RACE_LISTS:
+            summary[k] = None
     return rows, summary, turnout
