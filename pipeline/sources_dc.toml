@@ -1,0 +1,12 @@
+# District of Columbia Board of Elections results (electionresults.dcboe.org), 2026 general election.
+# See docs/superpowers/specs/2026-11-24-step2-dc-reader-design.md and sources/registry.csv.
+# A pass reads electionResults/getElectionInfo/<slug> (its CsvLink names the precinct-level CSV,
+# whose file name changes with the results type), the CSV, and cityWide/getCityWide/<slug>
+# (citywide and ward totals with candidate numbers). ANC contests are out of scope.
+
+[dc-2026-general]
+state = "DC"
+base_url = "https://electionresults.dcboe.org/"
+election_slug = "2026-General-Election"
+min_interval_s = 120
+request_gap_s = 10
