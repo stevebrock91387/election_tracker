@@ -1,0 +1,11 @@
+{
+ "source_id": "al-2026-general",
+ "state": "AL",
+ "started_utc": "20261124T000000Z",
+ "files": [
+  {
+   "kind": "zip",
+   "path": "al_results.zip"
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+# Alabama Secretary of State, certified 2026 general election results. See
+# docs/superpowers/specs/2026-11-24-step2-al-reader-design.md and sources/registry.csv.
+# A pass fetches the precinct results ZIP listed on
+# https://www.sos.alabama.gov/alabama-votes/voter/election-data: 67 county .xls workbooks.
+# The election-night page (www2.alabamavotes.gov/electionNight/) is empty between elections.
+
+[al-2026-general]
+state = "AL"
+zip_url = "https://www.sos.alabama.gov/sites/default/files/election-data/2026-11/2026GeneralElectionPrecinctResults.zip"
+min_interval_s = 120

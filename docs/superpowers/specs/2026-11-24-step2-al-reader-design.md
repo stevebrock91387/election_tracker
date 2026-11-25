@@ -84,6 +84,11 @@ Layout (all 67 surveyed):
   - `non_integer`: same for a float with a fraction.
   - `duplicate_lines`: (county, contest, choice) repeated within a county; the later line is dropped.
   - `duplicate_units`: (county, header) repeated; that county's second column is dropped.
+  - `multi_district_units`: (county, unit, office, [contests]) for a real precinct whose ballot
+    carries two or more districts of one office (US House, State Senate, State House, State Board of
+    Education). Seen in 2026: Jackson's Woodville carries House 22 (407) and 23 (11) of its 418
+    ballots. Each such block also appears in `ballot_balance_mismatches`.
+  - `blank_units`: (county, column index) for a unit column with a blank header; dropped.
   - `counties_registered_all_zero`: counties whose registered-voter row is 0 for every unit.
   - `missing_header_rows`: (county, name) when REGISTERED VOTERS - TOTAL or BALLOTS CAST - TOTAL is
     absent (the balance check then can't run for that county: listed, not silently skipped).
