@@ -1,0 +1,17 @@
+# Florida Division of Elections results files (Florida Election Watch, Downloads page), 2026
+# general election. See docs/superpowers/specs/2026-11-24-step2-fl-reader-design.md and
+# sources/registry.csv. A pass fetches the pipe-delimited informational file (races, candidates,
+# precinct counts, counties), the pipe-delimited votes file (county votes per candidate) and the
+# tab-delimited file (adds party). File names contain the election date. The site's links add
+# ?v=<number>; the fetch pass appends ?v=<unix seconds> the same way.
+# The host chains to GoDaddy TLS Root CA - R1, which the default stores lack; cafile adds GoDaddy's
+# cross-certificate so the chain ends at Go Daddy Root G2 (see pipeline/certs/README.md).
+
+[fl-2026-general]
+state = "FL"
+info_url = "https://flelectionfiles.floridados.gov/enightfilespublic/20261103_ElecResultsFL_PipeDlm_Info.txt"
+votes_url = "https://flelectionfiles.floridados.gov/enightfilespublic/20261103_ElecResultsFL_PipeDlm_Votes.txt"
+tab_url = "https://flelectionfiles.floridados.gov/enightfilespublic/20261103_ElecResultsFL.txt"
+cafile = "pipeline/certs/godaddy-tls-root-r1-cross-g2.pem"
+min_interval_s = 120
+request_gap_s = 10

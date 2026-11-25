@@ -1,0 +1,60 @@
+ElectionDate	PartyCode	PartyName	RaceCode	RaceName	CountyCode	CountyName	Juris1num	Juris2num	Precincts	PrecinctsReporting	CanNameLast	CanNameFirst	CanNameMiddle	CanVotes
+11/03/2026	REP	Republican Party	USS	United States Senator	ALA	Alachua	   	 	63	0	Moody	Ashley		34835
+11/03/2026	REP	Republican Party	USS	United States Senator	BAK	Baker	   	 	9	9	Moody	Ashley		8171
+11/03/2026	REP	Republican Party	USS	United States Senator	BAY	Bay	   	 	30	30	Moody	Ashley		48770
+11/03/2026	DEM	Democratic Party	USS	United States Senator	ALA	Alachua	   	 	63	0	Nixon	Angie		69813
+11/03/2026	DEM	Democratic Party	USS	United States Senator	BAK	Baker	   	 	9	9	Nixon	Angie		1571
+11/03/2026	DEM	Democratic Party	USS	United States Senator	BAY	Bay	   	 	30	30	Nixon	Angie		20773
+11/03/2026	NPA	No Party Affiliation	USS	United States Senator	ALA	Alachua	   	 	63	0	Gillespie	Neil	J.	983
+11/03/2026	NPA	No Party Affiliation	USS	United States Senator	BAK	Baker	   	 	9	9	Gillespie	Neil	J.	84
+11/03/2026	NPA	No Party Affiliation	USS	United States Senator	BAY	Bay	   	 	30	30	Gillespie	Neil	J.	805
+11/03/2026	REP	Republican Party	USR	Representative in Congress, District 2	BAY	Bay	002	 	30	30	Rogers	Austin		47767
+11/03/2026	DEM	Democratic Party	USR	Representative in Congress, District 2	BAY	Bay	002	 	30	30	Green	Amanda	Marie	22194
+11/03/2026	REP	Republican Party	USR	Representative in Congress, District 3	ALA	Alachua	003	 	63	0	Cammack	Kat		34558
+11/03/2026	REP	Republican Party	USR	Representative in Congress, District 3	BAK	Baker	003	 	9	9	Cammack	Kat		8147
+11/03/2026	DEM	Democratic Party	USR	Representative in Congress, District 3	ALA	Alachua	003	 	63	0	Harp	Seth		68465
+11/03/2026	DEM	Democratic Party	USR	Representative in Congress, District 3	BAK	Baker	003	 	9	9	Harp	Seth		1520
+11/03/2026	NPA	No Party Affiliation	USR	Representative in Congress, District 3	ALA	Alachua	003	 	63	0	Klein	Mike		2212
+11/03/2026	NPA	No Party Affiliation	USR	Representative in Congress, District 3	BAK	Baker	003	 	9	9	Klein	Mike		113
+11/03/2026	REP	Republican Party	GOV	Governor and Lieutenant Governor	ALA	Alachua	   	 	63	0	Avila	Donalds	/	34536
+11/03/2026	REP	Republican Party	GOV	Governor and Lieutenant Governor	BAK	Baker	   	 	9	9	Avila	Donalds	/	7977
+11/03/2026	REP	Republican Party	GOV	Governor and Lieutenant Governor	BAY	Bay	   	 	30	30	Avila	Donalds	/	48434
+11/03/2026	DEM	Democratic Party	GOV	Governor and Lieutenant Governor	ALA	Alachua	   	 	63	0	Graham	Jolly	/	69596
+11/03/2026	DEM	Democratic Party	GOV	Governor and Lieutenant Governor	BAK	Baker	   	 	9	9	Graham	Jolly	/	1637
+11/03/2026	DEM	Democratic Party	GOV	Governor and Lieutenant Governor	BAY	Bay	   	 	30	30	Graham	Jolly	/	20712
+11/03/2026	LPF	Libertarian Party	GOV	Governor and Lieutenant Governor	ALA	Alachua	   	 	63	0	Skelly	Jewett	/	505
+11/03/2026	LPF	Libertarian Party	GOV	Governor and Lieutenant Governor	BAK	Baker	   	 	9	9	Skelly	Jewett	/	50
+11/03/2026	LPF	Libertarian Party	GOV	Governor and Lieutenant Governor	BAY	Bay	   	 	30	30	Skelly	Jewett	/	413
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	ALA	Alachua	   	 	63	0	Coto	Burkett	/	179
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	BAK	Baker	   	 	9	9	Coto	Burkett	/	25
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	BAY	Bay	   	 	30	30	Coto	Burkett	/	152
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	ALA	Alachua	   	 	63	0	Rodriguez	Russo	/	185
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	BAK	Baker	   	 	9	9	Rodriguez	Russo	/	22
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	BAY	Bay	   	 	30	30	Rodriguez	Russo	/	163
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	ALA	Alachua	   	 	63	0	Rojas	Dimanche	/	113
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	BAK	Baker	   	 	9	9	Rojas	Dimanche	/	3
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	BAY	Bay	   	 	30	30	Rojas	Dimanche	/	65
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	ALA	Alachua	   	 	63	0	Van Vactor	Abrams	/	221
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	BAK	Baker	   	 	9	9	Van Vactor	Abrams	/	14
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	BAY	Bay	   	 	30	30	Van Vactor	Abrams	/	108
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	ALA	Alachua	   	 	63	0	Santana	Datto	/	76
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	BAK	Baker	   	 	9	9	Santana	Datto	/	11
+11/03/2026	NPA	No Party Affiliation	GOV	Governor and Lieutenant Governor	BAY	Bay	   	 	30	30	Santana	Datto	/	61
+11/03/2026	WRI	Write-in	GOV	Governor and Lieutenant Governor	ALA	Alachua	   	 	63	0	Nokovich	Anderson	/	0
+11/03/2026	WRI	Write-in	GOV	Governor and Lieutenant Governor	BAK	Baker	   	 	9	9	Nokovich	Anderson	/	0
+11/03/2026	WRI	Write-in	GOV	Governor and Lieutenant Governor	BAY	Bay	   	 	30	30	Nokovich	Anderson	/	0
+11/03/2026	WRI	Write-in	GOV	Governor and Lieutenant Governor	ALA	Alachua	   	 	63	0	Alaways	Morris	/	0
+11/03/2026	WRI	Write-in	GOV	Governor and Lieutenant Governor	BAK	Baker	   	 	9	9	Alaways	Morris	/	0
+11/03/2026	WRI	Write-in	GOV	Governor and Lieutenant Governor	BAY	Bay	   	 	30	30	Alaways	Morris	/	0
+11/03/2026	NOP	Non-Partisan	SCJ	Shall Justice Carlos G. Muñiz be retained in Office?	ALA	Alachua	   	1	63	0	Yes	 	 	42557
+11/03/2026	NOP	Non-Partisan	SCJ	Shall Justice Carlos G. Muñiz be retained in Office?	BAK	Baker	   	1	9	9	Yes	 	 	5629
+11/03/2026	NOP	Non-Partisan	SCJ	Shall Justice Carlos G. Muñiz be retained in Office?	BAY	Bay	   	1	30	30	Yes	 	 	40933
+11/03/2026	NOP	Non-Partisan	SCJ	Shall Justice Carlos G. Muñiz be retained in Office?	ALA	Alachua	   	1	63	0	No	 	 	53007
+11/03/2026	NOP	Non-Partisan	SCJ	Shall Justice Carlos G. Muñiz be retained in Office?	BAK	Baker	   	1	9	9	No	 	 	3383
+11/03/2026	NOP	Non-Partisan	SCJ	Shall Justice Carlos G. Muñiz be retained in Office?	BAY	Bay	   	1	30	30	No	 	 	23213
+11/03/2026	NOP	Non-Partisan	AMD	Budget Stabilization Fund	ALA	Alachua			63	0	Yes for Approval	 	 	29224
+11/03/2026	NOP	Non-Partisan	AMD	Budget Stabilization Fund	BAK	Baker			9	9	Yes for Approval	 	 	4186
+11/03/2026	NOP	Non-Partisan	AMD	Budget Stabilization Fund	BAY	Bay			30	30	Yes for Approval	 	 	31051
+11/03/2026	NOP	Non-Partisan	AMD	Budget Stabilization Fund	ALA	Alachua			63	0	No for Rejection	 	 	71938
+11/03/2026	NOP	Non-Partisan	AMD	Budget Stabilization Fund	BAK	Baker			9	9	No for Rejection	 	 	5186
+11/03/2026	NOP	Non-Partisan	AMD	Budget Stabilization Fund	BAY	Bay			30	30	No for Rejection	 	 	36325

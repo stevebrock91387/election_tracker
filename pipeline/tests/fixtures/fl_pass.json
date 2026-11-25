@@ -1,0 +1,18 @@
+{
+ "source_id": "fl-2026-general",
+ "state": "FL",
+ "files": [
+  {
+   "kind": "info",
+   "path": "fl_info.txt"
+  },
+  {
+   "kind": "votes",
+   "path": "fl_votes.txt"
+  },
+  {
+   "kind": "tab",
+   "path": "fl_tab.txt"
+  }
+ ]
+}
