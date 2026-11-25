@@ -30,11 +30,11 @@ format = "json"
 min_interval_s = 120
 
 # New Jersey: no statewide feed; 15 of 21 counties publish on Clarity (precinct level). Election ids as
-# linked from https://nj.gov/state/elections/election-night-results.shtml (2026-11-24). Only the eight
-# counties below publish reports/detailxml.zip; Cumberland 127562, Gloucester 127298, Middlesex 127580,
-# Monmouth 127586, Morris 127576, Passaic 127401 and Somerset 127569 publish JSON only (sum.json,
-# ALL.json, one file per vote type): a separate format, not read yet.
-# See docs/superpowers/specs/2026-11-25-step2-nj-clarity-counties-design.md.
+# linked from https://nj.gov/state/elections/election-night-results.shtml (2026-11-24) or the county's
+# Clarity election list (Passaic, Somerset). Eight counties publish reports/detailxml.zip (format
+# "county_xml"); seven publish JSON only (format "county_json": sum.json, ALL.json, vt.json, status.json,
+# one precinct file per vote type). See docs/superpowers/specs/2026-11-25-step2-nj-clarity-counties-design.md
+# and docs/superpowers/specs/2026-11-25-step2-nj-clarity-json-counties-design.md.
 
 [clarity-NJ-Atlantic-2026-general]
 state = "NJ"
@@ -90,4 +90,53 @@ state = "NJ"
 county = "Union"
 base = "https://results.enr.clarityelections.com/NJ/Union/127567"
 format = "county_xml"
+min_interval_s = 120
+
+[clarity-NJ-Cumberland-2026-general]
+state = "NJ"
+county = "Cumberland"
+base = "https://results.enr.clarityelections.com/NJ/Cumberland/127562"
+format = "county_json"
+min_interval_s = 120
+
+[clarity-NJ-Gloucester-2026-general]
+state = "NJ"
+county = "Gloucester"
+base = "https://results.enr.clarityelections.com/NJ/Gloucester/127298"
+format = "county_json"
+min_interval_s = 120
+
+[clarity-NJ-Middlesex-2026-general]
+state = "NJ"
+county = "Middlesex"
+base = "https://results.enr.clarityelections.com/NJ/Middlesex/127580"
+format = "county_json"
+min_interval_s = 120
+
+[clarity-NJ-Monmouth-2026-general]
+state = "NJ"
+county = "Monmouth"
+base = "https://results.enr.clarityelections.com/NJ/Monmouth/127586"
+format = "county_json"
+min_interval_s = 120
+
+[clarity-NJ-Morris-2026-general]
+state = "NJ"
+county = "Morris"
+base = "https://results.enr.clarityelections.com/NJ/Morris/127576"
+format = "county_json"
+min_interval_s = 120
+
+[clarity-NJ-Passaic-2026-general]
+state = "NJ"
+county = "Passaic"
+base = "https://results.enr.clarityelections.com/NJ/Passaic/127401"
+format = "county_json"
+min_interval_s = 120
+
+[clarity-NJ-Somerset-2026-general]
+state = "NJ"
+county = "Somerset"
+base = "https://results.enr.clarityelections.com/NJ/Somerset/127569"
+format = "county_json"
 min_interval_s = 120

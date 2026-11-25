@@ -2,13 +2,14 @@
 import csv
 import glob
 import gzip
+import json
 import os
 import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
 from pipeline.readers.clarity import TURNOUT_COLUMNS
-from pipeline.run_clarity import DEFAULT_SOURCES, fetch_pass, load_sources, main, read_body
+from pipeline.run_clarity import DEFAULT_SOURCES, fetch_pass, load_sources, main, read_body, type_file_name
 from pipeline.schema import COLUMNS
 
 FX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -28,14 +29,18 @@ class SourcesTest(unittest.TestCase):
         src = load_sources(DEFAULT_SOURCES)
         statewide = {k: s for k, s in src.items() if s["format"] in ("xml", "json")}
         county = {k: s for k, s in src.items() if s["format"] == "county_xml"}
-        self.assertEqual((len(statewide), len(county), len(src)), (4, 8, 12))
+        county_json = {k: s for k, s in src.items() if s["format"] == "county_json"}
+        self.assertEqual((len(statewide), len(county), len(county_json), len(src)), (4, 8, 7, 19))
+        self.assertEqual({s["county"] for s in county_json.values()},
+                         {"Cumberland", "Gloucester", "Middlesex", "Monmouth", "Morris", "Passaic", "Somerset"})
         self.assertEqual({s["state"] for s in statewide.values()}, {"CO", "IA", "SC", "WV"})
         self.assertEqual({s["state"] for s in county.values()}, {"NJ"})
         for sid, s in src.items():
             self.assertGreaterEqual(s["min_interval_s"], 120, sid)
             self.assertTrue(s["base"].startswith("https://"), sid)
             self.assertFalse(s["base"].endswith("/"), sid)
-            self.assertEqual(s["format"], {"IA": "json", "NJ": "county_xml"}.get(s["state"], "xml"), sid)
+            allowed = {"IA": ("json",), "NJ": ("county_xml", "county_json")}.get(s["state"], ("xml",))
+            self.assertIn(s["format"], allowed, sid)
 
 
 class FetchPassTest(unittest.TestCase):
@@ -65,6 +70,58 @@ class FetchPassTest(unittest.TestCase):
         with self.assertRaises(FetchError):
             fetch_pass("clarity-WV-2026-general", s, raw_dir=self.raw, opener=opener_for(b"<html>oops</html>", seen))
         self.assertEqual(seen, [s["base"] + "/current_ver.txt"])
+
+
+def json_opener(record, types_body=b'{"Types": ["Early Voting", "State/Fed"], "Contests": []}'):
+    def opener(url):
+        record.append(url)
+        if url.endswith("/current_ver.txt"):
+            return 200, b"387114\r\n"
+        if url.endswith("/vt.json"):
+            return 200, types_body
+        return 200, b'{"Contests": []}'
+    return opener
+
+
+class CountyJsonFetchTest(unittest.TestCase):
+    def setUp(self):
+        self.src = load_sources(DEFAULT_SOURCES)
+        self.sid = "clarity-NJ-Morris-2026-general"
+        self.s = self.src[self.sid]
+        self.raw = tempfile.mkdtemp()
+
+    def test_type_file_name_follows_site_rule(self):
+        self.assertEqual(type_file_name("State/Fed"), "State_Fed.json")
+        self.assertEqual(type_file_name("Early Voting"), "Early_Voting.json")
+        self.assertEqual(type_file_name("Vote-by-Mail"), "Vote-by-Mail.json")
+
+    def test_pass_order_and_record(self):
+        seen = []
+        out = fetch_pass(self.sid, self.s, raw_dir=self.raw, opener=json_opener(seen))
+        j = self.s["base"] + "/387114/json/"
+        self.assertEqual(seen, [self.s["base"] + "/current_ver.txt", j + "sum.json", j + "ALL.json", j + "vt.json",
+                                j + "status.json", j + "Early_Voting.json", j + "State_Fed.json"])
+        with open(out["record"]) as f:
+            rec = json.load(f)
+        self.assertEqual((rec["source_id"], rec["state"], rec["county"], rec["version"]),
+                         (self.sid, "NJ", "Morris", "387114"))
+        self.assertEqual([(x["kind"], x["vote_type"]) for x in rec["files"]],
+                         [("sum", ""), ("all", ""), ("vt", ""), ("status", ""), ("type", "Early Voting"),
+                          ("type", "State/Fed")])
+        for x in rec["files"]:
+            self.assertTrue(os.path.exists(x["path"]), x)
+
+    def test_no_vote_types_no_type_requests(self):
+        seen = []
+        fetch_pass(self.sid, self.s, raw_dir=self.raw, opener=json_opener(seen, b'{"Types": [], "Contests": []}'))
+        self.assertEqual(len(seen), 5)
+
+    def test_unreadable_vt_stops_pass(self):
+        for body in (b"<html>busy</html>", b'{"Contests": []}', b'{"Types": "Early Voting"}', b'{"Types": [""]}'):
+            seen = []
+            with self.assertRaises(FetchError, msg=body):
+                fetch_pass(self.sid, self.s, raw_dir=tempfile.mkdtemp(), opener=json_opener(seen, body))
+            self.assertEqual(len(seen), 4, body)
 
 
 class ReadBodyTest(unittest.TestCase):
