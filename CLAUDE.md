@@ -81,7 +81,7 @@ Every registry row was looked at in the built-in browser. **48 verified, 3 parti
 
 ### Step 2: Enhanced Voting reader (built 2026-11-20)
 
-`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (388 with Clarity, ResultsAjax, Tally, NC, OH, TX, CT, FL, VT, IN, LA, DC and DE). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
+`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (405 with Clarity, ResultsAjax, Tally, NC, OH, TX, CT, FL, VT, IN, LA, DC, DE and AK). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
 
 ### Step 2: Clarity reader (built 2026-11-20, county level)
 
@@ -139,6 +139,10 @@ DCBOE: the info JSON names the precinct CSV (`CsvLink`), checked against the cit
 
 Department of Elections ENR JSON: statewide (ids, vote types), 530 election districts, counties (with Wilmington), turnout. `pipeline/readers/de.py`, `pipeline/sources_de.toml`, CLI `python3 -m pipeline.run_de fetch|parse|fetch-parse SOURCE_ID`. County offices out. 2026: 29,261 rows, 57 contests, every check clean; machine/absentee/early vote types. Details in `docs/de.md`.
 
+### Step 2: Alaska reader (built 2026-11-24, precinct level, first choice)
+
+Division of Elections precinct CSV (one request): ids, five vote types, registered voters, under/over votes. `pipeline/readers/ak.py`, `pipeline/sources_ak.toml`, CLI `python3 -m pipeline.run_ak fetch|parse|fetch-parse SOURCE_ID`. **First-choice (round 1) counts only**; ranked-choice rounds are separate. No state rows (statewide only as PDF). 2026: 120,276 rows, 523 units (402 precincts + district counting units), every check clean; a ballots-minus-votes gap (likely write-ins, unverified) is reported per contest. Details in `docs/ak.md`.
+
 ### Parked (2026-11-24, Steve's call pending)
 
 - Alabama (seen 2026-11-24 in the built-in browser, ZIP downloaded once by script): the election-night page `www2.alabamavotes.gov/electionNight/statewideResultsByContest.aspx` says "Results Coming Soon"; certified 2026 results are `2026GeneralElectionPrecinctResults.zip` (sos.alabama.gov election-data page, 1,032,122 B) holding 67 county `.xls` (OLE2) files, which the stdlib can't read. `sources/registry.csv` still describes the election-night page as it was on 2026-11-20. Options: allow a dependency (e.g. xlrd), convert by hand, or skip.
@@ -152,7 +156,7 @@ Department of Elections ENR JSON: statewide (ids, vote types), 530 election dist
 
 ## Queued components (not part of the six-step pipeline)
 
-Order (Steve, 2026-11-20, revised the same day): source verification → scenario model (done) → **finish all six pipeline steps** (step 2 readers: Enhanced Voting and Clarity done 2026-11-20, ResultsAjax 2026-11-21, Tally 2026-11-23, NC, OH, TX, CT, FL, VT, IN, LA, DC and DE 2026-11-24) → league tracker → NPVIC. Neither may touch `sources/` or `tools/`; flag either if it starts growing.
+Order (Steve, 2026-11-20, revised the same day): source verification → scenario model (done) → **finish all six pipeline steps** (step 2 readers: Enhanced Voting and Clarity done 2026-11-20, ResultsAjax 2026-11-21, Tally 2026-11-23, NC, OH, TX, CT, FL, VT, IN, LA, DC, DE and AK 2026-11-24) → league tracker → NPVIC. Neither may touch `sources/` or `tools/`; flag either if it starts growing.
 
 - `scenarios/` — **built 2026-11-20** (design `docs/superpowers/specs/2026-11-20-scenario-model-design.md`, plan `docs/superpowers/plans/2026-11-20-scenario-model.md`). Starts from official FEC 2024 state totals + ME/NE district totals from the Certificates of Ascertainment (Steve chose state totals over county data; the swings are linear, so results are identical except for clipping). Run `/opt/homebrew/bin/python3 -m scenarios.run`; tests `/opt/homebrew/bin/python3 -m unittest discover -s scenarios/tests -t .` (28). Zero settings reproduce 312–226; flip point +1.726 (PA). Known limit: a third-party share drawn from R hits DC first (Trump ≈6.5% there), so large uniform draws stop the run by design (no clamping). Deferred minors listed in the build's final message. Original spec: `docs/queued/scenario-model-spec.md`.
 - `league/` — 2028 fantasy league tracker. Spec: `docs/queued/league-tracker-spec.md`.
