@@ -23,7 +23,10 @@ election_date from the tab file. There are no statewide rows in these files.
 
 Nothing is corrected; the summary lists: V records with unknown race or unit ids or an unknown
 (race, candidate) pair, duplicate (race, unit, candidate) records, non-integer votes or precinct
-counts (votes ""), precincts reporting above the p count, missing p records, status letters other
+counts (votes ""), precincts reporting above the p count, missing p records, expected (race,
+county, candidate) records with no V record (every p pair times the race's candidates: a short
+download shows here), tab rows of known races that no V record joined (the other direction of the
+pipe-vs-tab check), status letters other
 than I/F (and counts of each), races with no votes, pipe-vs-tab vote differences (and V records
 with no tab row), races whose name isn't in the tab file, candidates with more than one party,
 malformed lines, and missing or unreadable files. Without the info or votes file there are no
@@ -39,10 +42,10 @@ import re
 from pipeline.schema import COLUMNS
 
 FIELDS = {"r": 6, "c": 7, "p": 6, "u": 5, "V": 9}
-TAB_CHECKS = ["pipe_vs_tab_differences", "races_not_in_tab", "candidates_with_several_parties"]
+TAB_CHECKS = ["pipe_vs_tab_differences", "races_not_in_tab", "candidates_with_several_parties", "tab_rows_without_votes"]
 LISTS = ["unknown_races", "unknown_units", "unknown_choices", "duplicate_records", "non_numeric",
          "reporting_exceeds_precincts", "missing_precinct_counts", "unexpected_status", "races_without_votes",
-         "malformed_records"] + TAB_CHECKS
+         "malformed_records", "expected_records_missing"] + TAB_CHECKS
 
 
 def _int(v):
@@ -131,7 +134,7 @@ def parse_pass(record_path, base_dir="."):
     base = dict.fromkeys(COLUMNS, "")
     base.update(state=rec["state"], source_id=rec["source_id"], source_sha256=got["votes"][0], level="county",
                 contest_scope="statewide", election_date=election_date, vote_type="TOTAL")
-    rows, seen, voted, parties = [], set(), set(), {}
+    rows, seen, voted, parties, joined = [], set(), set(), {}, set()
     for f in votes:
         if f[0] != "V":
             summary["malformed_records"].append(("votes", f[0], "|".join(f)[:60]))
@@ -171,6 +174,8 @@ def parse_pass(record_path, base_dir="."):
                 summary["pipe_vs_tab_differences"].append((rid, uid, cid, n, None))
             elif n is None or (t["CanVotes"] or "").strip() != str(n):
                 summary["pipe_vs_tab_differences"].append((rid, uid, cid, n, t["CanVotes"]))
+        if t:
+            joined.add((tname, units.get(uid, ""), last.strip(), first.strip()))
         party = (t["PartyCode"] or "") if t else ""
         if t:
             parties.setdefault((rid, cid), set()).add(party)
@@ -180,10 +185,15 @@ def parse_pass(record_path, base_dir="."):
                          votes="" if n is None else n,
                          reporting_status=f"{rep_raw}/{precincts.get((rid, uid), '?')} precincts, status {status}"))
     summary["races_without_votes"] = sorted({r for r, _ in choices} - voted)
+    # Every (race, county) with a p record should have one V record per candidate of that race.
+    expected = {(r, u, c) for (r, u) in precincts for (rc, c) in choices if rc == r}
+    summary["expected_records_missing"] = sorted(expected - seen)
     if tab_rows is None:
         for k in TAB_CHECKS:
             summary[k] = None
     else:
         summary["races_not_in_tab"] = sorted(r for r in races if tab_name(r) is None)
         summary["candidates_with_several_parties"] = sorted((r, c, sorted(p)) for (r, c), p in parties.items() if len(p) > 1)
+        known = {tab_name(r) for r in races} - {None}
+        summary["tab_rows_without_votes"] = sorted(k for k in tab_rows if k[0] in known and k not in joined)
     return rows, summary

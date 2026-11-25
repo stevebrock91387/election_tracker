@@ -24,7 +24,7 @@ Steve chose option A: trust R1 for that host, with the fingerprint checked again
 
 - **Output:** 3,063 rows (one per county vote record).
 - **Coverage:** 176 races, 406 choices, 67 counties. Rows by race code: GOV 670, DCA 502, AMD 402, STR 283, USR 282, USS 201, AGR 201, ATG 134, CFO 134, SCJ 134, STS 94, CTJ 10, and 4 each for four special districts (ECW, PLB, SEB, TOL).
-- **Clean:** no unknown ids, duplicates, non-integer counts, missing precinct counts, reporting above the precinct count, races without votes or malformed lines. **The pipe and tab files agree on every vote record**, and every candidate has one party.
+- **Clean:** no unknown ids, duplicates, non-integer counts, missing precinct counts, reporting above the precinct count, races without votes, missing (race, county, candidate) records or malformed lines. **The pipe and tab files agree on every vote record, in both directions**, and every candidate has one party.
 - **Listed or counted:**
   - `status_counts`: all 3,063 records have status I ("Incomplete"), although the site header says "Official Election Results".
   - `zero_precincts_reporting`: 91 records report 0 precincts (e.g. every Alachua race: "0/63 precincts").

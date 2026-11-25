@@ -67,7 +67,8 @@ class RealFixtureTest(Base):
         for k in ("unknown_races", "unknown_units", "unknown_choices", "duplicate_records", "non_numeric",
                   "reporting_exceeds_precincts", "missing_precinct_counts", "unexpected_status", "races_without_votes",
                   "pipe_vs_tab_differences", "races_not_in_tab", "candidates_with_several_parties",
-                  "malformed_records", "unreadable_files", "missing_files"):
+                  "malformed_records", "unreadable_files", "missing_files", "expected_records_missing",
+                  "tab_rows_without_votes"):
             self.assertEqual(s[k], [], k)
 
     def test_every_row(self):
@@ -125,6 +126,19 @@ class SyntheticTest(Base):
         self.assertEqual(s["non_numeric"], [("votes", "120000", "12001", "89119", "n/a")])
         r, = find(rows, choice_id="89119", county_id="12001")
         self.assertEqual(r["votes"], "")
+
+    def test_truncated_votes_listed(self):
+        lines = text("votes").splitlines(keepends=True)
+        rows, s = self.parse(votes="".join(lines[:30]))
+        self.assertEqual(len(rows), 30)
+        self.assertEqual(len(s["expected_records_missing"]), 29)
+
+    def test_tab_rows_without_votes_listed(self):
+        lines = text("votes").splitlines(keepends=True)
+        rows, s = self.parse(votes="".join(lines[1:]))
+        self.assertEqual(s["expected_records_missing"], [("120000", "12001", "89119")])
+        self.assertEqual(len(s["tab_rows_without_votes"]), 1)
+        self.assertEqual(s["tab_rows_without_votes"][0][:2], ("United States Senator", "Alachua"))
 
     def test_pipe_vs_tab_difference_listed(self):
         t = text("tab").replace("\t34835", "\t34836", 1)

@@ -64,6 +64,12 @@ class CafileTest(unittest.TestCase):
         self.assertIn(("GoDaddy TLS Root CA - R1", "Go Daddy Root Certificate Authority - G2"), cns)
         self.assertIn(("Go Daddy Root Certificate Authority - G2", "Go Daddy Root Certificate Authority - G2"), cns)
 
+    def test_cafile_refuses_self_signed(self):
+        from pipeline.fetch import _ssl_context
+        root = os.path.join(os.path.dirname(__file__), "fixtures", "godaddy-tls-root-r1-selfsigned.pem")
+        with self.assertRaises(ValueError):
+            _ssl_context(root)
+
     def test_fetch_passes_cafile(self):
         import pipeline.fetch as fm
         seen = []

@@ -1,8 +1,9 @@
 # Extra CA certificates
 
 Used only by sources whose config names them (`cafile`); `pipeline/fetch.py` adds the file to the
-default trust store and turns off partial-chain trust, so a file here can never be a trust anchor
-by itself: a chain must still end at a root in the default store.
+default trust store and turns off partial-chain trust, and refuses a file that contains a
+self-signed certificate. So a file here can never be a trust anchor by itself: a chain must still
+end at a root in the default store. Only intermediates (including cross-certificates) belong here.
 
 ## godaddy-tls-root-r1-cross-g2.pem
 

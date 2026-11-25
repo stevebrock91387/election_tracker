@@ -52,9 +52,22 @@ class FetchError(RuntimeError):
 
 
 def _ssl_context(cafile):
-    """The default verifying context plus the certificates in cafile, with partial-chain trust off:
-    a certificate from cafile can complete a chain but never ends one, so every chain must still
-    reach a root in the default store."""
+    """The default verifying context plus the certificates in cafile, with partial-chain trust off.
+
+    Partial-chain trust off stops a non-self-signed certificate from ending a chain, and cafile may
+    not contain a self-signed one (ValueError): so a certificate from cafile can complete a chain
+    but never ends one, and every chain must still reach a root in the default store."""
+    with open(cafile) as f:
+        pem = f.read()
+    probe = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    probe.load_verify_locations(cadata=pem)
+    certs = probe.get_ca_certs()
+    if not certs:
+        raise ValueError(f"{cafile}: no certificates")
+    for c in certs:
+        if c.get("subject") == c.get("issuer"):
+            raise ValueError(f"{cafile}: self-signed certificate {dict(x[0] for x in c['subject'])}; "
+                             "cafile may only add intermediates, not roots")
     ctx = ssl.create_default_context()
     ctx.load_verify_locations(cafile=cafile)
     ctx.verify_flags &= ~ssl.VERIFY_X509_PARTIAL_CHAIN
