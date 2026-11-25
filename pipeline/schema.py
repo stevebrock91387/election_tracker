@@ -1,6 +1,7 @@
 """The common results format every reader produces: one row per vote count (long format).
 
-level: "state", "county" or "precinct".
+level: "state", "county", "town" or "precinct". "town" is a New England town (Connecticut); its
+  id and name go in the county_id / county_name columns.
 vote_type: "TOTAL" for an option's total, otherwise the source's own group name, unchanged.
 reporting_status: as the source states it for that row's unit and vote type; "" when absent.
 contest_scope: "statewide" when the contest appears in the source's state-level results

@@ -1,0 +1,46 @@
+{
+ "source_id": "ct-2026-general",
+ "state": "CT",
+ "version": 56593,
+ "office_types": [
+  "SW",
+  "C",
+  "S",
+  "A",
+  "PD"
+ ],
+ "files": [
+  {
+   "kind": "version",
+   "path": "ct_version.json"
+  },
+  {
+   "kind": "lookup",
+   "path": "ct_lookup.json"
+  },
+  {
+   "kind": "state",
+   "path": "ct_state.json"
+  },
+  {
+   "kind": "town",
+   "path": "ct_town.json"
+  },
+  {
+   "kind": "townstatus",
+   "path": "ct_townstatus.json"
+  },
+  {
+   "kind": "turnout",
+   "path": "ct_turnout.json"
+  },
+  {
+   "kind": "grouping",
+   "path": "ct_grouping.json"
+  },
+  {
+   "kind": "officeprecincts",
+   "path": "ct_officeprecincts.json"
+  }
+ ]
+}
