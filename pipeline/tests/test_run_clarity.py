@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
-from pipeline.readers.clarity import TURNOUT_COLUMNS
+from pipeline.readers.clarity import COUNTY_TURNOUT_COLUMNS, TURNOUT_COLUMNS
 from pipeline.run_clarity import DEFAULT_SOURCES, fetch_pass, load_sources, main, read_body, type_file_name
 from pipeline.schema import COLUMNS
 
@@ -157,6 +157,29 @@ class ParseCommandTest(unittest.TestCase):
               os.path.join(FX, "clarity_ia_all.json"), "--parsed-dir", out])
         (path,) = glob.glob(os.path.join(out, "clarity-IA-2026-general", "*.csv"))
         self.assertEqual(header(path), COLUMNS)
+
+    def test_parse_command_county_json(self):
+        out = tempfile.mkdtemp()
+        main(["parse", "clarity-NJ-Cumberland-2026-general", os.path.join(FX, "nj_cumberland_pass.json"),
+              "--base-dir", FX, "--parsed-dir", out])
+        files = sorted(glob.glob(os.path.join(out, "clarity-NJ-Cumberland-2026-general", "*.csv")))
+        (turnout,) = [f for f in files if f.endswith("-turnout.csv")]
+        (rows,) = [f for f in files if not f.endswith("-turnout.csv")]
+        self.assertEqual(header(rows), COLUMNS)
+        self.assertEqual(header(turnout), COUNTY_TURNOUT_COLUMNS)
+        with open(rows) as f:
+            self.assertEqual(sum(1 for _ in f), 11083)
+
+    def test_fetch_parse_county_json(self):
+        raw, out = tempfile.mkdtemp(), tempfile.mkdtemp()
+        import pipeline.run_clarity as rc
+        real = rc.fetch_pass
+        rc.fetch_pass = lambda sid, src, raw_dir: real(sid, src, raw_dir=raw_dir, opener=json_opener([]))
+        try:
+            main(["fetch-parse", "clarity-NJ-Morris-2026-general", "--raw-dir", raw, "--parsed-dir", out])
+        finally:
+            rc.fetch_pass = real
+        self.assertEqual(len(glob.glob(os.path.join(out, "clarity-NJ-Morris-2026-general", "*.csv"))), 2)
 
 
 if __name__ == "__main__":

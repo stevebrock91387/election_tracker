@@ -27,7 +27,8 @@ import time
 import tomllib
 
 from pipeline.fetch import FetchError, fetch
-from pipeline.readers.clarity import COUNTY_TURNOUT_COLUMNS, TURNOUT_COLUMNS, parse_county_xml, parse_json, parse_xml, read_body
+from pipeline.readers.clarity import (COUNTY_TURNOUT_COLUMNS, TURNOUT_COLUMNS, parse_county_json, parse_county_xml,
+                                      parse_json, parse_xml, read_body)
 from pipeline.schema import write_csv
 
 DEFAULT_SOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sources_clarity.toml")
@@ -97,8 +98,9 @@ def fetch_pass(source_id, src, raw_dir="data/raw", now=None, opener=None):
     return {"version": version, "paths": paths}
 
 
-def parse_files(source_id, src, paths, parsed_dir="data/parsed"):
-    """paths: [zip] for xml sources, [sum, all] for json sources. Returns the output paths."""
+def parse_files(source_id, src, paths, parsed_dir="data/parsed", base_dir="."):
+    """paths: [zip] for xml sources, [sum, all] for json sources, [pass record] for county_json (its file
+    paths are relative to base_dir). Returns the output paths."""
     out_dir = os.path.join(parsed_dir, source_id)
     os.makedirs(out_dir, exist_ok=True)
     stem = os.path.join(out_dir, time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()))
@@ -112,6 +114,11 @@ def parse_files(source_id, src, paths, parsed_dir="data/parsed"):
         rows, summary, turnout = parse_county_xml(zip_path, src["state"], src["county"], source_id)
         write_csv(turnout, stem + "-turnout.csv", COUNTY_TURNOUT_COLUMNS)
         outs = [stem + ".csv", stem + "-turnout.csv"]
+    elif src["format"] == "county_json":
+        (record,) = paths
+        rows, summary, turnout = parse_county_json(record, base_dir=base_dir)
+        write_csv(turnout, stem + "-turnout.csv", COUNTY_TURNOUT_COLUMNS)
+        outs = [stem + ".csv", stem + "-turnout.csv"]
     else:
         sum_path, all_path = paths
         rows, summary = parse_json(sum_path, all_path, src["state"], source_id)
@@ -119,7 +126,12 @@ def parse_files(source_id, src, paths, parsed_dir="data/parsed"):
     n = write_csv(rows, stem + ".csv")
     print(f"{source_id}: {n} rows -> {', '.join(outs)}")
     for k, v in summary.items():
-        print(f"  {k}: {len(v) if isinstance(v, list) and k != 'vote_types' else v}")
+        if v is None:
+            print(f"  {k}: not checked")
+        elif isinstance(v, list) and k != "vote_types":
+            print(f"  {k}: {len(v)}" + (f"  e.g. {v[:3]}" if v else ""))
+        else:
+            print(f"  {k}: {v}")
     return outs
 
 
@@ -131,19 +143,25 @@ def main(argv=None):
     p.add_argument("--sources", default=DEFAULT_SOURCES)
     p.add_argument("--raw-dir", default="data/raw")
     p.add_argument("--parsed-dir", default="data/parsed")
+    p.add_argument("--base-dir", default=".", help="county_json: directory the pass record's paths start from")
     a = p.parse_args(argv)
     sources = load_sources(a.sources)
     if a.source_id not in sources:
         p.error(f"unknown source id {a.source_id!r}; known: {', '.join(sources)}")
     src = sources[a.source_id]
     if a.command == "parse":
-        need = 1 if src["format"] in ("xml", "county_xml") else 2
+        need = 2 if src["format"] == "json" else 1
         if len(a.paths) != need:
             p.error(f"{a.source_id} is {src['format']}: parse needs {need} path(s)")
-        return parse_files(a.source_id, src, a.paths, a.parsed_dir)
+        return parse_files(a.source_id, src, a.paths, a.parsed_dir, a.base_dir)
     if a.paths:
         p.error(f"{a.command} takes no paths")
     r = fetch_pass(a.source_id, src, raw_dir=a.raw_dir)
+    if src["format"] == "county_json":
+        print(f"{a.source_id}: version {r['version']}, pass saved -> {r['record']}")
+        if a.command == "fetch-parse":
+            return parse_files(a.source_id, src, [r["record"]], a.parsed_dir)
+        return r
     print(f"{a.source_id}: version {r['version']}, saved {r['paths']}")
     if a.command == "fetch-parse":
         order = ["xml"] if src["format"] in ("xml", "county_xml") else ["sum", "all"]
