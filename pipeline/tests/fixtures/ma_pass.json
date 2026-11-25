@@ -2,6 +2,7 @@
  "offices": ["U.S. Senate", "Governor", "Attorney General", "Secretary of the Commonwealth", "Treasurer", "Auditor",
              "U.S. House", "Governor's Council", "State Senate", "State Representative"],
  "question_locations": ["Statewide"],
+ "stages": ["General Election"],
  "files": [{"kind": "search", "path": "ma_search.html"},
            {"kind": "questions", "path": "ma_questions.html"},
            {"kind": "contest", "id": "173531", "path": "ma_c173531.csv"},

@@ -26,7 +26,7 @@ def fx(name, mode="rb"):
 class ListParserTest(unittest.TestCase):
     def test_search(self):
         got = parse_search(fx("ma_search.html").decode("utf-8"))
-        self.assertEqual(sorted(got), ["173531", "173571", "173595", "173668"])
+        self.assertEqual(sorted(got), ["171923", "173531", "173571", "173595", "173668"])
         sen = got["173531"]
         self.assertEqual((sen["office"], sen["district"], sen["stage"], sen["year"]),
                          ("U.S. Senate", "Statewide", "General Election", "2026"))
@@ -48,7 +48,8 @@ class ListParserTest(unittest.TestCase):
         src = load_sources(DEFAULT_SOURCES)[MA_ID]
         contests = parse_search(fx("ma_search.html").decode("utf-8"))
         questions = parse_questions(fx("ma_questions.html").decode("utf-8"))
-        self.assertEqual(select(contests, questions, src["offices"], src["question_locations"]),
+        self.assertEqual(got["171923"]["stage"] if (got := contests) else None, "Special General Election")
+        self.assertEqual(select(contests, questions, src["offices"], src["question_locations"], src["stages"]),
                          (["173531", "173571", "173668"], ["11789"]))
 
 
@@ -74,7 +75,24 @@ class FetchPassTest(unittest.TestCase):
         self.assertEqual([(x["kind"], x.get("id")) for x in r["files"]],
                          [("search", None), ("questions", None), ("contest", "173531"), ("contest", "173571"),
                           ("contest", "173668"), ("question", "11789")])
-        self.assertEqual((r["offices"], r["question_locations"]), (self.src["offices"], ["Statewide"]))
+        self.assertEqual((r["offices"], r["question_locations"], r["stages"]),
+                         (self.src["offices"], ["Statewide"], ["General Election"]))
+        self.assertEqual({k: r["files"][2][k] for k in ("office", "district", "stage")},
+                         {"office": "U.S. Senate", "district": "Statewide", "stage": "General Election"})
+        self.assertEqual((r["files"][5]["number"], r["files"][5]["location"]), ("1", "Statewide"))
+
+    def test_list_page_without_rows_stops_pass(self):
+        with self.assertRaises(FetchError):
+            fetch_pass(MA_ID, self.src, raw_dir=self.raw, sleep=lambda s: None,
+                       opener=lambda u: (200, b"<html>Radware bot check</html>"))
+        self.assertFalse(os.path.exists(os.path.join(self.raw, MA_ID)))
+
+    def test_list_page_bad_utf8_stops_pass(self):
+        seen = []
+        ok = self.opener(seen)
+        with self.assertRaises(UnicodeDecodeError):
+            fetch_pass(MA_ID, self.src, raw_dir=self.raw, sleep=lambda s: None,
+                       opener=lambda u: (200, fx("ma_search.html") + b"\xff") if u.endswith("stage:General") else ok(u))
 
     def test_failure_stops_pass(self):
         seen = []

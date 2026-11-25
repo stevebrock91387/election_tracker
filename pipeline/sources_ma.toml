@@ -1,8 +1,8 @@
 # Massachusetts Secretary of the Commonwealth results archive (PD43+), 2026 state election. See
 # docs/superpowers/specs/2026-11-24-step2-ma-reader-design.md and sources/registry.csv.
 # A pass reads the 2026 general contest list and the 2026 ballot question list, then fetches the
-# precinct CSV of every contest whose office is in `offices` and every question whose location is in
-# `question_locations`. Certified results; Massachusetts has no statewide election-night feed.
+# precinct CSV of every contest whose office is in `offices` (and stage in `stages`) and every question
+# whose location is in `question_locations`. Certified results; Massachusetts has no statewide election-night feed.
 
 [ma-2026-general]
 state = "MA"
@@ -14,5 +14,7 @@ question_path = "/ballot_questions/download/{id}/precincts_include:1/"
 offices = ["U.S. Senate", "Governor", "Attorney General", "Secretary of the Commonwealth", "Treasurer", "Auditor",
            "U.S. House", "Governor's Council", "State Senate", "State Representative"]
 question_locations = ["Statewide"]
+# The General search also lists "Special General Election" contests; those are a different election.
+stages = ["General Election"]
 min_interval_s = 120
 request_gap_s = 5

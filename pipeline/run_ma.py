@@ -18,12 +18,12 @@ import os
 import time
 import tomllib
 
-from pipeline.fetch import fetch
+from pipeline.fetch import FetchError, fetch
 from pipeline.readers.ma import parse_pass, parse_questions, parse_search, select
 from pipeline.schema import write_csv
 
 DEFAULT_SOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sources_ma.toml")
-CONFIG_KEYS = ["offices", "question_locations"]
+CONFIG_KEYS = ["offices", "question_locations", "stages"]
 
 
 def load_sources(path=DEFAULT_SOURCES):
@@ -51,15 +51,20 @@ def fetch_pass(source_id, src, raw_dir="data/raw", now=None, opener=None, sleep=
         path = get(f"{source_id}-{kind}", base + src[f"{kind}_path"], "html")
         files.append({"kind": kind, "path": path})
         with open(path, "rb") as f:
-            pages[kind] = f.read().decode("utf-8", "replace")
+            pages[kind] = f.read().decode("utf-8")  # strict, as parse reads it
     contests, questions = parse_search(pages["search"]), parse_questions(pages["questions"])
-    cids, qids = select(contests, questions, src["offices"], src["question_locations"])
+    if not contests:
+        raise FetchError(f"{source_id}: the contest list page has no contest rows (blocked or changed?)")
+    cids, qids = select(contests, questions, src["offices"], src["question_locations"], src["stages"])
     for cid in cids:
         path = get(f"{source_id}-c{cid}", base + src["contest_path"].format(id=cid), "csv")
-        files.append({"kind": "contest", "id": cid, "path": path})
+        c = contests[cid]
+        files.append({"kind": "contest", "id": cid, "office": c["office"], "district": c["district"],
+                      "stage": c["stage"], "path": path})
     for qid in qids:
         path = get(f"{source_id}-q{qid}", base + src["question_path"].format(id=qid), "csv")
-        files.append({"kind": "question", "id": qid, "path": path})
+        q = questions[qid]
+        files.append({"kind": "question", "id": qid, "number": q["number"], "location": q["location"], "path": path})
     out_dir = os.path.join(raw_dir, source_id)
     os.makedirs(out_dir, exist_ok=True)
     rec_path = os.path.join(out_dir, f"pass-{started}.json")

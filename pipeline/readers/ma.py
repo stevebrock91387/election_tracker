@@ -134,9 +134,10 @@ def parse_questions(html):
     return out
 
 
-def select(contests, questions, offices, locations):
-    """The ids to fetch: contests whose office is in scope, questions whose location is (list order)."""
-    return ([i for i, c in contests.items() if c["office"] in offices],
+def select(contests, questions, offices, locations, stages=None):
+    """The ids to fetch: contests whose office (and stage, when `stages` is given) is in scope, questions
+    whose location is (list order). The General search also returns "Special General Election" rows."""
+    return ([i for i, c in contests.items() if c["office"] in offices and (stages is None or c["stage"] in stages)],
             [i for i, q in questions.items() if q["location"] in locations])
 
 
@@ -145,7 +146,8 @@ TOTAL = "Total Votes Cast"
 NUMBER = re.compile(r"\d{1,3}(?:,\d{3})+|\d+")
 LISTS = ["totals_row_mismatches", "totals_row_not_checked", "list_mismatches", "list_not_checked",
          "total_votes_mismatches", "total_votes_not_checked", "party_label_differences", "non_numeric",
-         "malformed_lines", "duplicate_precincts", "duplicate_choices", "contests_without_file", "files_not_in_list",
+         "malformed_lines", "duplicate_precincts", "duplicate_choices", "duplicate_contest_names",
+         "contests_without_file", "files_not_in_list",
          "unexpected_headers", "unreadable_files", "missing_files"]
 LIST_CHECKS = ["list_mismatches", "list_not_checked", "party_label_differences", "contests_without_file",
                "files_not_in_list"]
@@ -174,7 +176,11 @@ def parse_csv(text, kind):
            "totals": None, "malformed": [], "duplicates": dups}
     start = 1
     if kind == "contest" and len(recs) > 1 and recs[1][:3] == ["", "", ""]:
-        out["parties"] = {header[i]: p for i, p in enumerate(recs[1]) if i >= 3 and p}
+        party_row = recs[1]
+        if len(party_row) > len(header):
+            out["malformed"].append((2, len(party_row)))
+        # Keyed by the kept column's index, so a dropped duplicate column can't lend its party.
+        out["parties"] = {name: party_row[i] for i, name in columns if i < len(party_row) and party_row[i]}
         start = 2
     for n, f in enumerate(recs[start:], start=start + 1):
         if not f or f == [""]:
@@ -201,7 +207,8 @@ def _name(info, kind, fid):
 def parse_pass(record_path, base_dir="."):
     with open(record_path) as f:
         rec = json.load(f)
-    summary = {"contests": 0, "questions": 0, "out_of_scope_offices": None, "out_of_scope_questions": None}
+    summary = {"contests": 0, "questions": 0, "out_of_scope_offices": None, "out_of_scope_stages": None,
+               "out_of_scope_questions": None}
     summary.update({k: [] for k in LISTS})
     lists, lists_ok = {}, True
     for kind, parser in (("search", parse_search), ("questions", parse_questions)):
@@ -213,18 +220,24 @@ def parse_pass(record_path, base_dir="."):
         path = entry["path"] if os.path.isabs(entry["path"]) else os.path.join(base_dir, entry["path"])
         try:
             with open(path, "rb") as f:
-                lists[kind] = parser(f.read().decode("utf-8"))
-        except (OSError, UnicodeDecodeError, AssertionError) as e:
+                parsed = parser(f.read().decode("utf-8"))
+            if not parsed:
+                raise ValueError("no rows found in the list page")
+            lists[kind] = parsed
+        except (OSError, UnicodeDecodeError, AssertionError, ValueError, RecursionError) as e:
             summary["unreadable_files"].append((kind, str(e)))
             lists_ok = False
     contests, questions = lists.get("search", {}), lists.get("questions", {})
-    offices, locations = rec.get("offices", []), rec.get("question_locations", [])
+    offices, locations, stages = rec.get("offices", []), rec.get("question_locations", []), rec.get("stages")
     if "search" in lists:
-        oos = {}
+        oos, ost = {}, {}
         for c in contests.values():
             if c["office"] not in offices:
                 oos[c["office"]] = oos.get(c["office"], 0) + 1
+            if stages is not None and c["stage"] not in stages:
+                ost[c["stage"]] = ost.get(c["stage"], 0) + 1
         summary["out_of_scope_offices"] = dict(sorted(oos.items()))
+        summary["out_of_scope_stages"] = dict(sorted(ost.items()))
     if "questions" in lists:
         oos = {}
         for q in questions.values():
@@ -234,7 +247,7 @@ def parse_pass(record_path, base_dir="."):
 
     base = dict.fromkeys(COLUMNS, "")
     base.update(state=rec["state"], source_id=rec["source_id"], contest_scope="statewide", vote_type="TOTAL")
-    rows, read = [], set()
+    rows, read, names = [], set(), {}
     for x in rec["files"]:
         kind = x["kind"]
         if kind not in ("contest", "question"):
@@ -244,6 +257,11 @@ def parse_pass(record_path, base_dir="."):
         if lists_ok and info is None:
             summary["files_not_in_list"].append((kind, fid))
         name = _name(info, kind, fid)
+        if name in names:  # e.g. a special election under the same office and district
+            summary["duplicate_contest_names"].append((name, names[name], fid))
+            name = f"{name} [{fid}]"
+        else:
+            names[name] = fid
         path = x["path"] if os.path.isabs(x["path"]) else os.path.join(base_dir, x["path"])
         try:
             with open(path, "rb") as f:
@@ -282,7 +300,7 @@ def parse_pass(record_path, base_dir="."):
                 rows.append(dict(prow, choice=c, party="" if kind == "question" else p["parties"].get(c, ""),
                                  votes=v if isinstance(v, int) else ""))
             parts = [values[c] for c in p["choices"]]
-            if not all(isinstance(v, int) for v in parts + [values[TOTAL]]):
+            if p["duplicates"] or not all(isinstance(v, int) for v in parts + [values[TOTAL]]):
                 summary["total_votes_not_checked"].append((name, town, pid))
             elif sum(parts) != values[TOTAL]:
                 summary["total_votes_mismatches"].append((name, town, pid, values[TOTAL], sum(parts)))
@@ -320,7 +338,7 @@ def parse_pass(record_path, base_dir="."):
                     else:
                         summary["list_not_checked"].append((name, cand))
     if lists_ok:
-        cids, qids = select(contests, questions, offices, locations)
+        cids, qids = select(contests, questions, offices, locations, stages)
         for kind, ids, table in (("contest", cids, contests), ("question", qids, questions)):
             for i in ids:
                 if (kind, i) not in read and not any(x["kind"] == kind and x["id"] == i for x in rec["files"]):

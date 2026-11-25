@@ -7,7 +7,7 @@ ids below. The contest and question CSVs are copied into OUT_DIR separately, unm
 """
 import sys
 
-CONTESTS = ["173531", "173571", "173668", "173595"]  # U.S. Senate, U.S. House 2nd, Rep 1st Barnstable, Sheriff
+CONTESTS = ["173531", "173571", "173668", "173595", "171923"]  # U.S. Senate, U.S. House 2nd, Rep 1st Barnstable, Sheriff, State Senate 1st Middlesex special
 QUESTIONS = ["11789", "11758"]  # Question 1 (statewide), Question 10 (1st Bristol, local)
 END = "<!--// END tr#election-id-... //-->"
 

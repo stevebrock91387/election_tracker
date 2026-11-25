@@ -12,7 +12,7 @@ FX = os.path.join(os.path.dirname(__file__), "fixtures")
 SEN, H2, REP, Q1 = "U.S. Senate", "U.S. House 2nd Congressional", "State Representative 1st Barnstable", "Question 1"
 LISTS = ["totals_row_mismatches", "totals_row_not_checked", "list_mismatches", "list_not_checked",
          "total_votes_mismatches", "total_votes_not_checked", "non_numeric", "malformed_lines", "duplicate_precincts",
-         "duplicate_choices", "contests_without_file", "files_not_in_list", "unexpected_headers", "unreadable_files",
+         "duplicate_choices", "duplicate_contest_names", "contests_without_file", "files_not_in_list", "unexpected_headers", "unreadable_files",
          "missing_files"]
 LABELS = [(SEN, "Shiva Ayyadurai", "Unenrolled", "Independent"), (SEN, "Joe Tache", "Unenrolled", "Socialism and Liberation"),
           (REP, "Joe B. Glynn", "Unenrolled", "Gulf War Veteran")]
@@ -90,6 +90,7 @@ class FixtureTest(unittest.TestCase):
         self.assertEqual((s["contests"], s["questions"]), (3, 1))
         self.assertEqual(s["party_label_differences"], LABELS)
         self.assertEqual(s["out_of_scope_offices"], {"Sheriff": 1})
+        self.assertEqual(s["out_of_scope_stages"], {"Special General Election": 1})
         self.assertEqual(s["out_of_scope_questions"], {"1st Bristol": 1})
         for k in LISTS:
             self.assertEqual(s[k], [], k)
@@ -192,6 +193,48 @@ class CheckTest(unittest.TestCase):
         rows, s, _ = run(self, {"ma_search.html": t})
         self.assertEqual(s["files_not_in_list"], [("contest", "173668")])
         self.assertTrue(find(rows, contest_id="contest 173668"))
+
+    def test_same_name_contests_kept_apart(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d)
+        html = text("ma_search.html")
+        start = html.index('<tr id="election-id-173668"')
+        end = html.index("<!--// END tr#election-id-... //-->", start) + len("<!--// END tr#election-id-... //-->")
+        html = html[:end] + html[start:end].replace("election-id-173668", "election-id-999") + html[end:]
+        with open(os.path.join(FX, "ma_pass.json")) as f:
+            rec = json.load(f)
+        for x in rec["files"]:
+            x["path"] = os.path.join(FX, x["path"])
+        with open(os.path.join(d, "search.html"), "w", encoding="utf-8") as f:
+            f.write(html)
+        rec["files"][0]["path"] = os.path.join(d, "search.html")
+        rec["files"].append({"kind": "contest", "id": "999", "path": os.path.join(FX, "ma_c173668.csv")})
+        with open(os.path.join(d, "pass.json"), "w") as f:
+            json.dump(rec, f)
+        rows, s, _ = parse_pass(os.path.join(d, "pass.json"))
+        self.assertEqual(s["duplicate_contest_names"], [(REP, "173668", "999")])
+        self.assertEqual(len(find(rows, level="state", contest_id=REP)), 4)
+        self.assertEqual(len(find(rows, level="state", contest_id=REP + " [999]")), 4)
+
+    def test_duplicate_choice_keeps_first_party_and_skips_total_check(self):
+        t = edit("ma_c173668.csv", '"Joe B. Glynn"', '"Christopher Lambton"')
+        rows, s, _ = run(self, {"ma_c173668.csv": t})
+        r = find(rows, level="precinct", contest_id=REP, county_name="Brewster", precinct_id="-/1", choice="Christopher Lambton")
+        self.assertEqual([x["party"] for x in r], ["Democratic"])
+        self.assertEqual(s["total_votes_mismatches"], [])
+        self.assertIn((REP, "Brewster", "-/1"), s["total_votes_not_checked"])
+        self.assertNotIn(REP, [p[0] for p in s["party_label_differences"]])
+
+    def test_long_party_row_listed_not_crash(self):
+        t = edit("ma_c173668.csv", ",,,Democratic,Unenrolled", ",,,Democratic,Unenrolled,,,,X")
+        rows, s, _ = run(self, {"ma_c173668.csv": t})
+        self.assertIn((REP, 2, 9), s["malformed_lines"])
+        self.assertTrue(find(rows, contest_id=REP))
+
+    def test_list_page_without_rows_unreadable(self):
+        _, s, _ = run(self, {"ma_search.html": "<html>Radware bot check</html>"})
+        self.assertEqual([u[0] for u in s["unreadable_files"]], ["search"])
+        self.assertIsNone(s["list_mismatches"])
 
     def test_missing_search(self):
         rows, s, _ = run(self, drop=("ma_search.html",))
