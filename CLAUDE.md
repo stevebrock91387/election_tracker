@@ -81,7 +81,7 @@ Every registry row was looked at in the built-in browser. **48 verified, 3 parti
 
 ### Step 2: Enhanced Voting reader (built 2026-11-20)
 
-`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (189 with Clarity, ResultsAjax, Tally, NC, OH and TX). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
+`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (219 with Clarity, ResultsAjax, Tally, NC, OH, TX and CT). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
 
 ### Step 2: Clarity reader (built 2026-11-20, county level)
 
@@ -106,6 +106,14 @@ Steve approved: the live NIST 1500-100 XML feed now (approach A), certified prec
 ### Step 2: Texas reader (built 2026-11-24, county level)
 
 Steve approved: the Civix ENR statewide file plus its county file (the statewide file as a check), the 584 federal, statewide and district races, total and early votes. `pipeline/readers/tx.py` (rows, summary, county turnout table), `pipeline/sources_tx.toml`, CLI `python3 -m pipeline.run_tx fetch|parse|fetch-parse SOURCE_ID`. Two requests per pass; values are base64 JSON; counties carry FIPS. 2026: 36,970 rows, 584 races, 254 counties; statewide totals equal the county sums for all 917 choices (total and early). Party codes differ between the two files for 16 choices (LIB/L, G/GRE, I/IND; each kept as published, listed). County-level offices (2,591) aren't in these files. The county `VC` figure sums to exactly the US Senate total, so it may not be ballots cast. Last update Nov 4; whether it changes later is unverified. Details in `docs/tx.md`. The custom-site readers (NC, OH, TX) are done.
+
+### Remaining state readers (from 2026-11-24, standing approval)
+
+Steve: "Let's finish building the state readers. Assume I approve, merge, push from now on." Script access checked once per site 2026-11-24. Blocked for scripts (not pursued, per the Arizona rule): NY KS KY ME MI MO NV NH TN WI (403), OK (data API needs the app's built-in password login), MN (download page goes to a Radware CAPTCHA), CA, PA; FL's download files sit on a host whose GoDaddy TLS Root CA - R1 isn't in the Mozilla/Homebrew/macOS stores (verification not disabled); the HTML site verifies. Steve's call pending on all of these. Reachable: AL AK CT DE DC HI IL IN LA MD MA MS NJ VT WY.
+
+### Step 2: Connecticut reader (built 2026-11-24, town level)
+
+CT EMS static JSON: `Version.json`, then seven files under that version (one snapshot per pass). `pipeline/readers/ct.py`, `pipeline/sources_ct.toml`, CLI `python3 -m pipeline.run_ct fetch|parse|fetch-parse SOURCE_ID`. Scope: office types SW C S A PD (251 offices; town offices out). Rows `level = "town"` (added to the schema doc; town id/name in the county columns). Each party line is its own row (cross-endorsements: Lamont D and WF). 2026 (v56593): 6,886 rows, 169 towns; town sums equal state values everywhere. Listed: 5 lines with unknown party ids, 3 probate fusion candidates without a grouping entry. Candidate home addresses are in the lookup file and never copied. Details in `docs/ct.md`.
 
 ## Next tasks, in order
 

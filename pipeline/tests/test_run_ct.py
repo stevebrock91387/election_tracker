@@ -1,11 +1,19 @@
 """CT source list and the fetch pass (fake opener and sleep; no network)."""
+import contextlib
+import csv
+import glob
+import io
 import json
 import os
 import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
-from pipeline.run_ct import DEFAULT_SOURCES, fetch_pass, load_sources
+from pipeline.readers.ct import TURNOUT_COLUMNS
+from pipeline.run_ct import DEFAULT_SOURCES, fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 CT_ID = "ct-2026-general"
 BASE = "https://ctemspublic.tgstg.net/ng-app/data/election/108/"
@@ -72,6 +80,36 @@ class FetchPassTest(unittest.TestCase):
         with self.assertRaises(FetchError):
             self.run_pass(opener_for([], fail=("townVotes",)))
         self.assertTrue(self.no_record())
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", CT_ID, os.path.join(FX, "ct_pass.json"), "--base-dir", FX, "--parsed-dir", out])
+        (results,) = glob.glob(os.path.join(out, CT_ID, "*Z.csv"))
+        (turnout,) = glob.glob(os.path.join(out, CT_ID, "*-turnout.csv"))
+        self.assertEqual(turnout, results[:-4] + "-turnout.csv")
+        with open(results, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), COLUMNS)
+        with open(turnout, newline="") as f:
+            r = csv.reader(f)
+            self.assertEqual(next(r), TURNOUT_COLUMNS)
+            self.assertEqual(sum(1 for _ in r), 6)
+        self.assertIn("version: 56593", buf.getvalue())
+        self.assertIn("unknown_parties: 1", buf.getvalue())
+
+    def test_parse_prints_not_checked(self):
+        d = tempfile.mkdtemp()
+        rec = os.path.join(d, "pass.json")
+        with open(rec, "w") as f:
+            json.dump({"source_id": CT_ID, "state": "CT", "version": 1, "office_types": ["SW"],
+                       "files": [{"kind": "lookup", "path": os.path.join(FX, "ct_lookup.json")}]}, f)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", CT_ID, rec, "--parsed-dir", d])
+        self.assertIn("mismatches_state_vs_town: not checked", buf.getvalue())
 
 
 if __name__ == "__main__":
