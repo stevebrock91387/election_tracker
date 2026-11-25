@@ -19,7 +19,7 @@ The site `https://electionresults.vermont.gov/` reads static files under `https:
 
 - **Output:** 20,468 rows: 2,548 total rows (statewide and district totals) and 17,920 town-part rows; 247 turnout rows.
 - **Coverage:** 132 offices (Congress, 6 statewide, 16 senate districts, 109 house districts), 247 towns in 283 town parts.
-- **Every check is clean:** town-part sums equal the total entry for every choice (blank and over votes included); every entry's vote slots equal votes + blank + over; each town's Congress ballots (summed over its parts) equal its turnout ballots; no unknown towns, duplicates, non-integer counts or stray choices.
+- **Every check is clean:** town-part sums equal the total entry for every choice (blank and over votes included), and no choice is in one but not the other; every entry's vote slots equal votes + blank + over; each town's Congress ballots (summed over its parts) equal its turnout ballots, and the Congress total equals the turnout sum; no unknown towns, duplicates, non-integer counts or stray choices.
 - **Turnout sums:** registered 506,830; ballots 311,510 (= the Congress total); absentee 193,189.
 - **Example, Congress:** Balint DEMOCRATIC 198,758; Malloy REPUBLICAN 94,078; four independents; blank 6,241, overvotes 594.
 

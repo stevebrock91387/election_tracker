@@ -92,7 +92,8 @@ class RealFixtureTest(unittest.TestCase):
         town_sum = sum(r["votes"] for r in find(self.rows, level="town", contest_id="4", choice_id="225757"))
         self.assertEqual(balint, [("4", "225757", 198758, town_sum)])
         for k in ("total_entry_missing", "total_entry_repeated", "unknown_towns", "non_numeric",
-                  "choices_not_in_total", "unreadable_files", "missing_files"):
+                  "choices_not_in_total", "towns_missing_from_turnout",
+                  "malformed_entries", "unreadable_files", "missing_files"):
             self.assertEqual(s[k], [], k)
 
     def test_every_row(self):
@@ -163,6 +164,45 @@ class SyntheticTest(unittest.TestCase):
         self.assertEqual([x[0] for x in s["unreadable_files"]], ["senate"])
         self.assertFalse(find(rows, contest_id="12:CHI CT 1"))
         self.assertTrue(find(rows, contest_id="4"))
+        for k in ("sum_mismatches", "sc_mismatches", "duplicate_entries", "non_numeric", "choices_not_in_total",
+                  "choices_not_in_towns", "total_entry_missing"):
+            self.assertIsNone(s[k], k)
+
+    def test_empty_results_file_unreadable(self):
+        rows, s, _ = parse_data(self, self.d, raw={"house": '{"d": []}'})
+        self.assertEqual([x[0] for x in s["unreadable_files"]], ["house"])
+        self.assertIsNone(s["sum_mismatches"])
+
+    def test_malformed_entries_listed_not_fatal(self):
+        o = office(self.d, "federal")
+        entry(o, "ADDISON")["rc"].append(None)
+        o["cs"].append(None)
+        self.d["stateWide"]["d"][0]["o"].append("bad")
+        self.d["election"]["towns"].append(None)
+        self.d["turnOut"]["d"].append("bad")
+        rows, s, _ = parse_data(self, self.d)
+        self.assertTrue(find(rows, contest_id="4", county_id="16"))
+        self.assertEqual({m[0] for m in s["malformed_entries"]}, {"federal", "stateWide", "election", "turnOut"})
+
+    def test_choice_only_in_total_listed(self):
+        tot = entry(office(self.d, "federal"), "STATE WIDE")
+        tot["rc"].append({"cid": 7, "cn": "GHOST", "vc": 5000, "isWriteIn": False, "pn": None})
+        tot["sc"] += 5000
+        s = parse_data(self, self.d)[1]
+        self.assertIn(("4", "7"), s["choices_not_in_towns"])
+
+    def test_turnout_total_and_missing_towns(self):
+        self.d["turnOut"]["d"] = [t for t in self.d["turnOut"]["d"] if t["tid"] != 16]
+        s = parse_data(self, self.d)[1]
+        self.assertEqual(s["towns_missing_from_turnout"], [16])
+        self.assertTrue(s["turnout_total_mismatches"])
+
+    def test_turnout_check_per_federal_office(self):
+        second = copy.deepcopy(office(self.d, "federal"))
+        second["oid"] = 99
+        self.d["federal"]["d"][0]["o"].append(second)
+        s = parse_data(self, self.d)[1]
+        self.assertEqual(s["turnout_mismatches"], [])
 
     def test_missing_file_listed(self):
         rows, s, t = parse_data(self, self.d, kinds=[k for k in KINDS if k != "turnOut"])
