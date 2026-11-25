@@ -28,6 +28,10 @@ election-night feed on the SOS site (registry), so this is the certified load.
   same block layout with one row per county and a `Total` row. A county where a contest isn't on the
   ballot shows `-`.
 - No ids anywhere (contest, choice, precinct). No vote types. No registered voters.
+- Found while building: in Carbon, Converse and Crook the PbP precinct cells are numbers with a
+  date number format (`mm\-dd`): 44562 displays as `01-01`, the TBC workbook's text name for the
+  same precinct. Campbell, Laramie, Natrona and Sweetwater have a `Precincts Continue\non Next Page`
+  row with no values (a print page break). Teton's `1-12` has one empty cell beside `-` cells.
 
 ## Approaches
 
@@ -45,7 +49,12 @@ election-night feed on the SOS site (registry), so this is the certified load.
   order, its rels for each sheet's part, sharedStrings, inline strings; a grid is a list of rows
   (by row number, gaps kept as empty rows) of cells (by column letter, gaps `None`); values are
   strings as stored (numbers too). Members read in memory; a member over 50 MB is refused; XML
-  parsed with `xml.etree.ElementTree` (no external entities are resolved by it).
+  parsed with `xml.etree.ElementTree` (no external entities are resolved by it). A numeric cell whose style
+  has a date number format made only of `m`/`mm`/`d`/`dd`/`yy`/`yyyy` tokens and literal separators is
+  rendered as that format displays it (1900 date system; the workbook's `date1904` flag honoured);
+  each such cell is listed in `date_formatted_cells` (informational, with raw and shown value), and a
+  date-styled cell whose format isn't of that kind keeps its raw value and is listed in
+  `unrendered_formats`.
 - **Block parser** (`parse_blocks(grid) -> contests`), shared by PbP and summaries: row 3 gives each
   block's start column and contest name; the block runs to the next start (or the last non-empty
   header in row 4); row 4 gives each column's choice header; data rows run from row 5 to the `Total`
@@ -68,6 +77,11 @@ election-night feed on the SOS site (registry), so this is the certified load.
   - `precincts_over_ballots`: (county, precinct, contest, lines sum, ballots cast) where a contest's
     lines (choices + write-ins + over + under) don't equal the precinct's ballots cast (informational:
     vote-for-more contests mismatch by design).
+  - `empty_unit_rows`: (sheet, row, text) unit rows with no value in any block (page-break rows);
+    skipped. `empty_cells`: (sheet, unit, contest, choice) an empty cell in a unit that has other
+    values; no row. A `-` cell gives no row and is counted in `not_on_ballot_cells`.
+  - Comparisons that can't be made (a non-numeric side) go to `total_row_not_checked` /
+    `county_not_checked`, never into a mismatch list.
   - `non_numeric` (cell neither digits nor `-`), `duplicate_units`, `duplicate_choices`,
     `blank_headers`, `unmatched_tbc_precincts` (in one workbook only), `sheet_mismatches` (county
     sheets in one PbP workbook only), `out_of_place_cells` (values outside any block).

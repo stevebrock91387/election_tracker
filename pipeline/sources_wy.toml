@@ -1,0 +1,10 @@
+# Wyoming Secretary of State results, 2026 general election. See
+# docs/superpowers/specs/2026-11-24-step2-wy-reader-design.md and sources/registry.csv.
+# A pass fetches the ZIP linked as "Wyoming General Election Results" on
+# https://sos.wyo.gov/Elections/Docs/2026/2026GeneralResults.aspx: three official .xlsx workbooks
+# (precinct results, precinct ballots cast, statewide summaries by county).
+
+[wy-2026-general]
+state = "WY"
+zip_url = "https://sos.wyo.gov/Elections/Docs/2026/Results/General/2026_Wyoming_General_Results.zip"
+min_interval_s = 120
