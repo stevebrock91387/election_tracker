@@ -1,0 +1,29 @@
+{
+ "source_id": "clarity-NJ-Gloucester-2026-general",
+ "state": "NJ",
+ "county": "Gloucester",
+ "version": "387074",
+ "started_utc": "20261125T191927Z",
+ "files": [
+  {
+   "kind": "sum",
+   "vote_type": "",
+   "path": "nj_gloucester_sum.json"
+  },
+  {
+   "kind": "all",
+   "vote_type": "",
+   "path": "nj_gloucester_all.json"
+  },
+  {
+   "kind": "vt",
+   "vote_type": "",
+   "path": "nj_gloucester_vt.json"
+  },
+  {
+   "kind": "status",
+   "vote_type": "",
+   "path": "nj_gloucester_status.json"
+  }
+ ]
+}

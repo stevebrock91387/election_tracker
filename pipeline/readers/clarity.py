@@ -40,6 +40,7 @@ elements of Contest/Choice (listed, not parsed).
 import gzip
 import hashlib
 import json
+import os
 import xml.etree.ElementTree as ET
 import zipfile
 import zlib
@@ -365,3 +366,291 @@ def parse_county_xml(zip_path, state, county, source_id):
     else:
         summary["precincts_not_in_turnout"] = summary["turnout_precincts_without_results"] = None
     return rows, summary, turnout
+
+
+COUNTY_JSON_CHECKS = ["mismatches_precincts_vs_county", "mismatches_total_area_vs_county",
+                      "mismatches_vote_types_vs_total", "mismatches_area_totals", "precinct_sum_not_checked",
+                      "total_area_not_checked", "vote_type_sum_not_checked", "area_total_not_checked"]
+COUNTY_JSON_LISTS = COUNTY_JSON_CHECKS + [
+    "protected_cells", "non_numeric", "skipped_contest_length_mismatch", "duplicate_contests",
+    "skipped_length_mismatch", "skipped_areas", "contests_only_in_areas", "duplicate_areas",
+    "contests_without_precincts", "contests_without_vote_types", "precincts_not_in_status",
+    "status_precincts_without_results", "rcv_contests", "partial_contests"]
+PROTECTED = "protected"
+
+
+def _is_count(v):
+    return isinstance(v, int) and not isinstance(v, bool) and v >= 0
+
+
+def _total(values):
+    """Sum of a list of counts, None when any isn't a count."""
+    return sum(values) if all(_is_count(v) for v in values) else None
+
+
+def _load_json(path, summary, label):
+    try:
+        return json.loads(read_body(path))
+    except (OSError, ValueError, EOFError, zlib.error) as e:  # gzip.BadGzipFile is an OSError
+        summary["unreadable"].append((label, str(e)))
+        return None
+
+
+def parse_county_json(record_path, base_dir="."):
+    """One county's Clarity JSON files (New Jersey counties without detail XML), from a county_json pass record.
+
+    Design: docs/superpowers/specs/2026-11-25-step2-nj-clarity-json-counties-design.md.
+    County rows: TOTAL from sum.json, one per vote type from vt.json. Precinct rows: TOTAL from ALL.json,
+    one per vote type from that type's file. The "-1" area of each area file is the county total: compared,
+    not emitted. choice_id is sum.json's CHAggId; contest_scope "local" (keys are the county's own).
+    A cell that isn't a count gives votes "" and is listed: "protected" (the county's privacy filter) in
+    protected_cells, anything else in non_numeric; a comparison it prevents goes to a *_not_checked list.
+    Labels in the lists: "ALL" or the vote type name for area files, "vt.json" for vt.json.
+    Nothing is corrected. Without sum.json there are no rows and the checks are None; without a vote-type
+    file its precinct rows are missing and the precinct vote-type check is None; without vt.json (or with
+    no vote types published) the vote-type checks are None; without status.json the turnout table is
+    empty and its checks are None.
+    """
+    summary = {"county": None, "version": None, "contests": 0, "precincts": 0, "vote_types": [], "vpcfe": None,
+               "comparisons": 0, "precinct_vote_types_checked": 0, "unreadable": []}
+    summary.update({k: [] for k in COUNTY_JSON_LISTS})
+    with open(record_path) as f:
+        rec = json.load(f)
+    county, state, source_id = rec["county"], rec["state"], rec["source_id"]
+    summary.update(county=county, version=rec.get("version"))
+    paths = {}
+    for x in rec["files"]:
+        paths[(x["kind"], x.get("vote_type", ""))] = os.path.join(base_dir, x["path"])
+    docs, shas = {}, {}
+    for key, path in paths.items():
+        label = key[1] or key[0]
+        doc = _load_json(path, summary, label)
+        if doc is not None:
+            docs[key], shas[key] = doc, _sha256(path)
+
+    s = docs.get(("sum", ""))
+    if not isinstance(s, dict) or not isinstance(s.get("Contests"), list):
+        if ("sum", "") in docs:
+            summary["unreadable"].append(("sum", "no Contests list"))
+        for k in COUNTY_JSON_LISTS:
+            summary[k] = None
+        return [], summary, []
+    summary["vpcfe"] = s.get("VPCFE")
+    base = dict.fromkeys(COLUMNS, "")
+    base.update(state=state, source_id=source_id, contest_scope="local", county_name=county)
+
+    # Contests from sum.json: choices (as row templates) and county totals.
+    contests, skipped, rows = {}, set(), []
+    for c in s["Contests"]:
+        summary["contests"] += 1
+        k = str(c.get("K", ""))
+        lengths = {f: len(c.get(f) or []) for f in ("CH", "CHAggId", "P", "V")}
+        if k in contests or k in skipped:
+            summary["duplicate_contests"].append(k)
+            continue
+        if len(set(lengths.values())) != 1:
+            summary["skipped_contest_length_mismatch"].append((k, lengths))
+            skipped.add(k)
+            continue
+        if c.get("IsRCV"):
+            summary["rcv_contests"].append(k)
+        if c.get("PR") != c.get("TP"):
+            summary["partial_contests"].append((k, c.get("PR"), c.get("TP")))
+        contest = dict(base, contest_id=k, contest_name=c.get("C", ""), vote_for=str(c.get("VF", "")))
+        choices = [dict(contest, choice=name, choice_id=str(cid), party=party or "")
+                   for name, cid, party in zip(c["CH"], c["CHAggId"], c["P"])]
+        status = f"{c.get('PR', '')}/{c.get('TP', '')} precincts"
+        contests[k] = {"choices": choices, "total": c["V"], "status": status, "types": None}
+        for ch, v in zip(choices, c["V"]):
+            rows.append(dict(ch, level="county", vote_type="TOTAL", source_sha256=shas[("sum", "")],
+                             votes=_cell(v, "sum.json", "", k, ch["choice_id"], "TOTAL", summary),
+                             reporting_status=status))
+
+    # Vote types from vt.json: county rows, per-type totals, and the county vote-type check.
+    vt = docs.get(("vt", ""))
+    types = vt.get("Types") if isinstance(vt, dict) else None
+    if not (isinstance(types, list) and all(isinstance(t, str) and t for t in types)
+            and isinstance(vt.get("Contests"), list)):
+        if vt is not None:
+            summary["unreadable"].append(("vt", "no Types/Contests lists"))
+        types = None
+    summary["vote_types"] = list(types or [])
+    if not types:
+        for k in ("mismatches_vote_types_vs_total", "vote_type_sum_not_checked", "contests_without_vote_types"):
+            summary[k] = None
+        summary["precinct_vote_types_checked"] = None
+    else:
+        seen = set()
+        for c in vt["Contests"]:
+            k = str(c.get("K", ""))
+            if k in skipped:
+                continue
+            if k not in contests or k in seen:
+                summary["contests_only_in_areas"].append(("vt.json", "", k))
+                continue
+            seen.add(k)
+            info = contests[k]
+            votes, tots = c.get("Votes"), c.get("T")
+            if not (isinstance(votes, list) and len(votes) == len(info["choices"])
+                    and all(isinstance(r, list) and len(r) == len(types) for r in votes)
+                    and isinstance(tots, list) and len(tots) == len(types)):
+                summary["skipped_length_mismatch"].append(("vt.json", "", k))
+                continue
+            info["types"] = votes
+            cells = [[_cell(v, "vt.json", "", k, ch["choice_id"], t, summary) for v, t in zip(r, types)]
+                     for ch, r in zip(info["choices"], votes)]
+            for i, (ch, r) in enumerate(zip(info["choices"], cells)):
+                for t, v in zip(types, r):
+                    rows.append(dict(ch, level="county", vote_type=t, votes=v, source_sha256=shas[("vt", "")],
+                                     reporting_status=info["status"]))
+                _compare(summary, "mismatches_vote_types_vs_total", "vote_type_sum_not_checked",
+                         ("county", "", k, ch["choice_id"]), _count_or_none(info["total"][i]), _total(votes[i]))
+            for ti, t in enumerate(types):
+                _compare(summary, "mismatches_area_totals", "area_total_not_checked", ("vt.json", t, k),
+                         _count_or_none(tots[ti]), _total([r[ti] for r in votes]))
+        summary["contests_without_vote_types"] = [k for k in contests if k not in seen]
+
+    # Area files: ALL.json (TOTAL) and one per vote type.
+    files = [("ALL", "TOTAL", ("all", ""))] + [(t, t, ("type", t)) for t in (types or [])]
+    area_values = {}  # (file, area, contest) -> list of cells as published (precinct areas only)
+    status_names = None
+    st = docs.get(("status", ""))
+    reporting, turnout = {}, []
+    if isinstance(st, dict) and all(isinstance(st.get(f), list) for f in "PSRB") \
+            and len({len(st[f]) for f in "PSRB"}) == 1:
+        status_names = set()
+        for name, code, reg, bal in zip(st["P"], st["S"], st["R"], st["B"]):
+            status_names.add(name)
+            reporting[name] = str(code)
+            turnout.append({"state": state, "source_id": source_id, "source_sha256": shas[("status", "")],
+                            "county_name": county, "precinct_name": name,
+                            "registered_voters": reg if _is_count(reg) else None,
+                            "ballots_cast": bal if _is_count(bal) else None, "percent_reporting": str(code)})
+            for field, v in (("R", reg), ("B", bal)):
+                if not _is_count(v):
+                    summary["non_numeric"].append(("status.json", name, "", "", field, v))
+    elif ("status", "") in docs:
+        summary["unreadable"].append(("status", "P/S/R/B are not lists of one length"))
+
+    result_names = set()
+    for label, vtype, key in files:
+        doc = docs.get(key)
+        if doc is None:
+            if key[0] == "type":
+                summary["precinct_vote_types_checked"] = None
+            if key == ("all", ""):
+                for k in ("mismatches_precincts_vs_county", "precinct_sum_not_checked"):
+                    summary[k] = None
+            continue
+        if not isinstance(doc, dict) or not isinstance(doc.get("Contests"), list):
+            summary["unreadable"].append((label, "no Contests list"))
+            if key[0] == "type":
+                summary["precinct_vote_types_checked"] = None
+            continue
+        sums, broken, areas_seen = {}, set(), set()
+        for a in doc["Contests"]:
+            name = a.get("A")
+            if name in areas_seen:
+                summary["duplicate_areas"].append((label, name))
+                continue
+            areas_seen.add(name)
+            ks, vs, ts = a.get("C"), a.get("V"), a.get("T")
+            if not (isinstance(ks, list) and isinstance(vs, list) and isinstance(ts, list)
+                    and len(ks) == len(vs) == len(ts)):
+                summary["skipped_areas"].append((label, name, "C/V/T lengths differ"))
+                broken.add(name)
+                continue
+            for k, votes, tot in zip(ks, vs, ts):
+                k = str(k)
+                if k in skipped:
+                    continue
+                if k not in contests:
+                    summary["contests_only_in_areas"].append((label, name, k))
+                    continue
+                info = contests[k]
+                if not isinstance(votes, list) or len(votes) != len(info["choices"]):
+                    summary["skipped_length_mismatch"].append((label, name, k))
+                    broken.add((name, k))
+                    continue
+                cells = [_cell(v, label, name, k, ch["choice_id"], vtype, summary)
+                         for v, ch in zip(votes, info["choices"])]
+                _compare(summary, "mismatches_area_totals", "area_total_not_checked", (label, name, k),
+                         _count_or_none(tot), _total(votes))
+                if name == "-1":
+                    county_vals = info["total"] if vtype == "TOTAL" else (
+                        [r[types.index(vtype)] for r in info["types"]] if info["types"] else None)
+                    for i, ch in enumerate(info["choices"]):
+                        cv = _count_or_none(county_vals[i]) if county_vals is not None else None
+                        _compare(summary, "mismatches_total_area_vs_county", "total_area_not_checked",
+                                 (label, k, ch["choice_id"]), cv, _count_or_none(votes[i]))
+                    continue
+                result_names.add(name)
+                area_values[(label, name, k)] = votes
+                acc = sums.setdefault(k, [0] * len(votes))
+                for i, v in enumerate(votes):
+                    acc[i] = acc[i] + v if acc[i] is not None and _is_count(v) else None
+                for ch, v in zip(info["choices"], cells):
+                    rows.append(dict(ch, level="precinct", precinct_id=name, precinct_name=name, vote_type=vtype,
+                                     votes=v, source_sha256=shas[key], reporting_status=reporting.get(name, "")))
+        # Precinct sums against the county values (sum.json for ALL, vt.json for a type).
+        whole_area_skipped = any(isinstance(b, str) for b in broken)
+        for k, info in contests.items():
+            incomplete = whole_area_skipped or (any(b[1] == k for b in broken if isinstance(b, tuple)))
+            if k not in sums and not incomplete:
+                if label == "ALL":
+                    summary["contests_without_precincts"].append(k)
+                continue
+            county_vals = info["total"] if vtype == "TOTAL" else (
+                [r[types.index(vtype)] for r in info["types"]] if info["types"] else None)
+            acc = sums.get(k, [None] * len(info["choices"]))
+            for i, ch in enumerate(info["choices"]):
+                cv = _count_or_none(county_vals[i]) if county_vals is not None else None
+                _compare(summary, "mismatches_precincts_vs_county", "precinct_sum_not_checked",
+                         (label, k, ch["choice_id"]), cv, None if incomplete else acc[i])
+
+    # Precinct vote types against the precinct total.
+    if types and summary["precinct_vote_types_checked"] is not None:
+        for (label, name, k), totals in area_values.items():
+            if label != "ALL":
+                continue
+            per_type = [area_values.get((t, name, k)) for t in types]
+            for i, ch in enumerate(contests[k]["choices"]):
+                parts = None if any(p is None for p in per_type) else [p[i] for p in per_type]
+                before = summary["comparisons"]
+                _compare(summary, "mismatches_vote_types_vs_total", "vote_type_sum_not_checked",
+                         ("precinct", name, k, ch["choice_id"]), _count_or_none(totals[i]),
+                         None if parts is None else _total(parts))
+                summary["precinct_vote_types_checked"] += summary["comparisons"] - before
+
+    summary["precincts"] = len(result_names)
+    if status_names is None:
+        summary["precincts_not_in_status"] = summary["status_precincts_without_results"] = None
+    else:
+        summary["precincts_not_in_status"] = sorted(result_names - status_names)
+        summary["status_precincts_without_results"] = sorted(status_names - result_names)
+    return rows, summary, turnout
+
+
+def _count_or_none(v):
+    return v if _is_count(v) else None
+
+
+def _cell(v, label, area, k, chid, vtype, summary):
+    """A published cell as a row value: the count, or "" (listed) for "protected" or anything else."""
+    if _is_count(v):
+        return v
+    if v == PROTECTED:
+        summary["protected_cells"].append((label, area, k, chid, vtype))
+    else:
+        summary["non_numeric"].append((label, area, k, chid, vtype, v))
+    return ""
+
+
+def _compare(summary, mismatch_key, not_checked_key, ident, expected, got):
+    """Record one comparison: a mismatch, a not-checked entry (either side unusable), or a match."""
+    if expected is None or got is None:
+        summary[not_checked_key].append(ident)
+    else:
+        summary["comparisons"] += 1
+        if expected != got:
+            summary[mismatch_key].append(ident + (expected, got))

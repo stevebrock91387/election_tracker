@@ -1,0 +1,54 @@
+{
+ "source_id": "clarity-NJ-Cumberland-2026-general",
+ "state": "NJ",
+ "county": "Cumberland",
+ "version": "387108",
+ "started_utc": "20261125T191926Z",
+ "files": [
+  {
+   "kind": "sum",
+   "vote_type": "",
+   "path": "nj_cumberland_sum.json"
+  },
+  {
+   "kind": "all",
+   "vote_type": "",
+   "path": "nj_cumberland_all.json"
+  },
+  {
+   "kind": "vt",
+   "vote_type": "",
+   "path": "nj_cumberland_vt.json"
+  },
+  {
+   "kind": "status",
+   "vote_type": "",
+   "path": "nj_cumberland_status.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Early Voting",
+   "path": "nj_cumberland_type_0.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Election Day",
+   "path": "nj_cumberland_type_1.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Vote-by-Mail",
+   "path": "nj_cumberland_type_2.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Provisional",
+   "path": "nj_cumberland_type_3.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Emergency Votes",
+   "path": "nj_cumberland_type_4.json"
+  }
+ ]
+}

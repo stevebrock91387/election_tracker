@@ -1,0 +1,59 @@
+{
+ "source_id": "clarity-NJ-Morris-2026-general",
+ "state": "NJ",
+ "county": "Morris",
+ "version": "387114",
+ "started_utc": "20261125T191930Z",
+ "files": [
+  {
+   "kind": "sum",
+   "vote_type": "",
+   "path": "nj_morris_sum.json"
+  },
+  {
+   "kind": "all",
+   "vote_type": "",
+   "path": "nj_morris_all.json"
+  },
+  {
+   "kind": "vt",
+   "vote_type": "",
+   "path": "nj_morris_vt.json"
+  },
+  {
+   "kind": "status",
+   "vote_type": "",
+   "path": "nj_morris_status.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Early Voting",
+   "path": "nj_morris_type_0.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Election Day",
+   "path": "nj_morris_type_1.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Mail-in",
+   "path": "nj_morris_type_2.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Provisional",
+   "path": "nj_morris_type_3.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Emergency",
+   "path": "nj_morris_type_4.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "State/Fed",
+   "path": "nj_morris_type_5.json"
+  }
+ ]
+}

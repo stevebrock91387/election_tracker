@@ -1,0 +1,49 @@
+{
+ "source_id": "clarity-NJ-Middlesex-2026-general",
+ "state": "NJ",
+ "county": "Middlesex",
+ "version": "387262",
+ "started_utc": "20261125T191928Z",
+ "files": [
+  {
+   "kind": "sum",
+   "vote_type": "",
+   "path": "nj_middlesex_sum.json"
+  },
+  {
+   "kind": "all",
+   "vote_type": "",
+   "path": "nj_middlesex_all.json"
+  },
+  {
+   "kind": "vt",
+   "vote_type": "",
+   "path": "nj_middlesex_vt.json"
+  },
+  {
+   "kind": "status",
+   "vote_type": "",
+   "path": "nj_middlesex_status.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Election Day",
+   "path": "nj_middlesex_type_0.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Mail-In Ballot",
+   "path": "nj_middlesex_type_1.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Early Voting",
+   "path": "nj_middlesex_type_2.json"
+  },
+  {
+   "kind": "type",
+   "vote_type": "Provisional Ballot",
+   "path": "nj_middlesex_type_3.json"
+  }
+ ]
+}
