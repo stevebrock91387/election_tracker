@@ -81,7 +81,7 @@ Every registry row was looked at in the built-in browser. **48 verified, 3 parti
 
 ### Step 2: Enhanced Voting reader (built 2026-11-20)
 
-`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (248 with Clarity, ResultsAjax, Tally, NC, OH, TX, CT and FL). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
+`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (273 with Clarity, ResultsAjax, Tally, NC, OH, TX, CT, FL and VT). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
 
 ### Step 2: Clarity reader (built 2026-11-20, county level)
 
@@ -118,6 +118,10 @@ CT EMS static JSON: `Version.json`, then seven files under that version (one sna
 ### Step 2: Florida reader (built 2026-11-25, county level)
 
 Division of Elections pipe-delimited files (info + votes) plus the tab file for party. `pipeline/readers/fl.py`, `pipeline/sources_fl.toml`, CLI `python3 -m pipeline.run_fl fetch|parse|fetch-parse SOURCE_ID`. The file host chains to GoDaddy TLS Root CA - R1 (not in the default stores); per Steve's option A, implemented narrowly: `fetch` takes an optional `cafile` (default store plus that file, partial-chain trust off) and Florida passes GoDaddy's published R1-cross-signed-by-G2 certificate (`pipeline/certs/`), so the chain ends at Go Daddy Root G2. 2026: 3,063 county rows, 176 races, 67 counties (ids are FIPS), pipe and tab agree everywhere; every record has status I; 91 report 0 precincts. Choice ids 10/20 repeat across retention and amendment races: key on (contest, choice). No statewide rows. Details in `docs/fl.md`.
+
+### Step 2: Vermont reader (built 2026-11-24, town level)
+
+SOS static JSON: the election file names one timestamped snapshot; a pass reads federal, statewide, state senate, state house and turnout files. `pipeline/readers/vt.py`, `pipeline/sources_vt.toml`, CLI `python3 -m pipeline.run_vt fetch|parse|fetch-parse SOURCE_ID`. Rows per town part (24 towns are split by legislative districts; the part is in `precinct_id`), totals at level "state"; blank and over votes are rows. 2026: 20,468 rows, 132 offices, 247 towns; every check clean. Write-in names (many private individuals) are replaced in the committed fixture. Details in `docs/vt.md`.
 
 ## Next tasks, in order
 

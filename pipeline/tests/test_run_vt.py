@@ -1,11 +1,19 @@
 """VT source list and the fetch pass (fake opener and sleep; no network)."""
+import contextlib
+import csv
+import glob
+import io
 import json
 import os
 import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
-from pipeline.run_vt import DEFAULT_SOURCES, fetch_pass, load_sources
+from pipeline.readers.vt import TURNOUT_COLUMNS
+from pipeline.run_vt import DEFAULT_SOURCES, fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 VT_ID = "vt-2026-general"
 BASE = "https://static.electionresults.vermont.gov/"
@@ -76,6 +84,32 @@ class FetchPassTest(unittest.TestCase):
         with self.assertRaises(FetchError):
             self.run_pass(opener_for([], election_body(), fail=("-sn-",)))
         self.assertTrue(self.no_record())
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", VT_ID, os.path.join(FX, "vt_pass.json"), "--base-dir", FX, "--parsed-dir", out])
+        (results,) = glob.glob(os.path.join(out, VT_ID, "*Z.csv"))
+        (turnout,) = glob.glob(os.path.join(out, VT_ID, "*-turnout.csv"))
+        with open(results, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), COLUMNS)
+        with open(turnout, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), TURNOUT_COLUMNS)
+        self.assertIn("snapshot: 20261117185828", buf.getvalue())
+
+    def test_parse_prints_not_checked(self):
+        d = tempfile.mkdtemp()
+        rec = os.path.join(d, "pass.json")
+        with open(rec, "w") as f:
+            json.dump({"source_id": VT_ID, "state": "VT", "snapshot": "x",
+                       "files": [{"kind": "election", "path": os.path.join(FX, "vt_election.json")}]}, f)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", VT_ID, rec, "--parsed-dir", d])
+        self.assertIn("turnout_mismatches: not checked", buf.getvalue())
 
 
 if __name__ == "__main__":
