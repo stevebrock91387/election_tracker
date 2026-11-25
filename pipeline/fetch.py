@@ -19,6 +19,10 @@ state update, and the manifest append, each happen under an exclusive lock on
 file, then renamed). The lock is not held during the download itself.
 
 Run with Homebrew Python: some sources (e.g. Arizona) require TLS 1.3.
+
+cafile (optional, per source) adds one PEM file to the default trust store, with partial-chain
+trust off, for a host whose chain needs an extra intermediate (see pipeline/certs/README.md).
+Verification is never disabled.
 """
 import contextlib
 import csv
@@ -28,6 +32,7 @@ import json
 import os
 import tempfile
 import posixpath
+import ssl
 import time
 import urllib.error
 import urllib.parse
@@ -46,10 +51,20 @@ class FetchError(RuntimeError):
     pass
 
 
-def _urllib_opener(url):
+def _ssl_context(cafile):
+    """The default verifying context plus the certificates in cafile, with partial-chain trust off:
+    a certificate from cafile can complete a chain but never ends one, so every chain must still
+    reach a root in the default store."""
+    ctx = ssl.create_default_context()
+    ctx.load_verify_locations(cafile=cafile)
+    ctx.verify_flags &= ~ssl.VERIFY_X509_PARTIAL_CHAIN
+    return ctx
+
+
+def _urllib_opener(url, context=None):
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+        with urllib.request.urlopen(req, timeout=TIMEOUT, context=context) as resp:
             return resp.status, resp.read()
     except urllib.error.HTTPError as e:
         return e.code, e.read()
@@ -85,8 +100,10 @@ def _write_state(path, state):
         raise
 
 
-def fetch(source_id, url, min_interval_s, raw_dir="data/raw", now=time.time, opener=None, ext=None):
-    opener = opener or _urllib_opener
+def fetch(source_id, url, min_interval_s, raw_dir="data/raw", now=time.time, opener=None, ext=None, cafile=None):
+    if opener is None:
+        ctx = _ssl_context(cafile) if cafile else None
+        opener = lambda u: _urllib_opener(u, ctx)
     os.makedirs(raw_dir, exist_ok=True)
     state_path = os.path.join(raw_dir, ".last_fetch.json")
     with _locked(raw_dir):
