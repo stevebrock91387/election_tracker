@@ -1,0 +1,1 @@
+{"source_id": "dc-2026-general", "state": "DC", "csv_link": "https://electionresults.dcboe.org/Downloads/Reports/November_3_2026_General_Election_Pre-certified_Results.csv", "files": [{"kind": "info", "path": "dc_info.json"}, {"kind": "csv", "path": "dc_csv.csv"}, {"kind": "citywide", "path": "dc_citywide.json"}]}
