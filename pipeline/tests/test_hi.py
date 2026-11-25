@@ -119,7 +119,8 @@ class FixtureTest(unittest.TestCase):
         self.assertEqual((s["contests"], s["units"], s["vsc_units"], s["plain_units"]), (4, 494, 247, 247))
         self.assertEqual(s["lines"], {"summary": 8, "media": 2000})
         self.assertEqual(s["parties_from_prefix"], 4)
-        for k in ("state_precinct_mismatches", "state_precinct_not_checked", "total_mismatches", "registered_mismatches", "precinct_count_mismatches",
+        for k in ("state_precinct_mismatches", "state_precinct_not_checked", "registered_not_checked",
+                  "precinct_count_not_checked", "total_mismatches", "registered_mismatches", "precinct_count_mismatches",
                   "title_mismatches", "choice_name_mismatches", "unit_conflicts", "duplicate_lines", "non_numeric",
                   "malformed_lines", "inconsistent_contest_fields", "unreadable_files", "missing_files"):
             self.assertEqual(s[k], [], k)
@@ -201,6 +202,66 @@ class CheckTest(unittest.TestCase):
     def test_party_column_used_without_prefix(self):
         rows, _, _ = parse_texts(self, media=media_edit({2: "23", 6: "47", 9: "1"}, 11, "N"))
         self.assertEqual(find(rows, level="precinct", precinct_id="23", contest_id="47", choice_id="1")[0]["party"], "N")
+
+
+class ReviewFixTest(unittest.TestCase):
+    def unit23(self, index, value):
+        text = raw("media")
+        for cid, ch in [("47", "1"), ("47", "2")]:
+            text = media_edit({2: "23", 6: cid, 9: ch}, index, value, text)
+        return text
+
+    def test_non_numeric_reg_voters_not_checked(self):
+        _, s, _ = parse_texts(self, media=self.unit23(3, "n/a"))
+        self.assertIsNone(s["registered_mismatches"])
+        self.assertIn(("media", "23", "", "", "Reg_voters", "n/a"), s["non_numeric"])
+
+    def test_non_numeric_ballots_and_reporting_listed(self):
+        text = self.unit23(4, "x")
+        text = edit(text, {2: "23", 6: "47", 9: "1"}, 5, "y", 3)
+        text = edit(text, {2: "23", 6: "47", 9: "2"}, 5, "y", 3)
+        _, s, _ = parse_texts(self, media=text)
+        self.assertIn(("media", "23", "", "", "Ballots", "x"), s["non_numeric"])
+        self.assertIn(("media", "23", "", "", "Reporting", "y"), s["non_numeric"])
+        self.assertEqual(sum(1 for n in s["non_numeric"] if n[1] == "23"), 2)
+
+    def test_conflicting_reg_voters_not_summed(self):
+        _, s, _ = parse_texts(self, media=media_edit({2: "23", 6: "47", 9: "1"}, 3, "9999999"))
+        self.assertIsNone(s["registered_mismatches"])
+        self.assertEqual([c[0] for c in s["unit_conflicts"]], ["23"])
+
+    def test_registered_published_non_numeric_not_checked(self):
+        text = raw("summary")
+        for cand in ("1", "2"):
+            text = summary_edit({0: "47", 14: cand}, 11, "n/a", text)
+        _, s, _ = parse_texts(self, summary=text)
+        self.assertEqual(s["registered_mismatches"], [])
+        self.assertEqual(s["registered_not_checked"], ["47"])
+
+    def test_inconsistent_precinct_counts_not_checked(self):
+        _, s, _ = parse_texts(self, summary=summary_edit({0: "47", 14: "2"}, 12, "5"))
+        self.assertEqual(s["precinct_count_mismatches"], [])
+        self.assertEqual(s["precinct_count_not_checked"], ["47"])
+
+    def test_one_sided_non_numeric_not_checked(self):
+        text = drop(raw("summary"), {0: "47", 14: "2"}, 2)
+        media = media_edit({2: "23", 6: "47", 9: "2"}, 13, "n/a")
+        _, s, _ = parse_texts(self, summary=text, media=media)
+        self.assertIn(("47", "2", "Mail Votes"), s["state_precinct_not_checked"])
+        self.assertNotIn(("47", "2", "Mail Votes", None, None), s["state_precinct_mismatches"])
+        self.assertIn(("47", "2", "In-Person Votes", None, 170), s["state_precinct_mismatches"])
+
+    def test_state_side_non_numeric_without_media_line(self):
+        text = summary_edit({0: "47", 14: "2"}, 18, "")
+        media = drop(raw("media"), {6: "47", 9: "2"}, 3)
+        _, s, _ = parse_texts(self, summary=text, media=media)
+        self.assertIn(("47", "2", "Mail Votes"), s["state_precinct_not_checked"])
+        self.assertIn(("47", "2", "In-Person Votes", 170, None), s["state_precinct_mismatches"])
+
+    def test_nothing_read_line_checks_none(self):
+        _, s, _ = parse_texts(self, kinds=())
+        for k in ("duplicate_lines", "non_numeric", "malformed_lines"):
+            self.assertIsNone(s[k], k)
 
 
 class FileTest(unittest.TestCase):

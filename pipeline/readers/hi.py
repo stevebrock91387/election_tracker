@@ -17,7 +17,9 @@ Over and Invalid Votes per contest). Choice names have whitespace runs collapsed
 turnout table has one row per unit.
 
 Nothing is corrected; the summary lists every check named in the design. A check that couldn't run is
-None: cross-checks need both files, summary-only checks the summary, unit checks the media file.
+None: cross-checks need both files, summary-only checks the summary, unit checks the media file, line
+checks at least one file. A value that can't be compared (not a number, or conflicting within a unit
+or contest) puts the comparison in a *_not_checked list, never in a mismatch list.
 """
 import csv
 import hashlib
@@ -52,8 +54,8 @@ PAIRS = [("Mail Votes", "Mail votes"), ("In-Person Votes", "In-Person votes")]
 CONTEST_TYPES = {"OF": "candidate", "MS": "measure"}
 REAL = re.compile(r"\d\d-\d\d")
 PREFIX = re.compile(r"\((\w+)\)\s")
-CROSS = ["state_precinct_mismatches", "state_precinct_not_checked", "registered_mismatches",
-         "precinct_count_mismatches", "title_mismatches", "choice_name_mismatches"]
+CROSS = ["state_precinct_mismatches", "state_precinct_not_checked", "registered_mismatches", "registered_not_checked",
+         "precinct_count_mismatches", "precinct_count_not_checked", "title_mismatches", "choice_name_mismatches"]
 SUMMARY_ONLY = ["total_mismatches", "inconsistent_contest_fields"]
 MEDIA_ONLY = ["unit_conflicts"]
 ALWAYS = ["duplicate_lines", "non_numeric", "malformed_lines"]
@@ -112,6 +114,9 @@ def parse_pass(record_path, base_dir="."):
         summary[k] = None
     if len(tables) < 2:
         for k in CROSS:
+            summary[k] = None
+    if not tables:
+        for k in ALWAYS:
             summary[k] = None
 
     base = dict.fromkeys(COLUMNS, "")
@@ -219,6 +224,10 @@ def parse_pass(record_path, base_dir="."):
             bad = {k: sorted(u[k]) for k in UNIT_FIELDS if len(u[k]) > 1}
             if bad:
                 summary["unit_conflicts"].append((unit, bad))
+            for k in ("Reg_voters", "Ballots", "Reporting"):
+                for val in sorted(u[k]):
+                    if _int(val) is None:
+                        summary["non_numeric"].append(("media", unit, "", "", k, val))
         summary.update(units=len(units), vsc_units=sum(1 for u in units.values() if u["first"]["Split_Name"]),
                        plain_units=sum(1 for u in units.values() if not u["first"]["Split_Name"]))
     summary["contests"] = len(set(contests) | set(contest_units)) if tables else None
@@ -234,30 +243,43 @@ def parse_pass(record_path, base_dir="."):
     if len(tables) == 2:
         for (cid, ch), counts in state.items():
             for skey, mkey in PAIRS:
-                key = (cid, ch, mkey)
+                key, sval = (cid, ch, mkey), counts[skey]
                 if key not in sums:
-                    summary["state_precinct_mismatches"].append((cid, ch, skey, counts[skey], None))
-                elif sums[key] is None or counts[skey] is None:
+                    if sval is None:
+                        summary["state_precinct_not_checked"].append((cid, ch, skey))
+                    else:
+                        summary["state_precinct_mismatches"].append((cid, ch, skey, sval, None))
+                elif sums[key] is None or sval is None:
                     summary["state_precinct_not_checked"].append((cid, ch, skey))
-                elif sums[key] != counts[skey]:
-                    summary["state_precinct_mismatches"].append((cid, ch, skey, counts[skey], sums[key]))
+                elif sums[key] != sval:
+                    summary["state_precinct_mismatches"].append((cid, ch, skey, sval, sums[key]))
         for (cid, ch, mkey), total in sums.items():
             if (cid, ch) not in state:
-                skey = dict((m, s) for s, m in PAIRS)[mkey]
-                summary["state_precinct_mismatches"].append((cid, ch, skey, None, total))
-        reg_values = [_int(next(iter(u["Reg_voters"]))) for u in units.values()]
-        reg_sum = None if None in reg_values else sum(reg_values)
+                skey = dict((m, s_) for s_, m in PAIRS)[mkey]
+                if total is None:
+                    summary["state_precinct_not_checked"].append((cid, ch, skey))
+                else:
+                    summary["state_precinct_mismatches"].append((cid, ch, skey, None, total))
+        # A unit whose registered voters conflict across its lines or aren't a number can't be summed.
+        regs = [_int(next(iter(u["Reg_voters"]))) if len(u["Reg_voters"]) == 1 else None for u in units.values()]
+        reg_sum = None if None in regs else sum(regs)
+        if reg_sum is None:
+            summary["registered_mismatches"] = None
         for cid, fl in contests.items():
-            if len(fl["Registered Voters"]) == 1:
-                pub = _int(next(iter(fl["Registered Voters"])))
-                if reg_sum is not None and pub != reg_sum:
-                    summary["registered_mismatches"].append((cid, pub, reg_sum))
-            if len(fl["Total Precincts"]) == 1 and len(fl["Counted Precincts"]) == 1:
-                tot, cnt = _int(next(iter(fl["Total Precincts"]))), _int(next(iter(fl["Counted Precincts"])))
+            pub = _int(next(iter(fl["Registered Voters"]))) if len(fl["Registered Voters"]) == 1 else None
+            if pub is None:
+                summary["registered_not_checked"].append(cid)
+            elif reg_sum is not None and pub != reg_sum:
+                summary["registered_mismatches"].append((cid, pub, reg_sum))
+            tot = _int(next(iter(fl["Total Precincts"]))) if len(fl["Total Precincts"]) == 1 else None
+            cnt = _int(next(iter(fl["Counted Precincts"]))) if len(fl["Counted Precincts"]) == 1 else None
+            if tot is None or cnt is None:
+                summary["precinct_count_not_checked"].append(cid)
+            else:
                 us = contest_units.get(cid, set())
-                rep = sum(1 for u in us if units[u]["first"]["Reporting"] == "1")
-                if (tot, cnt) != (len(us), rep):
-                    summary["precinct_count_mismatches"].append((cid, tot, cnt, len(us), rep))
+                rep_ = sum(1 for u in us if units[u]["first"]["Reporting"] == "1")
+                if (tot, cnt) != (len(us), rep_):
+                    summary["precinct_count_mismatches"].append((cid, tot, cnt, len(us), rep_))
             for t in sorted(m_titles.get(cid, set()) - {s_titles[cid]}):
                 summary["title_mismatches"].append((cid, s_titles[cid], t))
         for key, name in s_names.items():
