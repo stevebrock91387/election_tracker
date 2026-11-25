@@ -1,0 +1,16 @@
+#FormatVersion 1																				
+#Contest ID	Contest Title	Contest Seq Nbr	Contest Type	Contest Party	Mail Blank Votes	In-Person Blank Votes	Mail Over Votes	In-Person Over Votes	Mail Invalid Votes	In-Person Invalid Votes	Registered Voters	Total Precincts	Counted Precincts	Candidate ID	Candidate Name	Candidate Seq Nbr	Candidate Party	Mail Votes	In-Person Votes	Total Votes
+43	Governor and Lieutenant Governor	3	OF		6941	263	494	27	0	0	853399	494	247	2	"(D) GREEN, Josh
+For GOVERNOR
+KAWAKAMI, Derek S.K.
+For LIEUTENANT GOVERNOR"	2		271589	7856	279445
+43	Governor and Lieutenant Governor	3	OF		6941	263	494	27	0	0	853399	494	247	1	"(R) CORDERY, Gary
+For GOVERNOR
+ANTHONY, Daniel
+For LIEUTENANT GOVERNOR"	1		95894	9364	105258
+23	"State Representative, Dist 2"	10	OF		622	12	5	0	0	0	853399	8	4	1	"(D) KEOHOKAPU LEE LOY, Sue"	2		6319	229	6548
+23	"State Representative, Dist 2"	10	OF		622	12	5	0	0	0	853399	8	4	2	"(R) KENNEALY, Jonathan"	1		1599	153	1752
+47	"Councilmember, Dist 4"	44	OF		544	53	4	1	0	0	853399	4	2	1	"ENRIQUEZ, Lloyd K."	1		3096	171	3267
+47	"Councilmember, Dist 4"	44	OF		544	53	4	1	0	0	853399	4	2	2	"OHARA, Eileen"	2		3006	170	3176
+38	Question #1	61	MS		30851	794	383	22	0	0	853399	494	247	2	YES	1		218725	8404	227129
+38	Question #1	61	MS		30851	794	383	22	0	0	853399	494	247	1	NO	2		124959	8290	133249

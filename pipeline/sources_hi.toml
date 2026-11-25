@@ -1,0 +1,11 @@
+# Hawaii Office of Elections results, 2026 general election. See
+# docs/superpowers/specs/2026-11-24-step2-hi-reader-design.md and sources/registry.csv.
+# A pass fetches the two text files linked as "Certified Text Files" on
+# https://elections.hawaii.gov/election-results/: the statewide summary (state rows and the check)
+# and the statewide precinct detail (precinct rows, mail and in-person votes).
+
+[hi-2026-general]
+state = "HI"
+summary_url = "https://elections.hawaii.gov/wp-content/results/2026%20General/summary.txt"
+media_url = "https://elections.hawaii.gov/wp-content/results/2026%20General/media.txt"
+min_interval_s = 120
