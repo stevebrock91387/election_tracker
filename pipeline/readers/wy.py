@@ -6,8 +6,10 @@ The ZIP holds PBP (one sheet per county: precinct results), TBC (one sheet per c
 cast per precinct) and SUMMARIES (statewide sheets with one row per county). Result sheets share a
 block layout: row 3 names each contest at its block's first column, row 4 names each column's choice
 ("Harriet\\nHageman (R)", Write-Ins, Overvotes, Undervotes), data rows follow with the unit (precinct
-or county) in column A, then a "Total" row. Counts are stored as text; "-" means the contest is not on
-that unit's ballot. An .xlsx is a ZIP of XML parts, read here with the stdlib only.
+or county) in column A, then a "Total" row. "-" means the contest is not on
+that unit's ballot. Counts are numeric cells (the summaries workbook, a Google Sheets export, holds
+cached formula values); names and "-" are strings. An .xlsx is a ZIP of XML parts, read here with the
+stdlib only.
 """
 import datetime
 import hashlib
@@ -17,6 +19,7 @@ import os
 import re
 import xml.etree.ElementTree as ET
 import zipfile
+import zlib
 
 from pipeline.schema import COLUMNS
 
@@ -51,7 +54,8 @@ def _read(z, name):
 
 
 BUILTIN_DATE_FORMATS = set(range(14, 23)) | set(range(45, 48))
-_TOKEN = re.compile(r'yyyy|yy|mm|m|dd|d|\\.|"[^"]*"|[-/. ]')
+_TOKEN = re.compile(r'y+|m+|d+|\\.|"[^"]*"|[-/. ]')
+_SIMPLE = {"yyyy", "yy", "mm", "m", "dd", "d"}  # mmm/dddd (names) and others are not rendered
 
 
 def _date_like(code):
@@ -65,27 +69,33 @@ def render_date(raw, code, date1904):
     if not re.fullmatch(r"\d+", raw or ""):
         return None
     serial = int(raw)
-    if date1904:
-        day = datetime.date(1904, 1, 1) + datetime.timedelta(days=serial)
-    elif serial >= 61:  # serials below 61 straddle Excel's fictitious 1900-02-29
-        day = datetime.date(1899, 12, 30) + datetime.timedelta(days=serial)
-    else:
+    try:
+        if date1904:
+            day = datetime.date(1904, 1, 1) + datetime.timedelta(days=serial)
+        elif serial >= 61:  # serials below 61 straddle Excel's fictitious 1900-02-29
+            day = datetime.date(1899, 12, 30) + datetime.timedelta(days=serial)
+        else:
+            return None
+    except (OverflowError, ValueError):
         return None
     out, pos = [], 0
     for m in _TOKEN.finditer(code):
         if m.start() != pos:
             return None
         t, pos = m.group(), m.end()
+        if t[0] in "ymd" and t not in _SIMPLE:
+            return None
         out.append({"yyyy": f"{day.year:04d}", "yy": f"{day.year % 100:02d}", "mm": f"{day.month:02d}",
                     "m": str(day.month), "dd": f"{day.day:02d}", "d": str(day.day)}.get(
             t, t[1:] if t.startswith("\\") else t.strip('"') if t.startswith('"') else t))
     return "".join(out) if pos == len(code) else None
 
 
-def read_xlsx(data, notes=None):
+def read_xlsx(data, notes=None, render_columns=(0,)):
     """Return [(sheet name, grid)] in workbook order. grid[i] is row i+1; cells are str or None.
 
-    A numeric cell styled with a date format is rendered as the format displays it; `notes` (a dict,
+    A numeric cell in `render_columns` (unit names) styled with a date format is rendered as the format
+    displays it; elsewhere a date-styled numeric cell keeps its raw value and is listed; `notes` (a dict,
     optional) receives "date_formatted_cells" [(sheet, ref, raw, shown)] and "unrendered_formats"
     [(sheet, ref, raw, format code)].
     """
@@ -133,7 +143,9 @@ def read_xlsx(data, notes=None):
                         val = v.text or ""
                         code = styles.get(int(c.get("s") or 0))
                         if code is not None and c.get("t") in (None, "n"):
-                            shown = None if code.startswith("built-in") else render_date(val, code, date1904)
+                            col = _col(c.get("r"))
+                            shown = None if code.startswith("built-in") or col not in render_columns \
+                                else render_date(val, code, date1904)
                             if shown is None:
                                 notes["unrendered_formats"].append((sheet.get("name"), c.get("r"), val, code))
                             else:
@@ -144,7 +156,8 @@ def read_xlsx(data, notes=None):
                 rows[int(row.get("r"))] = [cells.get(i) for i in range(width)]
             out.append((sheet.get("name"), [rows.get(n, []) for n in range(1, max(rows, default=0) + 1)]))
         return out
-    except (zipfile.BadZipFile, KeyError, ET.ParseError, IndexError, ValueError, AttributeError) as e:
+    except (zipfile.BadZipFile, KeyError, ET.ParseError, IndexError, ValueError, AttributeError, TypeError,
+            OverflowError, EOFError, NotImplementedError, zlib.error) as e:
         raise ValueError(f"not a readable workbook: {e}") from e
 
 
@@ -194,6 +207,7 @@ def parse_blocks(grid):
 
 
 MEMBERS = {PBP: "PbP", TBC: "TBC", SUMMARIES: "Summaries"}
+_MISSING = object()
 BALLOTS = "Total Ballots Cast"
 STATE_BALLOTS_SHEET = "Statewide Total Ballots Cast"
 NON_CANDIDATE = {"Write-Ins", "Overvotes", "Undervotes"}
@@ -201,13 +215,13 @@ PARTY = re.compile(r"(.*?)\s*\((\w+)\)$")
 LIST_KEYS = ["total_row_mismatches", "total_row_not_checked", "county_mismatches", "county_not_checked",
              "ballots_mismatches", "ballot_balance_mismatches", "non_numeric", "empty_cells", "empty_unit_rows",
              "duplicate_units", "duplicate_choices", "duplicate_contests", "blank_headers", "out_of_place_cells",
-             "trailing_text", "unmatched_tbc_precincts", "sheet_mismatches", "layout_problems",
+             "trailing_text", "units_not_on_any_ballot", "unmatched_tbc_precincts", "sheet_mismatches", "layout_problems",
              "date_formatted_cells", "unrendered_formats"]
 NEEDS = {  # check -> members it needs
     "county_mismatches": (PBP, SUMMARIES), "county_not_checked": (PBP, SUMMARIES),
     "ballots_mismatches": (TBC, SUMMARIES), "ballot_balance_mismatches": (PBP, TBC),
     "unmatched_tbc_precincts": (PBP, TBC), "duplicate_units": (PBP,), "empty_cells": (PBP,),
-    "empty_unit_rows": (PBP,),
+    "empty_unit_rows": (PBP,), "units_not_on_any_ballot": (PBP,),
 }
 
 
@@ -268,14 +282,20 @@ def _results(summary, label, sheet, grid, emit, level_of_unit):
     summary["out_of_place_cells"].extend((sheet,) + x for x in probs["out_of_place_cells"])
     summary["trailing_text"].extend((sheet,) + x for x in probs["trailing_text"])
     summary["layout_problems"].extend((label, sheet, x) for x in probs["layout"])
-    values, totals, lines = {}, {}, {}
+    values, totals, lines, units = {}, {}, {}, set()
     if not contests:
-        return values, totals, lines
+        return values, totals, lines, units
     blank_rows = {n for n, _, _ in contests[0]["units"]
                   if all(_blank(v) for ct in contests for m, _, cells in ct["units"] if m == n for v in cells.values())}
     for n, unit, _ in contests[0]["units"]:
-        if n in blank_rows and level_of_unit == "precinct":
-            summary["empty_unit_rows"].append((sheet, n, unit))
+        if n in blank_rows:
+            if level_of_unit == "precinct":
+                summary["empty_unit_rows"].append((sheet, n, unit))
+            continue
+        units.add(unit)
+        cells = [v for ct in contests for m, _, cl in ct["units"] if m == n for v in cl.values()]
+        if level_of_unit == "precinct" and all(_blank(v) or str(v).strip() == "-" for v in cells):
+            summary["units_not_on_any_ballot"].append((sheet, n, unit))
     seen_units, seen_contests = {}, set()
     for ct in contests:
         name = _collapse(ct["name"])
@@ -344,7 +364,7 @@ def _results(summary, label, sheet, grid, emit, level_of_unit):
                 summary["total_row_not_checked"].append((sheet, name, choice))
             elif t != sums[choice]:
                 summary["total_row_mismatches"].append((sheet, name, choice, t, sums[choice]))
-    return values, totals, lines
+    return values, totals, lines, units
 
 
 def parse_workbooks(base, books, notes=None):
@@ -372,10 +392,10 @@ def parse_workbooks(base, books, notes=None):
 
     pbp_totals, pbp_lines, pbp_units, contests = {}, {}, {}, set()
     for sheet, grid in books.get(PBP, []):
-        _, totals, lines = _results(summary, "PbP", sheet, grid, emit, "precinct")
+        _, totals, lines, units = _results(summary, "PbP", sheet, grid, emit, "precinct")
         pbp_totals[sheet] = totals
         pbp_lines[sheet] = lines
-        pbp_units[sheet] = {u for u, _ in lines}
+        pbp_units[sheet] = units
         contests.update(c for c, _ in totals)
     summ_values, summ_ballots, summ_counties = {}, {}, set()
     for sheet, grid in books.get(SUMMARIES, []):
@@ -392,12 +412,14 @@ def parse_workbooks(base, books, notes=None):
             elif t != sum(vals):
                 summary["total_row_mismatches"].append((sheet, BALLOTS, "", t, sum(vals)))
             continue
-        values, _, _ = _results(summary, "Summaries", sheet, grid, emit, "county")
+        values, _, _, _ = _results(summary, "Summaries", sheet, grid, emit, "county")
         summ_values.update(values)
         summ_counties.update(u for u, _, _ in values)
-    tbc, tbc_units = {}, {}
+    tbc, tbc_units, tbc_bad = {}, {}, set()
     for sheet, grid in books.get(TBC, []):
         units, total, probs = parse_single(grid)
+        if probs or not units:
+            tbc_bad.add(sheet)
         summary["layout_problems"].extend(("TBC", sheet, p) for p in probs)
         seen = set()
         for _, unit, cell in units:
@@ -425,9 +447,10 @@ def parse_workbooks(base, books, notes=None):
         for county in sorted(set(pbp_totals) & summ_counties):
             keys = {(c, ch) for (u, c, ch) in summ_values if u == county} | set(pbp_totals[county])
             for contest, choice in sorted(keys):
-                s = summ_values.get((county, contest, choice))
-                p = pbp_totals[county].get((contest, choice))
-                s_absent, p_absent = s in (None, "-"), p in (None, "-")
+                # Absent or "-" means not on that county's ballot; present but empty (None) means unreadable.
+                s = summ_values.get((county, contest, choice), _MISSING)
+                p = pbp_totals[county].get((contest, choice), _MISSING)
+                s_absent, p_absent = s is _MISSING or s == "-", p is _MISSING or p == "-"
                 if s_absent and p_absent:
                     continue
                 if (not s_absent and not isinstance(s, int)) or (not p_absent and not isinstance(p, int)):
@@ -438,7 +461,7 @@ def parse_workbooks(base, books, notes=None):
         for county in sorted(set(tbc_units) & set(summ_ballots)):
             vals = [tbc[(county, u)] for u in tbc_units[county]]
             s = summ_ballots[county]
-            if not isinstance(s, int) or not all(isinstance(v, int) for v in vals):
+            if county in tbc_bad or not isinstance(s, int) or not all(isinstance(v, int) for v in vals):
                 summary["county_not_checked"].append((county, BALLOTS, ""))
             elif s != sum(vals):
                 summary["ballots_mismatches"].append((county, sum(vals), s))
@@ -464,7 +487,9 @@ def parse_workbooks(base, books, notes=None):
     for k, needs in NEEDS.items():
         if not all(m in have for m in needs):
             summary[k] = None
-    if not have:
+    if len(have) < 2:
+        summary["sheet_mismatches"] = None
+    if PBP not in have:  # the precinct workbook is the data: without it no check stands (design)
         for k in LIST_KEYS:
             summary[k] = None
     if PBP in have:
@@ -484,8 +509,8 @@ def parse_pass(record_path, base_dir="."):
         try:
             with open(paths["zip"], "rb") as f:
                 data = f.read()
-            outer = zipfile.ZipFile(io.BytesIO(data))
             base["source_sha256"] = hashlib.sha256(data).hexdigest()
+            outer = zipfile.ZipFile(io.BytesIO(data))
             names = outer.namelist()
             problems["other_members"] = [n for n in names if n not in MEMBERS]
             for m in MEMBERS:
@@ -494,7 +519,7 @@ def parse_pass(record_path, base_dir="."):
                 try:
                     notes[m] = {}
                     books[m] = read_xlsx(_read(outer, m), notes[m])
-                except ValueError as e:
+                except (ValueError, zipfile.BadZipFile, zlib.error, EOFError, OSError) as e:
                     problems["unreadable_members"].append((m, str(e)))
                     notes.pop(m)
         except (OSError, zipfile.BadZipFile) as e:

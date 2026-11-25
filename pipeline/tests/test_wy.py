@@ -124,7 +124,7 @@ class BlocksTest(unittest.TestCase):
 
 
 BASE = {"state": "WY", "source_id": "wy-test", "source_sha256": "abc"}
-LISTS = ["total_row_mismatches", "total_row_not_checked", "county_mismatches", "county_not_checked",
+LISTS = ["ballot_balance_mismatches", "empty_unit_rows", "units_not_on_any_ballot", "total_row_mismatches", "total_row_not_checked", "county_mismatches", "county_not_checked",
          "ballots_mismatches", "non_numeric", "empty_cells", "duplicate_units", "duplicate_choices",
          "duplicate_contests", "blank_headers", "out_of_place_cells", "unmatched_tbc_precincts", "sheet_mismatches",
          "layout_problems", "unrendered_formats", "unreadable_members", "missing_members", "unreadable_files",
@@ -184,11 +184,13 @@ class FixtureTest(unittest.TestCase):
         self.assertEqual(s["trailing_text"][0][0], "Statewide Ballot Issue")
         self.assertEqual(s["county_mismatches"], TETON)
         for k in LISTS:
-            if k not in ("empty_cells", "county_mismatches"):
+            if k not in ("empty_cells", "county_mismatches", "ballot_balance_mismatches", "empty_unit_rows"):
                 self.assertEqual(s[k], [], k)
 
     def test_ballot_balance_informational(self):
-        self.assertIsInstance(self.summary["ballot_balance_mismatches"], list)
+        bb = self.summary["ballot_balance_mismatches"]
+        self.assertEqual(len(bb), 93)
+        self.assertIn(("Big Horn", "01-01", "House District 27", 286, 636), bb)
 
 
 def books():
@@ -303,6 +305,123 @@ class CheckTest(unittest.TestCase):
         for k in ("county_mismatches", "ballot_balance_mismatches", "duplicate_units", "empty_cells"):
             self.assertIsNone(s[k], k)
         self.assertTrue(find(rows, level="county"))
+
+
+class ReviewFixTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.real = books()
+
+    def fresh(self):
+        import copy
+        return copy.deepcopy(self.real)
+
+    def test_missing_total_row_not_checked(self):
+        b = self.fresh()
+        g = sheet(b, PBP, "Albany")
+        del g[15]  # the Total row
+        _, s, _ = parse_workbooks(BASE, b)
+        self.assertEqual(s["county_mismatches"], TETON)
+        self.assertIn(("Albany", SEN, "Harriet Hageman"), s["county_not_checked"])
+
+    def test_empty_total_cell_not_checked(self):
+        b = self.fresh()
+        sheet(b, PBP, "Albany")[15][1] = None
+        _, s, _ = parse_workbooks(BASE, b)
+        self.assertNotIn(("Albany", SEN, "Harriet Hageman", 5450, None), s["county_mismatches"])
+        self.assertIn(("Albany", SEN, "Harriet Hageman"), s["county_not_checked"])
+
+    def test_tbc_layout_problem_ballots_not_checked(self):
+        b = self.fresh()
+        sheet(b, TBC, "Albany")[2][1] = "Ballots"
+        _, s, _ = parse_workbooks(BASE, b)
+        self.assertEqual(s["ballots_mismatches"], [])
+        self.assertIn(("Albany", "Total Ballots Cast", ""), s["county_not_checked"])
+
+    def test_missing_pbp_every_check_none(self):
+        b = self.fresh()
+        del b[PBP]
+        rows, s, _ = parse_workbooks(BASE, b)
+        for k in LISTS[:-5]:
+            self.assertIsNone(s[k], k)
+        self.assertTrue(find(rows, level="county"))
+
+    def test_sheet_mismatches_need_two_members(self):
+        b = self.fresh()
+        del b[TBC], b[SUMMARIES]
+        _, s, _ = parse_workbooks(BASE, b)
+        self.assertIsNone(s["sheet_mismatches"])
+
+    def test_all_dash_unit_listed(self):
+        b = self.fresh()
+        g = sheet(b, PBP, "Albany")
+        g[4] = [g[4][0]] + ["-" if v is not None else None for v in g[4][1:]]
+        _, s, _ = parse_workbooks(BASE, b)
+        self.assertEqual(s["units_not_on_any_ballot"], [("Albany", 5, "13-1")])
+        self.assertEqual(s["precincts"], 432)
+        self.assertNotIn(("Albany", "13-1", "tbc only"), s["unmatched_tbc_precincts"])
+
+    def test_month_name_formats_not_rendered(self):
+        from pipeline.readers.wy import render_date
+        for code in ("d\\-mmm", "mmm d", "mmmm", "dddd", "ddd"):
+            self.assertIsNone(render_date("44562", code, False), code)
+
+    def test_overflow_not_rendered(self):
+        from pipeline.readers.wy import render_date
+        self.assertIsNone(render_date("3000000", "mm\\-dd", False))
+        self.assertIsNone(render_date("99999999999", "mm\\-dd", False))
+
+    def test_dates_rendered_only_in_column_a(self):
+        notes = {}
+        data = edit_member(PBP, "xl/worksheets/", lambda x: x.replace('<c r="B5" s="', '<c r="B5" s="10" t="n" x="', 1))
+        g = dict(read_xlsx(data, notes))
+        self.assertTrue(any(c[1] == "B5" for c in notes["unrendered_formats"]))
+
+    def test_corrupt_member_listed(self):
+        with zipfile.ZipFile(os.path.join(FX, "wy_results.zip")) as z:
+            raw_zip = open(os.path.join(FX, "wy_results.zip"), "rb").read()
+            info = z.getinfo(TBC)
+        start = info.header_offset + 30 + len(info.filename.encode()) + len(info.extra)
+        broken = raw_zip[:start + 200] + bytes(b ^ 0xFF for b in raw_zip[start + 200:start + 400]) + raw_zip[start + 400:]
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d)
+        with open(os.path.join(d, "wy.zip"), "wb") as f:
+            f.write(broken)
+        with open(os.path.join(d, "pass.json"), "w") as f:
+            json.dump({"source_id": "wy-test", "state": "WY", "files": [{"kind": "zip", "path": "wy.zip"}]}, f)
+        rows, s, _ = parse_pass(os.path.join(d, "pass.json"), base_dir=d)
+        self.assertEqual([u[0] for u in s["unreadable_members"]], [TBC])
+        self.assertEqual(s["unreadable_files"], [])
+        self.assertTrue(find(rows, level="county"))
+
+    def test_cell_without_ref_is_unreadable_not_a_crash(self):
+        data = edit_member(PBP, "xl/worksheets/sheet1.xml", lambda x: x.replace('<c r="A5"', '<c', 1))
+        with self.assertRaises(ValueError):
+            read_xlsx(data)
+
+    def test_non_zip_file_has_sha(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d)
+        with open(os.path.join(d, "wy.zip"), "wb") as f:
+            f.write(b"<html>blocked</html>")
+        with open(os.path.join(d, "pass.json"), "w") as f:
+            json.dump({"source_id": "wy-test", "state": "WY", "files": [{"kind": "zip", "path": "wy.zip"}]}, f)
+        _, s, _ = parse_pass(os.path.join(d, "pass.json"), base_dir=d)
+        self.assertEqual(len(s["sha256"]), 64)
+
+
+def edit_member(member_name, part_prefix, change):
+    """Rewrite the first inner xlsx part whose name starts with part_prefix."""
+    inner = zipfile.ZipFile(io.BytesIO(member(member_name)))
+    buf = io.BytesIO()
+    done = False
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as out:
+        for n in inner.namelist():
+            data = inner.read(n)
+            if not done and n.startswith(part_prefix) and n.endswith(".xml"):
+                data, done = change(data.decode("utf-8")).encode("utf-8"), True
+            out.writestr(n, data)
+    return buf.getvalue()
 
 
 class FileTest(unittest.TestCase):

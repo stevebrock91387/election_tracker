@@ -20,7 +20,7 @@ election-night feed on the SOS site (registry), so this is the certified load.
   (`United States Senator`, `House District 13`, `Supreme Court Justice, Wyoming Supreme Court …`);
   row 4 `Precinct` then one header per column (`Harriet\nHageman (R)`, `Write-Ins`, `Overvotes`,
   `Undervotes`; retention and propositions `For`/`Against` or similar); then one row per precinct
-  (`13-1`, 436 in all) and a `Total` row. Counts are stored as text.
+  (`13-1`, 432 in all) and a `Total` row. Counts are numeric cells (summaries: cached formula values).
 - `2026 County General PbP TBC - OFFICIAL.xlsx`: one sheet per county, `Precinct`, `Total Ballots
   Cast` per precinct (the turnout table).
 - `2026 General Results Summaries - OFFICIAL.xlsx`: sheets Statewide Total Ballots Cast, Statewide
@@ -74,7 +74,7 @@ election-night feed on the SOS site (registry), so this is the certified load.
   - `county_mismatches`: (county, contest, choice, summaries value, PbP Total row) both directions
     (a contest/choice on one side only listed with `None`).
   - `ballots_mismatches`: (county, PbP TBC sum, summaries Total Ballots Cast).
-  - `precincts_over_ballots`: (county, precinct, contest, lines sum, ballots cast) where a contest's
+  - `ballot_balance_mismatches`: (county, precinct, contest, lines sum, ballots cast) where a contest's
     lines (choices + write-ins + over + under) don't equal the precinct's ballots cast (informational:
     vote-for-more contests mismatch by design).
   - `empty_unit_rows`: (sheet, row, text) unit rows with no value in any block (page-break rows);
@@ -83,8 +83,10 @@ election-night feed on the SOS site (registry), so this is the certified load.
   - Comparisons that can't be made (a non-numeric side) go to `total_row_not_checked` /
     `county_not_checked`, never into a mismatch list.
   - `non_numeric` (cell neither digits nor `-`), `duplicate_units`, `duplicate_choices`,
-    `blank_headers`, `unmatched_tbc_precincts` (in one workbook only), `sheet_mismatches` (county
-    sheets in one PbP workbook only), `out_of_place_cells` (values outside any block).
+    `blank_headers`, `unmatched_tbc_precincts` (in one workbook only), `sheet_mismatches` (a county
+    in some workbooks but not others; needs two readable workbooks), `out_of_place_cells`,
+    `duplicate_contests`, `layout_problems`, `units_not_on_any_ballot` (a precinct with `-` in every
+    contest), `trailing_text` (informational: notes after a Total row).
   - `unreadable_files` / `missing_files` / `unreadable_members` / `missing_members`; every check
     `None` when the PbP workbook can't be read.
 
