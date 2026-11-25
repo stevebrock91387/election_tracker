@@ -81,7 +81,7 @@ Every registry row was looked at in the built-in browser. **48 verified, 3 parti
 
 ### Step 2: Enhanced Voting reader (built 2026-11-20)
 
-`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (358 with Clarity, ResultsAjax, Tally, NC, OH, TX, CT, FL, VT, IN, LA and DC). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
+`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (379 with Clarity, ResultsAjax, Tally, NC, OH, TX, CT, FL, VT, IN, LA, DC and DE). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
 
 ### Step 2: Clarity reader (built 2026-11-20, county level)
 
@@ -134,6 +134,15 @@ SOS live-results JSON blobs: multi-parish races and totals, then per race a pari
 ### Step 2: DC reader (built 2026-11-24, precinct level)
 
 DCBOE: the info JSON names the precinct CSV (`CsvLink`), checked against the citywide JSON. `pipeline/readers/dc.py`, `pipeline/sources_dc.toml`, CLI `python3 -m pipeline.run_dc fetch|parse|fetch-parse SOURCE_ID`. Scope: every contest except ANCs (DC matters for 2028 through its 3 electoral votes). 2026: 6,978 rows, 144 precincts in 8 wards, every check clean; RCV contests are first-rank counts; over/under votes have no choice id. Details in `docs/dc.md`.
+
+### Step 2: Delaware reader (built 2026-11-24, election-district level)
+
+Department of Elections ENR JSON: statewide (ids, vote types), 530 election districts, counties (with Wilmington), turnout. `pipeline/readers/de.py`, `pipeline/sources_de.toml`, CLI `python3 -m pipeline.run_de fetch|parse|fetch-parse SOURCE_ID`. County offices out. 2026: 29,261 rows, 57 contests, every check clean; machine/absentee/early vote types. Details in `docs/de.md`.
+
+### Parked (2026-11-24, Steve's call pending)
+
+- Alabama: the election-night site has been reset ("Results Coming Soon"); certified 2026 results are a ZIP of 67 county `.xls` (OLE2) files on sos.alabama.gov, which the stdlib can't read. Options: allow a dependency (e.g. xlrd), convert by hand, or skip.
+- Maryland: live results are ~130 HTML pages (one per contest/district); the 2026 general CSV data files aren't posted yet (only the primary's). Options: wait for the CSVs or build the HTML reader.
 
 ## Next tasks, in order
 

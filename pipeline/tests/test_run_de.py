@@ -1,11 +1,19 @@
 """DE source list and the fetch pass (fake opener, sleep and clock; no network)."""
+import contextlib
+import csv
+import glob
+import io
 import json
 import os
 import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
-from pipeline.run_de import DEFAULT_SOURCES, fetch_pass, load_sources
+from pipeline.readers.de import TURNOUT_COLUMNS
+from pipeline.run_de import DEFAULT_SOURCES, fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 DE_ID = "de-2026-general"
 B = "https://elections.delaware.gov/results/enr/"
@@ -51,6 +59,32 @@ class FetchPassTest(unittest.TestCase):
             self.run_pass(opener_for([], fail=("ByCounty",)))
         d = os.path.join(self.raw, DE_ID)
         self.assertFalse(os.path.isdir(d) and [p for p in os.listdir(d) if p.startswith("pass-")])
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", DE_ID, os.path.join(FX, "de_pass.json"), "--base-dir", FX, "--parsed-dir", out])
+        (results,) = glob.glob(os.path.join(out, DE_ID, "*Z.csv"))
+        (turnout,) = glob.glob(os.path.join(out, DE_ID, "*-turnout.csv"))
+        with open(results, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), COLUMNS)
+        with open(turnout, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), TURNOUT_COLUMNS)
+        self.assertIn("results_type: OFFICIAL RESULTS", buf.getvalue())
+
+    def test_parse_prints_not_checked(self):
+        d = tempfile.mkdtemp()
+        rec = os.path.join(d, "pass.json")
+        with open(rec, "w") as f:
+            json.dump({"source_id": DE_ID, "state": "DE", "exclude_title_prefixes": [], "district_title_prefixes": [],
+                       "files": [{"kind": "district", "path": os.path.join(FX, "de_district.json")}]}, f)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", DE_ID, rec, "--parsed-dir", d])
+        self.assertIn("district_vs_state_mismatches: not checked", buf.getvalue())
 
 
 if __name__ == "__main__":
