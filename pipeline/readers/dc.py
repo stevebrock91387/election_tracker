@@ -21,7 +21,10 @@ Nothing is corrected; the summary lists: precinct sums that differ from citywide
 lines with no CSV rows and CSV lines with no citywide line, party differences (over/under excepted),
 precincts whose ward differs between rows, duplicate (contest, precinct, candidate), non-integer
 votes (votes ""), precincts missing the registered or ballots row, ballots above registered, the
-info's precinct count vs the CSV's, malformed entries, and missing or unreadable files. Checks that
+info's precinct count vs the CSV's (None when the info or its count is unusable), CSV contest
+numbers that are neither a non-negative integer nor -1/-2 (rows skipped), citywide lines with no
+usable CandidateNumber (choice_id "") and repeated citywide lines (last kept), malformed entries,
+and missing or unreadable files. Checks that
 need a file that wasn't read are None.
 """
 import csv
@@ -39,8 +42,8 @@ TURNOUT_COLUMNS = ["state", "source_id", "source_sha256", "precinct_id", "ward",
 CROSS = ["precinct_vs_citywide_mismatches", "citywide_lines_without_precincts", "precinct_lines_without_citywide",
          "party_differences"]
 CSV_ONLY = ["ward_conflicts", "duplicate_entries", "ballots_exceed_registered", "precincts_missing_specials",
-            "precinct_count_mismatch"]
-LISTS = CROSS + CSV_ONLY + ["non_numeric", "malformed_entries"]
+            "precinct_count_mismatch", "unexpected_contest_numbers"]
+LISTS = CROSS + CSV_ONLY + ["non_numeric", "malformed_entries", "missing_candidate_numbers", "duplicate_citywide_lines"]
 
 
 def _int(v):
@@ -105,18 +108,31 @@ def parse_pass(record_path, base_dir="."):
             if not isinstance(c, dict):
                 summary["malformed_entries"].append(("citywide", "contest"))
                 continue
-            cno, name = str(c.get("ContestNumber", "")), c.get("OfficeName") or ""
+            if c.get("ContestNumber") is None:
+                summary["malformed_entries"].append(("citywide", "ContestNumber", c.get("OfficeName")))
+                continue
+            cno, name = str(c.get("ContestNumber")), c.get("OfficeName") or ""
             if not _in_scope(cno, name):
                 continue
-            rcv[cno] = bool(c.get("IsRCV"))
-            for e in c.get("ElectionData") or []:
+            rcv[cno] = c.get("IsRCV") is True
+            data_ = c.get("ElectionData")
+            if not isinstance(data_, list):
+                summary["malformed_entries"].append(("citywide", cno, "ElectionData"))
+                continue
+            for e in data_:
                 if not isinstance(e, dict) or not isinstance(e.get("Contestant"), str):
                     summary["malformed_entries"].append(("citywide", cno))
                     continue
                 who = e["Contestant"]
+                if (cno, who) in city:
+                    summary["duplicate_citywide_lines"].append((cno, who))
                 city[(cno, who)] = (_int(e.get("Votes")), name)
                 if who not in NOT_CHOICES:
-                    cand_no[(cno, who)] = str(e.get("CandidateNumber", ""))
+                    num = e.get("CandidateNumber")
+                    if (isinstance(num, int) and not isinstance(num, bool)) or (isinstance(num, str) and num.strip()):
+                        cand_no[(cno, who)] = str(num)
+                    else:
+                        summary["missing_candidate_numbers"].append((cno, who))
                 city_party[(cno, who)] = e.get("PartyCode") or ""
                 if _int(e.get("Votes")) is None:
                     summary["non_numeric"].append(("citywide", cno, "", who, e.get("Votes")))
@@ -135,6 +151,10 @@ def parse_pass(record_path, base_dir="."):
                 specials.setdefault(prec, {})["registered" if cno == "-2" else "ballots"] = n
                 if n is None:
                     summary["non_numeric"].append(("csv", cno, prec, "", r.get("Votes")))
+                continue
+            if not re.fullmatch(r"\d+", cno.strip()):
+                if (cno, name) not in summary["unexpected_contest_numbers"]:
+                    summary["unexpected_contest_numbers"].append((cno, name))
                 continue
             if not _in_scope(cno, name):
                 continue
@@ -166,7 +186,9 @@ def parse_pass(record_path, base_dir="."):
                                 ward=wards[prec], registered_voters=sp.get("registered", ""), ballots_cast=sp.get("ballots", "")))
         summary["precincts"] = len(wards)
         counted = _int(info.get("PrecinctsCounted")) if isinstance(info.get("PrecinctsCounted"), (int, str)) else None
-        if "info" in data and counted is not None and counted != len(wards):
+        if "info" not in data or counted is None:
+            summary["precinct_count_mismatch"] = None
+        elif counted != len(wards):
             summary["precinct_count_mismatch"].append((counted, len(wards)))
         if "citywide" in data:
             for key, (n, _) in city.items():

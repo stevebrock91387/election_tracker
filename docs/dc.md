@@ -31,3 +31,4 @@ The CSV's name changes with the results type ("Pre-certified" now), so the pass 
 ## Not done
 
 - RCV rounds; ANCs; President (2028) will appear as a new contest.
+- Election-night behaviour is unverified: whether the CSV updates live, and whether the info's `PrecinctsCounted` equals the CSV's precinct count mid-count (only the post-election state was seen).

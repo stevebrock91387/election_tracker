@@ -61,11 +61,18 @@ class FetchPassTest(unittest.TestCase):
         self.assertEqual(self.slept, [10, 10])
 
     def test_bad_csvlink_stops_pass(self):
-        for link in ("https://evil.example/x.csv", B + "../x.csv", None):
+        for link in ("https://evil.example/x.csv", B + "Downloads/../x.csv", B + "other/x.csv", None):
             self.raw = tempfile.mkdtemp()
             with self.assertRaises(ValueError):
                 self.run_pass(opener_for([], link=link))
             self.assertTrue(self.no_record())
+
+    def test_non_json_info_stops_pass(self):
+        def opener(url):
+            return 200, b"<html>" if "getElectionInfo" in url else b"x"
+        with self.assertRaises(ValueError):
+            self.run_pass(opener)
+        self.assertTrue(self.no_record())
 
     def test_failure_stops_pass(self):
         with self.assertRaises(FetchError):

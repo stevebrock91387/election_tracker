@@ -64,7 +64,8 @@ class RealFixtureTest(unittest.TestCase):
             self.assertEqual({(r["choice_id"], r["party"]) for r in o}, {("", "")})
 
     def test_anc_and_specials_excluded(self):
-        self.assertFalse(find(self.rows, contest_id="19"))
+        self.assertTrue("ANC-" in raw("csv"))
+        self.assertFalse(find(self.rows, contest_id="29"))
         self.assertFalse([r for r in self.rows if r["contest_id"].startswith("-")])
 
     def test_turnout(self):
@@ -142,6 +143,78 @@ class SyntheticTest(unittest.TestCase):
         self.assertEqual([b[0] for b in s["ballots_exceed_registered"]], ["22"])
         self.assertIn(("1", "registered"), s["precincts_missing_specials"])
         self.assertEqual(len(s["non_numeric"]), 1)
+
+    def test_clean_cross_check(self):
+        import csv as _csv
+        import io as _io
+        sums = {}
+        for r in _csv.DictReader(_io.StringIO(raw("csv"))):
+            sums[(r["ContestNumber"], r["Candidate"])] = sums.get((r["ContestNumber"], r["Candidate"]), 0) + int(r["Votes"])
+        c = json.loads(raw("citywide"))
+        for x in c:
+            for e in x["ElectionData"]:
+                e["Votes"] = sums[(str(x["ContestNumber"]), e["Contestant"])]
+        rows, s, _ = parse_texts(self, {"citywide": json.dumps(c)})
+        self.assertEqual(s["precinct_vs_citywide_mismatches"], [])
+
+    def test_info_unreadable(self):
+        rows, s, _ = parse_texts(self, {"info": "<html>no</html>"})
+        self.assertEqual([x[0] for x in s["unreadable_files"]], ["info"])
+        self.assertIsNone(s["precinct_count_mismatch"])
+        self.assertTrue(rows)
+
+    def test_csv_unreadable(self):
+        rows, s, _ = parse_texts(self, {"csv": "<html>no</html>"})
+        self.assertEqual([x[0] for x in s["unreadable_files"]], ["csv"])
+        for k in ("precinct_vs_citywide_mismatches", "citywide_lines_without_precincts", "precinct_lines_without_citywide",
+                  "party_differences", "ward_conflicts", "duplicate_entries", "ballots_exceed_registered",
+                  "precincts_missing_specials", "precinct_count_mismatch", "unexpected_contest_numbers"):
+            self.assertIsNone(s[k], k)
+        r, = find(rows, level="state", contest_id="4", choice="DEM Robert White")
+        self.assertEqual(r["party"], "DEM")
+        self.assertEqual(find(rows, level="state", contest_id="4", choice="OVER VOTES")[0]["party"], "")
+
+    def test_rcv_on_precinct_rows(self):
+        rows, s, _ = parse_texts(self)
+        self.assertEqual({r["contest_type"] for r in find(rows, level="precinct", contest_id="4")}, {"RCV first rank"})
+
+    def test_bad_election_data_listed(self):
+        c = json.loads(raw("citywide"))
+        c[0]["ElectionData"] = 5
+        c[1]["ElectionData"] = None
+        c.append({"OfficeName": "NO NUMBER", "ElectionData": []})
+        rows, s, _ = parse_texts(self, {"citywide": json.dumps(c)})
+        self.assertGreaterEqual(len(s["malformed_entries"]), 3)
+        self.assertTrue(rows)
+
+    def test_unexpected_contest_numbers_listed(self):
+        t = edit_csv(["DEM Robert White", ",20,1,"], ",4,DELEGATE", ",x4,DELEGATE")
+        rows, s, _ = parse_texts(self, {"csv": t})
+        self.assertEqual([u[0] for u in s["unexpected_contest_numbers"]], ["x4"])
+
+    def test_candidate_numbers_and_duplicates(self):
+        c = json.loads(raw("citywide"))
+        for e in c[0]["ElectionData"]:
+            if e["Contestant"] == "DEM Robert White":
+                e["CandidateNumber"] = None
+        c[0]["ElectionData"].append(dict(c[0]["ElectionData"][0]))
+        rows, s, _ = parse_texts(self, {"citywide": json.dumps(c)})
+        self.assertIn(("4", "DEM Robert White"), s["missing_candidate_numbers"])
+        self.assertNotIn("None", {r["choice_id"] for r in rows})
+        self.assertEqual(len(s["duplicate_citywide_lines"]), 1)
+
+    def test_bad_values_listed(self):
+        c = json.loads(raw("citywide"))
+        c[0]["ElectionData"][0]["Votes"] = "n/a"
+        lines = raw("csv").split("\n")
+        j = next(n for n, l in enumerate(lines) if "REGISTERED VOTERS" in l and ",22," in l)
+        lines[j] = lines[j].rsplit(",", 1)[0] + ",n/a"
+        k = next(n for n, l in enumerate(lines) if "BALLOTS CAST" in l and ",20," in l)
+        del lines[k]
+        rows, s, _ = parse_texts(self, {"citywide": json.dumps(c), "csv": "\n".join(lines)})
+        self.assertTrue(any(x[0] == "citywide" for x in s["non_numeric"]))
+        self.assertTrue(any(x[0] == "csv" and x[1] == "-2" for x in s["non_numeric"]))
+        self.assertIn(("20", "ballots"), s["precincts_missing_specials"])
 
     def test_malformed_and_missing(self):
         c = json.loads(raw("citywide"))
