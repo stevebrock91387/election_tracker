@@ -81,7 +81,7 @@ Every registry row was looked at in the built-in browser. **48 verified, 3 parti
 
 ### Step 2: Enhanced Voting reader (built 2026-11-20)
 
-`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (301 with Clarity, ResultsAjax, Tally, NC, OH, TX, CT, FL, VT and IN). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
+`pipeline/` package: `fetch.py` (120 s minimum interval per source, raw body + `data/raw/manifest.csv` row before parsing), `schema.py` (common long-format columns), `readers/enhanced_voting.py`, `sources.toml` (AZ GA UT WA VA RI ID), CLI `python3 -m pipeline.run_ev`. Tests: `/opt/homebrew/bin/python3 -m unittest discover -s pipeline/tests -t .` (321 with Clarity, ResultsAjax, Tally, NC, OH, TX, CT, FL, VT, IN and LA). All seven 2026 exports parse with 0 statewide-vs-county mismatches **when matched by option id**; an earlier claim of GA/WA source faults was a name-matching bug, corrected in `docs/enhanced-voting.md`. Ranked-choice contests are skipped and listed. Output carries `choice_id` and `contest_scope` (statewide/local; added at Steve's call): join on ids, not names. UT Carbon County repeats option id `2` within two local contests (source fault, recorded in `docs/enhanced-voting.md`; step 3 should check for duplicate ids).
 
 ### Step 2: Clarity reader (built 2026-11-20, county level)
 
@@ -126,6 +126,10 @@ SOS static JSON: the election file names one timestamped snapshot; a pass reads 
 ### Step 2: Indiana reader (built 2026-11-24, precinct level)
 
 Indiana ENR: `settings.json` (version letter A/B), six category JSON files (state and county totals with office, candidate and FIPS ids), county turnout, and the 35 MB precinct CSV of every office (no ids; joined on office/county/name, case-insensitive). `pipeline/readers/in_.py` (`in` is a keyword), `pipeline/sources_in.toml`, CLI `python3 -m pipeline.run_in fetch|parse|fetch-parse SOURCE_ID`. Categories: US House, Secretary of State, Comptroller, Treasurer, state senate and house (2028: add US Senator and Governor ids; uncovered Federal/State categories are listed). 2026: 82,906 rows (80,844 precinct), every check clean. No reporting flag: zero-vote precincts are ambiguous for step 4. Details in `docs/in.md`.
+
+### Step 2: Louisiana reader (built 2026-11-24, parish level)
+
+SOS live-results JSON blobs: multi-parish races and totals, then per race a parish file and an early-vote file (44 requests, ~7⅓ min). `pipeline/readers/la.py`, `pipeline/sources_la.toml` (holds the 64 parish names, copied from the site's JavaScript), CLI `python3 -m pipeline.run_la fetch|parse|fetch-parse SOURCE_ID`. Scope: 21 federal, statewide, legislative and amendment races. 2026: 4,163 rows, 64 parishes, every check clean; House 5 and 6 go to the 12/12 runoff (a separate date: add a config entry). Amendment choice ids 3/4 repeat across races. Details in `docs/la.md`.
 
 ## Next tasks, in order
 

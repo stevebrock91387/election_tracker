@@ -1,11 +1,19 @@
 """LA source list and the fetch pass (fake opener and sleep; no network)."""
+import contextlib
+import csv
+import glob
+import io
 import json
 import os
 import tempfile
 import unittest
 
 from pipeline.fetch import FetchError
-from pipeline.run_la import DEFAULT_SOURCES, fetch_pass, load_sources
+from pipeline.readers.la import TURNOUT_COLUMNS
+from pipeline.run_la import DEFAULT_SOURCES, fetch_pass, load_sources, main
+from pipeline.schema import COLUMNS
+
+FX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 LA_ID = "la-2026-general"
 B = "https://voterportal.sos.la.gov/ElectionResults/ElectionResults/Data?blob="
@@ -68,6 +76,32 @@ class FetchPassTest(unittest.TestCase):
         with self.assertRaises(FetchError):
             self.run_pass(opener_for([], fail=("VotesEarly/Votes_13833",)))
         self.assertTrue(self.no_record())
+
+
+class ParseCommandTest(unittest.TestCase):
+    def test_parse_command(self):
+        out = tempfile.mkdtemp()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", LA_ID, os.path.join(FX, "la_pass.json"), "--base-dir", FX, "--parsed-dir", out])
+        (results,) = glob.glob(os.path.join(out, LA_ID, "*Z.csv"))
+        (turnout,) = glob.glob(os.path.join(out, LA_ID, "*-turnout.csv"))
+        with open(results, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), COLUMNS)
+        with open(turnout, newline="") as f:
+            self.assertEqual(next(csv.reader(f)), TURNOUT_COLUMNS)
+        self.assertIn("runoff_races: 1", buf.getvalue())
+
+    def test_parse_prints_not_checked(self):
+        d = tempfile.mkdtemp()
+        rec = os.path.join(d, "pass.json")
+        with open(rec, "w") as f:
+            json.dump({"source_id": LA_ID, "state": "LA", "election_date": "20261103", "races": ["67997"],
+                       "parishes": {}, "files": [{"kind": "races", "path": os.path.join(FX, "la_races.json")}]}, f)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main(["parse", LA_ID, rec, "--parsed-dir", d])
+        self.assertIn("parish_vs_state_mismatches: not checked", buf.getvalue())
 
 
 if __name__ == "__main__":
