@@ -28,7 +28,7 @@ class SourcesTest(unittest.TestCase):
         src = load_sources(DEFAULT_SOURCES)
         statewide = {k: s for k, s in src.items() if s["format"] in ("xml", "json")}
         county = {k: s for k, s in src.items() if s["format"] == "county_xml"}
-        self.assertEqual((len(statewide), len(county), len(src)), (4, 15, 19))
+        self.assertEqual((len(statewide), len(county), len(src)), (4, 8, 12))
         self.assertEqual({s["state"] for s in statewide.values()}, {"CO", "IA", "SC", "WV"})
         self.assertEqual({s["state"] for s in county.values()}, {"NJ"})
         for sid, s in src.items():

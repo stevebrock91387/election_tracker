@@ -195,6 +195,8 @@ def parse_json(sum_path, all_path, state, source_id):
 
 COUNTY_TURNOUT_COLUMNS = ["state", "source_id", "source_sha256", "county_name", "precinct_name", "registered_voters",
                           "ballots_cast", "percent_reporting"]
+# Contest-level VoteTypes that are not results: regVotersCounty is 0 in every 2026 NJ file (a placeholder).
+CONTEST_VOTE_TYPES_NOT_EMITTED = {"regVotersCounty"}
 COUNTY_LISTS = ["mismatches_vote_types_vs_total", "mismatches_precincts_vs_vote_type", "vote_type_sum_not_checked",
                 "region_mismatch", "unknown_elements", "precincts_not_in_turnout", "turnout_precincts_without_results",
                 "duplicate_precincts", "non_numeric"]
@@ -210,11 +212,14 @@ def parse_county_xml(zip_path, state, county, source_id):
     Design: docs/superpowers/specs/2026-11-25-step2-nj-clarity-counties-design.md.
     Rows: county rows (TOTAL = totalVotes, one per VoteType) and precinct rows (one per VoteType and
     Precinct). Contest keys are local to the county's file, so contest_scope is "local". A contest-level
-    VoteType (e.g. regVotersCounty) is counted in contest_vote_types and checked, not emitted. Nothing is
+    VoteType is described below. Nothing is
     corrected; a non-integer count gives votes "" and moves its sums to vote_type_sum_not_checked.
+    Contest-level VoteTypes (Overvotes, Undervotes in some counties; regVotersCounty in others) are
+    counted in contest_vote_types; all but CONTEST_VOTE_TYPES_NOT_EMITTED become rows with that name as
+    the choice (choice_id "", vote_type TOTAL, since they aren't split by vote type).
     """
     summary = {"region": None, "timestamp": None, "contests": 0, "precincts": 0, "vote_types": [],
-               "contest_vote_types": {}, "unreadable": []}
+               "contest_vote_types": {}, "contest_vote_types_emitted": [], "unreadable": []}
     summary.update({k: [] for k in COUNTY_LISTS})
     try:
         with zipfile.ZipFile(zip_path) as z:
@@ -273,7 +278,8 @@ def parse_county_xml(zip_path, state, county, source_id):
             elif total is not None:
                 total += v
             if row is not None:
-                rows.append(dict(row, level="precinct", precinct_id=name, precinct_name=name, vote_type=vtype,
+                rows.append(dict(row, level="precinct", precinct_id=name, precinct_name=name,
+                                 vote_type=row["vote_type"] or vtype,  # contest-level rows carry TOTAL
                                  votes="" if v is None else v, reporting_status=reporting.get(name, "")))
         return total
 
@@ -283,11 +289,22 @@ def parse_county_xml(zip_path, state, county, source_id):
         contest = dict(base, contest_id=cid, contest_name=c.get("text", ""), vote_for=c.get("voteFor", ""),
                        contest_type="question" if c.get("isQuestion") == "true" else "")
         status = f"{c.get('precinctsReported', '')}/{c.get('precinctsReporting', '')} precincts"
+        summary["contest_vote_types"] = dict(sorted(summary["contest_vote_types"].items()))
         for el in c:
-            if el.tag == "VoteType":  # contest-level (not a choice): counted and checked, no rows
+            if el.tag == "VoteType":  # contest-level (not a choice): counted, checked, rows unless excluded
                 name = el.get("name")
                 summary["contest_vote_types"][name] = summary["contest_vote_types"].get(name, 0) + 1
-                s, v = units(cid, "", name, el, None), _count(el.get("votes"))
+                row = None
+                if name not in CONTEST_VOTE_TYPES_NOT_EMITTED:
+                    if name not in summary["contest_vote_types_emitted"]:
+                        summary["contest_vote_types_emitted"].append(name)
+                    row = dict(contest, choice=name, choice_id="", party="")
+                    v = _count(el.get("votes"))
+                    if v is None:
+                        summary["non_numeric"].append((cid, "", name, "", el.get("votes")))
+                    row = dict(row, vote_type="TOTAL")
+                    rows.append(dict(row, level="county", votes="" if v is None else v, reporting_status=status))
+                s, v = units(cid, "", name, el, row), _count(el.get("votes"))
                 if s is not None and v is not None and s != v:
                     summary["mismatches_precincts_vs_vote_type"].append((cid, "", name, v, s))
             elif el.tag != "Choice":
@@ -322,6 +339,7 @@ def parse_county_xml(zip_path, state, county, source_id):
             elif ch.find("VoteType") is not None and vt_sum != total:
                 summary["mismatches_vote_types_vs_total"].append((cid, chid, total, vt_sum))
     summary["vote_types"] = sorted(vote_types)
+    summary["contest_vote_types"] = dict(sorted(summary["contest_vote_types"].items()))
     summary["precincts"] = len(result_names)
     summary["precincts_not_in_turnout"] = sorted(result_names - turnout_names)
     summary["turnout_precincts_without_results"] = sorted(turnout_names - result_names)

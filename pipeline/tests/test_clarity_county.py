@@ -13,10 +13,9 @@ from pipeline.schema import COLUMNS
 FX = os.path.join(os.path.dirname(__file__), "fixtures")
 ATL = os.path.join(FX, "clarity_nj_atlantic.zip")
 SEN = "0004"
-NJ_COUNTIES = {"Atlantic": "127487", "Burlington": "127582", "Cape_May": "127585", "Cumberland": "127562",
-               "Essex": "127486", "Gloucester": "127298", "Hudson": "127495", "Mercer": "127554",
-               "Middlesex": "127580", "Monmouth": "127586", "Morris": "127576", "Ocean": "127556",
-               "Passaic": "127401", "Somerset": "127569", "Union": "127567"}
+# The eight NJ Clarity counties that publish reports/detailxml.zip (the other seven publish JSON only).
+NJ_COUNTIES = {"Atlantic": "127487", "Burlington": "127582", "Cape_May": "127585", "Essex": "127486",
+               "Hudson": "127495", "Mercer": "127554", "Ocean": "127556", "Union": "127567"}
 
 
 def find(rows, **kw):
@@ -71,6 +70,7 @@ class FixtureTest(unittest.TestCase):
     def test_no_contest_level_vote_type_rows(self):
         self.assertFalse(find(self.rows, vote_type="regVotersCounty"))
         self.assertEqual(self.summary["contest_vote_types"], {"regVotersCounty": 65})
+        self.assertEqual(self.summary["contest_vote_types_emitted"], [])
 
     def test_turnout(self):
         t = {r["precinct_name"]: r for r in self.turnout}
@@ -108,6 +108,15 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(s["mismatches_vote_types_vs_total"], [])
         r = find(rows, level="county", contest_id=SEN, choice_id="001", vote_type="Election Day")
         self.assertEqual(r[0]["votes"], "")
+
+    def test_contest_level_over_under_votes_are_rows(self):
+        t = xml().replace('<VoteType name="regVotersCounty" votes="0">', '<VoteType name="Undervotes" votes="0">', 1)
+        rows, s, _ = parse_text(self, t)
+        c = find(rows, level="county", contest_id=SEN, choice="Undervotes")
+        self.assertEqual([(r["vote_type"], r["votes"], r["choice_id"], r["party"]) for r in c], [("TOTAL", 0, "", "")])
+        self.assertEqual(len(find(rows, level="precinct", contest_id=SEN, choice="Undervotes")), 145)
+        self.assertEqual(s["contest_vote_types"], {"Undervotes": 1, "regVotersCounty": 64})
+        self.assertEqual(s["contest_vote_types_emitted"], ["Undervotes"])
 
     def test_region_mismatch(self):
         _, s, _ = parse_text(self, xml(), county="Bergen")

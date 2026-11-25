@@ -27,6 +27,14 @@ refuses curl's default client)
 - 2026 Atlantic: 65 contests (federal, county, municipal, school boards), 145 precincts, timestamp
   11/19/2026.
 - No statewide official results yet (the Division's 2026 page has audits and candidate lists).
+- Found on the first real run (2026-11-25): only 8 counties publish `reports/detailxml.zip` (Atlantic,
+  Burlington, Cape May, Essex, Hudson, Mercer, Ocean, Union). The other 7 (Cumberland, Gloucester,
+  Middlesex, Monmouth, Morris, Passaic, Somerset) return 404 for it; their results pages load
+  `json/sum.json`, `json/ALL.json` and one JSON file per vote type instead. That format is a separate
+  step; this one covers the 8 XML counties. Contest-level `VoteType`s are `regVotersCounty` (0 in every
+  file) in five counties and `Overvotes`/`Undervotes` (real counts) in Burlington, Essex and Mercer.
+  Vote type names differ by county (`Mail-In`, `Vote by Mail`, `Election Day ICP`, `Federal Votes`,
+  `Overseas`). Burlington publishes every write-in name as a choice (US Senate 121 choices).
 
 ## Approaches
 
@@ -39,7 +47,7 @@ refuses curl's default client)
 
 ## Design
 
-- **Config** (`sources_clarity.toml`): one entry per county, `clarity-NJ-<County>-2026-general`,
+- **Config** (`sources_clarity.toml`): one entry per XML county (8), `clarity-NJ-<County>-2026-general`,
   `state = "NJ"`, `county = "<name as on the state page>"`, `base`, `format = "county_xml"`,
   `min_interval_s = 120`. Fetch as today.
 - **Rows** (`parse_county_xml(zip_path, state, county, source_id)`):
@@ -55,7 +63,8 @@ refuses curl's default client)
   county total line.
 - **Summary lists** (nothing corrected; a check that couldn't run is `None`):
   vote types that don't sum to a choice's total; precincts that don't sum to their vote type;
-  `contest_vote_types` (contest-level VoteType names, listed, not rows); `region_mismatch` (the
+  `contest_vote_types` (contest-level VoteType names, counted; `Overvotes`/`Undervotes` and any other
+  name become rows with that name as the choice, vote type TOTAL; `regVotersCounty` doesn't); `region_mismatch` (the
   file's Region isn't the config county); unknown elements; `precincts_not_in_turnout` and
   `turnout_precincts_without_results`; duplicate precincts within a vote type (later dropped).
 - **Cross-county:** none in this step: contest names differ by county, and there is no state total
