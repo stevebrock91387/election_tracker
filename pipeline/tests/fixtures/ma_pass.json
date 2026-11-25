@@ -1,0 +1,10 @@
+{"source_id": "ma-2026-general", "state": "MA", "started_utc": "20261124T000000Z",
+ "offices": ["U.S. Senate", "Governor", "Attorney General", "Secretary of the Commonwealth", "Treasurer", "Auditor",
+             "U.S. House", "Governor's Council", "State Senate", "State Representative"],
+ "question_locations": ["Statewide"],
+ "files": [{"kind": "search", "path": "ma_search.html"},
+           {"kind": "questions", "path": "ma_questions.html"},
+           {"kind": "contest", "id": "173531", "path": "ma_c173531.csv"},
+           {"kind": "contest", "id": "173571", "path": "ma_c173571.csv"},
+           {"kind": "contest", "id": "173668", "path": "ma_c173668.csv"},
+           {"kind": "question", "id": "11789", "path": "ma_q11789.csv"}]}
