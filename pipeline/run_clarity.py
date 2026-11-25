@@ -1,4 +1,5 @@
-"""Fetch and/or parse Clarity statewide results (county level).
+"""Fetch and/or parse Clarity results: statewide files (county level) and, with format "county_xml",
+one county's file (precinct level; New Jersey counties).
 
 A fetch pass reads <base>/current_ver.txt first and builds every data URL from
 that one version, so the files of a pass belong together. Each file has its
@@ -6,7 +7,7 @@ own source id (<id>-ver, then <id> for the XML zip, or <id>-sum and <id>-all
 for JSON), and pipeline/fetch.py enforces min_interval_s on each.
 
     /opt/homebrew/bin/python3 -m pipeline.run_clarity fetch SOURCE_ID
-    /opt/homebrew/bin/python3 -m pipeline.run_clarity parse SOURCE_ID ZIP          (xml sources)
+    /opt/homebrew/bin/python3 -m pipeline.run_clarity parse SOURCE_ID ZIP          (xml, county_xml sources)
     /opt/homebrew/bin/python3 -m pipeline.run_clarity parse SOURCE_ID SUM ALL      (json sources)
     /opt/homebrew/bin/python3 -m pipeline.run_clarity fetch-parse SOURCE_ID
 
@@ -20,7 +21,7 @@ import time
 import tomllib
 
 from pipeline.fetch import FetchError, fetch
-from pipeline.readers.clarity import TURNOUT_COLUMNS, parse_json, parse_xml, read_body
+from pipeline.readers.clarity import COUNTY_TURNOUT_COLUMNS, TURNOUT_COLUMNS, parse_county_xml, parse_json, parse_xml, read_body
 from pipeline.schema import write_csv
 
 DEFAULT_SOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sources_clarity.toml")
@@ -40,7 +41,7 @@ def fetch_pass(source_id, src, raw_dir="data/raw", now=None, opener=None):
     version = read_body(ver_path).decode("utf-8", "replace").strip()
     if not re.fullmatch(r"\d+", version):
         raise FetchError(f"{source_id}: current_ver.txt is not a version number: {version[:60]!r} (saved to {ver_path})")
-    if src["format"] == "xml":
+    if src["format"] in ("xml", "county_xml"):
         paths = {"xml": fetch(source_id, f"{base}/{version}/reports/detailxml.zip", iv, **kw)}
     elif src["format"] == "json":
         paths = {"sum": fetch(f"{source_id}-sum", f"{base}/{version}/json/sum.json", iv, **kw),
@@ -59,6 +60,11 @@ def parse_files(source_id, src, paths, parsed_dir="data/parsed"):
         (zip_path,) = paths
         rows, summary, turnout = parse_xml(zip_path, src["state"], source_id)
         write_csv(turnout, stem + "-turnout.csv", TURNOUT_COLUMNS)
+        outs = [stem + ".csv", stem + "-turnout.csv"]
+    elif src["format"] == "county_xml":
+        (zip_path,) = paths
+        rows, summary, turnout = parse_county_xml(zip_path, src["state"], src["county"], source_id)
+        write_csv(turnout, stem + "-turnout.csv", COUNTY_TURNOUT_COLUMNS)
         outs = [stem + ".csv", stem + "-turnout.csv"]
     else:
         sum_path, all_path = paths
@@ -85,7 +91,7 @@ def main(argv=None):
         p.error(f"unknown source id {a.source_id!r}; known: {', '.join(sources)}")
     src = sources[a.source_id]
     if a.command == "parse":
-        need = 1 if src["format"] == "xml" else 2
+        need = 1 if src["format"] in ("xml", "county_xml") else 2
         if len(a.paths) != need:
             p.error(f"{a.source_id} is {src['format']}: parse needs {need} path(s)")
         return parse_files(a.source_id, src, a.paths, a.parsed_dir)
@@ -94,7 +100,7 @@ def main(argv=None):
     r = fetch_pass(a.source_id, src, raw_dir=a.raw_dir)
     print(f"{a.source_id}: version {r['version']}, saved {r['paths']}")
     if a.command == "fetch-parse":
-        order = ["xml"] if src["format"] == "xml" else ["sum", "all"]
+        order = ["xml"] if src["format"] in ("xml", "county_xml") else ["sum", "all"]
         return parse_files(a.source_id, src, [r["paths"][k] for k in order], a.parsed_dir)
     return r
 

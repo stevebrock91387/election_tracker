@@ -26,13 +26,16 @@ def opener_for(version_body, record):
 class SourcesTest(unittest.TestCase):
     def test_sources_complete(self):
         src = load_sources(DEFAULT_SOURCES)
-        self.assertEqual(len(src), 4)
-        self.assertEqual({s["state"] for s in src.values()}, {"CO", "IA", "SC", "WV"})
+        statewide = {k: s for k, s in src.items() if s["format"] in ("xml", "json")}
+        county = {k: s for k, s in src.items() if s["format"] == "county_xml"}
+        self.assertEqual((len(statewide), len(county), len(src)), (4, 15, 19))
+        self.assertEqual({s["state"] for s in statewide.values()}, {"CO", "IA", "SC", "WV"})
+        self.assertEqual({s["state"] for s in county.values()}, {"NJ"})
         for sid, s in src.items():
             self.assertGreaterEqual(s["min_interval_s"], 120, sid)
             self.assertTrue(s["base"].startswith("https://"), sid)
             self.assertFalse(s["base"].endswith("/"), sid)
-            self.assertEqual(s["format"], "json" if s["state"] == "IA" else "xml", sid)
+            self.assertEqual(s["format"], {"IA": "json", "NJ": "county_xml"}.get(s["state"], "xml"), sid)
 
 
 class FetchPassTest(unittest.TestCase):
