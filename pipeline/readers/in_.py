@@ -23,10 +23,12 @@ summary counts precinct units, units named "...Nv" and all-zero units).
 
 Nothing is corrected; the summary lists: precinct sums that differ from county totals, precinct rows
 that join no county line, county lines with no precinct rows, county sums that differ from statewide
-totals, statewide candidates with no county id, state-vs-county party codes that differ beyond case,
+totals, statewide candidates with no county id, county lines no statewide line covers, state-vs-county party codes that differ beyond case,
 duplicate entries, non-integer counts (votes ""), counties without FIPS, the turnout Total vs the
 county sums, Federal/State categories in the index that the record doesn't cover (judges and
-prosecutors excepted), malformed entries (skipped) and missing or unreadable files. Checks that need
+prosecutors excepted; headings compared case-insensitively), configured categories missing from the
+index, configured categories with no known name (the CSV can't be filtered for them, so the precinct
+checks are None), malformed entries (skipped) and missing or unreadable files. Checks that need
 a file that wasn't read are None.
 """
 import csv
@@ -47,7 +49,7 @@ CSV_HEAD = {"Election", "ReportingCountyName", "DataEntryJurisdictionName", "Off
 LISTS = ["precinct_vs_county_mismatches", "unmatched_precinct_rows", "county_lines_without_precincts",
          "county_vs_state_mismatches", "statewide_without_id", "party_differences", "duplicate_entries",
          "non_numeric", "counties_without_fips", "turnout_total_mismatches", "uncovered_categories",
-         "malformed_entries"]
+         "malformed_entries", "county_lines_without_state", "unnamed_categories", "configured_categories_not_in_index"]
 
 
 def _L(x):
@@ -63,7 +65,7 @@ def _int(v):
 
 
 def _cf(s):
-    return (s or "").strip().casefold()
+    return s.strip().casefold() if isinstance(s, str) else ""
 
 
 def parse_pass(record_path, base_dir="."):
@@ -114,22 +116,30 @@ def parse_pass(record_path, base_dir="."):
         base["election_name"] = csv_rows[0].get("Election") or ""
 
     # Category names: from the index, else from the category files themselves.
-    cat_names = {}
+    cat_names, parsed_items = {}, 0
     if "elections" in data:
         for h in _L(data["elections"].get("List")):
             if not isinstance(h, dict):
                 summary["malformed_entries"].append(("elections", "List"))
                 continue
-            for item in _L((h.get("Items") or {}).get("Item") if isinstance(h.get("Items"), dict) else None):
+            items = h.get("Items")
+            if items is not None and not isinstance(items, dict):
+                summary["malformed_entries"].append(("elections", "Items"))
+                continue
+            for item in _L((items or {}).get("Item")):
                 if not isinstance(item, dict):
+                    summary["malformed_entries"].append(("elections", "Item"))
                     continue
+                parsed_items += 1
                 cid, nm = str(item.get("OFFICECATEGORYID", "")), item.get("OFFICE_CATEGORY_NAME", "")
                 if cid in cats:
                     cat_names[cid] = nm
-                elif h.get("Heading") in ("Federal", "State") and cid not in NOT_IN_SCOPE:
+                elif _cf(h.get("Heading")) in ("federal", "state") and cid not in NOT_IN_SCOPE:
                     summary["uncovered_categories"].append((cid, nm))
-    else:
-        summary["uncovered_categories"] = None
+        summary["configured_categories_not_in_index"] = [c for c in cats if c not in cat_names]
+    if not parsed_items:
+        # No index (or none of it parsed): no way to see uncovered categories.
+        summary["uncovered_categories"] = summary["configured_categories_not_in_index"] = None
 
     rows = []
     county_index = {}   # (office title cf, county cf, name cf) -> (office id, cand id, fips, votes)
@@ -169,6 +179,9 @@ def parse_pass(record_path, base_dir="."):
                 elif (county,) not in [(x,) for x in summary["counties_without_fips"]]:
                     summary["counties_without_fips"].append(county)
                 oid = str(race.get("OFFICEID", ""))
+                if not isinstance(race.get("OFFICE_TITLE"), str) or not isinstance(county, str):
+                    summary["malformed_entries"].append((k, "Race", oid))
+                    continue
                 office_by_title[(_cf(race.get("OFFICE_TITLE")), _cf(county))] = (oid, fips, cname)
                 crow = dict(base, level="county", source_sha256=sha[k], source_created_at=wt, contest_id=oid,
                             contest_name=race.get("OFFICE_TITLE", ""), contest_type=cname,
@@ -179,6 +192,9 @@ def parse_pass(record_path, base_dir="."):
                         summary["malformed_entries"].append((k, "Candidate"))
                         continue
                     cid, name = str(cd.get("CANDIDATEID", "")), cd.get("NAME_ON_BALLOT", "")
+                    if not isinstance(name, str):
+                        summary["malformed_entries"].append((k, "Candidate", oid, cid))
+                        continue
                     n = _int(cd.get("TOTAL_VOTES"))
                     if n is None:
                         summary["non_numeric"].append(("county", oid, county, cid, cd.get("TOTAL_VOTES")))
@@ -209,15 +225,21 @@ def parse_pass(record_path, base_dir="."):
                     summary["malformed_entries"].append((k, "Candidate"))
                     continue
                 name = cd.get("NAME_ON_BALLOT", "")
+                if not isinstance(name, str):
+                    summary["malformed_entries"].append((k, "StatewideSummary", oid))
+                    continue
                 n = _int(cd.get("TOTAL"))
                 if n is None:
                     summary["non_numeric"].append(("state", oid, "", name, cd.get("TOTAL")))
                 state_lines.append((oid, name, n, cd.get("PARTY", "") or ""))
                 rows.append(dict(srow, choice=name, party=cd.get("PARTY", "") or "", votes="" if n is None else n,
                                  choice_id=cand_ids.get((oid, _cf(name)), "")))
-    # State lines vs county lines.
+    # State lines vs county lines, both directions.
+    consumed = set()
     for oid, name, n, party in state_lines:
         cid = cand_ids.get((oid, _cf(name)))
+        if cid is not None:
+            consumed.add((oid, cid))
         if cid is None:
             summary["statewide_without_id"].append((oid, name))
             continue
@@ -225,10 +247,17 @@ def parse_pass(record_path, base_dir="."):
             summary["county_vs_state_mismatches"].append((oid, cid, n, county_sums.get((oid, cid))))
         if _cf(party) != _cf(county_party.get((oid, cid))):
             summary["party_differences"].append((oid, cid, party, county_party.get((oid, cid))))
+    summary["county_lines_without_state"] = sorted(k for k in county_sums if k not in consumed)
     summary["counties"] = len(fips_by_name)
 
+    summary["unnamed_categories"] = [c for c in cats if not cat_names.get(c)]
     # Precinct rows from the CSV.
-    if csv_rows is not None:
+    if csv_rows is not None and summary["unnamed_categories"]:
+        # A category with no known name can't be picked out of the CSV: its precinct rows would be dropped.
+        for k in ("precinct_vs_county_mismatches", "unmatched_precinct_rows", "county_lines_without_precincts"):
+            summary[k] = None
+        summary["precinct_units"] = summary["nv_units"] = summary["all_zero_units"] = None
+    if csv_rows is not None and not summary["unnamed_categories"]:
         names = {_cf(n) for n in cat_names.values()}
         precinct_sums, seen, units = {}, set(), {}
         for r in csv_rows:
@@ -286,6 +315,9 @@ def parse_pass(record_path, base_dir="."):
             if t.get("County") == "Total":
                 total = t
                 continue
+            if not isinstance(t.get("County"), str):
+                summary["malformed_entries"].append(("turnout", "County", t.get("County")))
+                continue
             turnout.append(dict(state=rec["state"], source_id=rec["source_id"], source_sha256=sha["turnout"],
                                 county_id=fips_by_name.get(_cf(t.get("County")), ""), county_name=t.get("County", ""),
                                 registered_voters=t.get("REGISTERED_VOTERS", ""), voters_voting=t.get("VotersVoting", ""),
@@ -303,4 +335,5 @@ def parse_pass(record_path, base_dir="."):
         summary["turnout_total_mismatches"] = None
     if any(f"offcat-{c}" not in data for c in cats):
         summary["county_vs_state_mismatches"] = summary["statewide_without_id"] = None
+        summary["county_lines_without_state"] = None
     return rows, summary, turnout

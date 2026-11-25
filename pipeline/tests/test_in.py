@@ -68,6 +68,7 @@ class RealFixtureTest(unittest.TestCase):
     def test_summary(self):
         s = self.summary
         for k in ("precinct_vs_county_mismatches", "unmatched_precinct_rows", "county_lines_without_precincts",
+                  "unnamed_categories", "configured_categories_not_in_index",
                   "statewide_without_id", "duplicate_entries", "non_numeric", "counties_without_fips",
                   "malformed_entries", "unreadable_files", "missing_files"):
             self.assertEqual(s[k], [], k)
@@ -94,6 +95,50 @@ class SyntheticTest(unittest.TestCase):
         self.assertTrue(p)
         self.assertEqual({r["contest_id"] for r in p}, {""})
         self.assertIsNone(s["precinct_vs_county_mismatches"])
+
+    def test_unread_category_and_index(self):
+        rows, s, _ = parse_texts(self, {"offcat-1041": "<html>no</html>", "elections": "<html>no</html>"})
+        self.assertEqual(s["unnamed_categories"], ["1041"])
+        self.assertIsNone(s["unmatched_precinct_rows"])
+        self.assertIsNone(s["uncovered_categories"])
+
+    def test_index_wrong_shape(self):
+        el = json.loads(raw("elections"))
+        el["Root"]["List"] = None
+        s = parse_texts(self, {"elections": json.dumps(el)})[1]
+        self.assertIsNone(s["uncovered_categories"])
+        el = json.loads(raw("elections"))
+        el["Root"]["List"][0]["Heading"] = "FEDERAL"
+        el["Root"]["List"][0]["Items"]["Item"].append({"OFFICECATEGORYID": "1001", "OFFICE_CATEGORY_NAME": "US Senator"})
+        el["Root"]["List"][1]["Items"]["Item"] = [i for i in el["Root"]["List"][1]["Items"]["Item"]
+                                                  if i["OFFICECATEGORYID"] != "1018"]
+        s = parse_texts(self, {"elections": json.dumps(el)})[1]
+        self.assertEqual(s["uncovered_categories"], [("1001", "US Senator")])
+        self.assertEqual(s["configured_categories_not_in_index"], ["1018"])
+
+    def test_county_lines_without_state_listed(self):
+        o = json.loads(raw("offcat-1041"))
+        races = o["Root"]["StatewideSummary"]["Race"]
+        races = races if isinstance(races, list) else [races]
+        cands = races[0]["Candidates"]["Candidate"]
+        gone = cands.pop()
+        rows, s, _ = parse_texts(self, {"offcat-1041": json.dumps(o)})
+        self.assertTrue(s["county_lines_without_state"])
+        self.assertTrue(all(x[0] == "2258" for x in s["county_lines_without_state"]))
+
+    def test_non_string_name_listed_not_fatal(self):
+        o = json.loads(raw("offcat-1041"))
+        reg = o["Root"]["OfficeCategory"]["Regions"]["Region"]
+        reg = reg if isinstance(reg, list) else [reg]
+        race = reg[0]["Races"]["Race"]
+        race = race[0] if isinstance(race, list) else race
+        c = race["Candidates"]["Candidate"]
+        (c[0] if isinstance(c, list) else c)["NAME_ON_BALLOT"] = 5
+        t = json.loads(raw("turnout"))
+        t["root"]["CountyTurnout"][0]["County"] = 7
+        rows, s, _ = parse_texts(self, {"offcat-1041": json.dumps(o), "turnout": json.dumps(t)})
+        self.assertTrue(rows)
+        self.assertGreaterEqual(len(s["malformed_entries"]), 2)
 
     def test_csv_missing(self):
         rows, s, _ = parse_texts(self, kinds=[k for k in KINDS if k != "csv"])

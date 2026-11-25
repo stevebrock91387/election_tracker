@@ -25,14 +25,15 @@ Settings: `VersionCode` 20261119_100058, `Certified` F (not certified). The site
 
 - **Output:** 82,906 rows: 271 state, 1,791 county, 80,844 precinct. 92 turnout rows.
 - **Coverage:** 137 offices, 92 counties (FIPS), 5,123 precinct units in the CSV (county + precinct name; the category index says 5,061 of 5,067 precincts reporting).
-- **Every check is clean:** precinct sums equal county totals for every candidate line, every in-scope precinct row joins to its ids, county sums equal statewide totals, every statewide candidate has an id, no party differences beyond case, no duplicates, no non-integer counts, every county has FIPS, the turnout Total equals the county sums, and no Federal/State category is uncovered.
+- **Every check is clean:** precinct sums equal county totals for every candidate line, every in-scope precinct row joins to its ids, county sums equal statewide totals and every county line has a statewide line (both directions), every statewide candidate has an id, no party differences beyond case, no duplicates, no non-integer counts, every county has FIPS, the turnout Total equals the county sums, and no Federal/State category is uncovered.
+- **Not listed by design:** a county line with zero votes and no precinct rows.
 - **Counted:** 26 precinct units whose name ends "Nv"; 60 units with zero votes in every in-scope line.
 - **Example, Secretary of State (unofficial):** Bayh D 1,007,815; Engling R 829,083; Ballard Lp 70,068; Shillings L 38,663; Delano (W/I) Nsaw 136.
 
 ## Quirks
 
 - **The precinct CSV has no ids.** Rows get office, candidate and county ids by joining on (office title, county, name on ballot) to the category JSON, compared case-insensitively. The files spell names in different case: "Secretary Of State" vs "Secretary of State"; "Laporte"/"Dekalb"/"Lagrange" vs "LaPorte"/"DeKalb"/"LaGrange".
-- **Party spellings differ by level, kept as published:** statewide summaries use title case ("Lp", "Nsaw"), county lines the abbreviation ("LP"), the CSV the full party name. The Libertarian candidates appear as both "Lp" and "L".
+- **Party spellings differ by level, kept as published:** statewide summaries and county lines both carry codes like "Lp", "Nsaw", "L", "SPI" (settings list "LP", "NSAW"); the CSV has the full party name. The two Libertarian candidates appear as "Lp" and "L".
 - **No reporting flag:** an unreported precinct can't be told from one with zero votes, so `reporting_status` is empty everywhere. Step 4 (expected vote) has to treat zero-vote precincts as unknown.
 - **The CSV isn't versioned** with the JSON. A pass during an update could mix two moments; the precinct-vs-county check would then list differences.
 - A single item in the JSON may be an object instead of a one-element list.
@@ -41,5 +42,5 @@ Settings: `VersionCode` 20261119_100058, `Certified` F (not certified). The site
 
 - Judges, prosecutors, local offices, referendums.
 - Vote types (the CSV has totals only).
-- What "Nv" precinct names mean; the 62-precinct gap between the CSV's units and the index's 5,067.
+- What "Nv" precinct names mean; the 56-unit gap between the CSV's 5,123 units and the index's 5,067 precincts.
 - 2028 adds US Senator and Governor categories; their ids go into `pipeline/sources_in.toml` (the reader lists uncovered Federal/State categories).
