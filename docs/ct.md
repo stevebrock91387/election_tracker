@@ -29,12 +29,14 @@ The version moved from 56592 (recon, earlier the same day) to 56593: the feed is
   - `multi_line_names_without_grouping`: 3 probate districts (18, 31, 40) where one candidate runs on two lines with no grouping entry (e.g. Matt Jalowiec, Probate 18, D and R).
   - `multi_line_names`: 165 (office, name) pairs with more than one line. Informational: these are the joins steps 5–6 need.
   - `office_precincts_below_100`: 67 in-scope offices whose `officePrecincts` value is below 100% although every town shows 100%. Meaning unknown.
+  - `offices_without_precinct_status`: 50 in-scope offices (A 32, PD 16, S 2) have no `officePrecincts` entry, so their 91 state rows have an empty `reporting_status`. The file has 286 entries in v56593 (recon's v56592 had 261).
 - **Turnout:** registered (`EV`) 2,276,199; ballots (`VV`) 1,307,022. Hartford's turnout `PR` reads "25 of 24 (104.17%)"; its town status reads "24 of 24 (100.00%)".
 - **Example, Governor and Lieutenant Governor (unofficial):** Lamont/Bysiewicz D 742,437 + WF 29,820; Fazio/Corey R 496,473 + IND 27,767; three write-in tickets 28, 18, 18.
 
 ## Quirks
 
 - **Level "town":** rows use `level = "town"` with the town id and name in `county_id`/`county_name` (`pipeline/schema.py` documents this). The turnout table also carries the town's county name.
+- **Malformed values** (a JSON value of the wrong type in any file) are listed under `malformed_entries` and skipped; none in 2026. A lookup file without an office list and candidate table counts as unreadable.
 - **Party lines:** each line is its own candidate id and row; no combined person rows are made up. The feed has no person id, so combining lines means joining on (office, name) within Connecticut.
 - **Candidate addresses:** the lookup file carries each candidate's home address (`AD`). The reader never copies it, and the test fixtures have it removed.
 - **No timestamp** in any file; `source_created_at` is empty and the version number is in the summary.

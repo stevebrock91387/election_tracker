@@ -28,7 +28,10 @@ file and not the other, grouping totals that differ from the sum of the office's
 same-named multi-line choices with no grouping entry (and grouping entries matching no line), the
 turnout Total entry vs the town sums, non-integer counts (votes ""), unknown town, office,
 candidate and party ids, office types outside SW C S A PD SM (skipped), in-scope offices with no
-state entry, duplicate (office, line) entries, and missing or unreadable files. Without the lookup
+state entry, duplicate (office, line) entries, in-scope offices with state rows but no
+officePrecincts entry (their state rows have an empty reporting_status), parties with no code,
+malformed entries (a value of the wrong JSON type; skipped), and missing or unreadable files (a
+lookup without an officeList list and candidateIds object counts as unreadable). Without the lookup
 nothing can be scoped or named: no rows, and every check is None. Other checks that need a file
 that wasn't read are None.
 """
@@ -46,7 +49,8 @@ TURNOUT_COLUMNS = ["state", "source_id", "source_sha256", "county_id", "county_n
 LISTS = ["mismatches_state_vs_town", "state_lines_missing_from_towns", "town_lines_missing_from_state",
          "grouping_mismatches", "multi_line_names_without_grouping", "grouping_without_lines", "multi_line_names",
          "unknown_parties", "unknown_towns", "unknown_offices", "unknown_candidates", "unknown_office_types",
-         "in_scope_offices_without_state_entry", "non_numeric_votes", "duplicate_lines", "turnout_total_mismatches"]
+         "in_scope_offices_without_state_entry", "non_numeric_votes", "duplicate_lines", "turnout_total_mismatches",
+         "offices_without_precinct_status", "parties_without_code", "malformed_entries"]
 KINDS = ("version", "lookup", "state", "town", "townstatus", "turnout", "grouping", "officeprecincts")
 
 
@@ -94,11 +98,21 @@ def parse_pass(record_path, base_dir="."):
         return [], summary, []
 
     lk = data["lookup"]
+    if not isinstance(lk.get("officeList"), list) or not isinstance(lk.get("candidateIds"), dict):
+        summary["unreadable_files"].append(("lookup", "no officeList list / candidateIds object"))
+        not_checked("contests", "choices", "towns", "office_precincts_below_100", *LISTS)
+        return [], summary, []
     scope = set(rec.get("office_types") or [])
     offices = {}
-    for o in lk.get("officeList") or []:
+    for o in lk["officeList"]:
+        if not isinstance(o, dict):
+            summary["malformed_entries"].append(("lookup.officeList", repr(o)[:60]))
+            continue
         for oid, v in o.items():
-            offices[oid] = v
+            if isinstance(v, dict):
+                offices[oid] = v
+            else:
+                summary["malformed_entries"].append(("lookup.officeList", oid))
     in_scope = set()
     for oid, v in offices.items():
         ot = v.get("OT", "")
@@ -107,7 +121,12 @@ def parse_pass(record_path, base_dir="."):
         elif ot in scope:
             in_scope.add(oid)
     cands = lk.get("candidateIds") or {}
-    parties = {pid: (p or {}).get("CD", "") for pid, p in (lk.get("partyIds") or {}).items()}
+    parties = {}
+    for pid, p in (lk.get("partyIds") or {}).items():
+        code = p.get("CD") if isinstance(p, dict) else None
+        if not code:
+            summary["parties_without_code"].append(pid)
+        parties[pid] = code or ""
     towns = lk.get("townIds") or {}
     counties = lk.get("counties") or {}
     county_of = {str(ct.get("TownID")): counties.get(str(ct.get("CountyID")), "") for ct in lk.get("countyTowns") or []}
@@ -115,8 +134,18 @@ def parse_pass(record_path, base_dir="."):
     base = dict.fromkeys(COLUMNS, "")
     base.update(state=rec["state"], source_id=rec["source_id"], contest_scope="statewide",
                 election_name=election.get("DNM", ""), election_date=election.get("DT", ""))
-    op = data.get("officeprecincts", {})
-    ts = data.get("townstatus", {})
+    op = {}
+    for oid, v in data.get("officeprecincts", {}).items():
+        if isinstance(v, str):
+            op[oid] = v
+        else:
+            summary["malformed_entries"].append(("officeprecincts", oid))
+    ts = {}
+    for tid, v in data.get("townstatus", {}).items():
+        if isinstance(v, dict):
+            ts[tid] = v
+        else:
+            summary["malformed_entries"].append(("townstatus", tid))
     rows, seen_unknown = [], set()
 
     def choice_of(oid, cid):
@@ -132,21 +161,39 @@ def parse_pass(record_path, base_dir="."):
             summary["unknown_parties"].append((cid, pid))
         return c.get("NM", ""), parties.get(pid, "")
 
+    def entries(kind, unit, oid, lst, quiet=False):
+        """The (candidate id, value) pairs of one office's list; malformed parts are listed (unless
+        quiet: a second pass over the same list) and skipped."""
+        if lst is None:
+            return []
+        if not isinstance(lst, list):
+            if not quiet:
+                summary["malformed_entries"].append((kind, unit, oid))
+            return []
+        out = []
+        for e in lst:
+            if not isinstance(e, dict):
+                if not quiet:
+                    summary["malformed_entries"].append((kind, unit, oid))
+                continue
+            for cid, v in e.items():
+                out.append((cid, v if isinstance(v, dict) else {}))
+        return out
+
     def emit(level, unit, oid, lst, row, seen, sums=None):
-        for e in lst or []:
-            for cid, v in (e or {}).items():
-                if (unit, oid, cid) in seen:
-                    summary["duplicate_lines"].append((level, unit, oid, cid))
-                seen.add((unit, oid, cid))
-                raw = (v or {}).get("V")
-                n = _int(raw)
-                if n is None:
-                    summary["non_numeric_votes"].append((level, unit, oid, cid, raw))
-                elif sums is not None:
-                    sums[(oid, cid)] = sums.get((oid, cid), 0) + n
-                name, party = choice_of(oid, cid)
-                rows.append(dict(row, choice_id=cid, choice=name, party=party, vote_type="TOTAL",
-                                 votes="" if n is None else n))
+        for cid, v in entries(level, unit, oid, lst):
+            if (unit, oid, cid) in seen:
+                summary["duplicate_lines"].append((level, unit, oid, cid))
+            seen.add((unit, oid, cid))
+            raw = v.get("V")
+            n = _int(raw)
+            if n is None:
+                summary["non_numeric_votes"].append((level, unit, oid, cid, raw))
+            elif sums is not None:
+                sums[(oid, cid)] = sums.get((oid, cid), 0) + n
+            name, party = choice_of(oid, cid)
+            rows.append(dict(row, choice_id=cid, choice=name, party=party, vote_type="TOTAL",
+                             votes="" if n is None else n))
 
     def office_row(oid):
         o = offices[oid]
@@ -170,9 +217,8 @@ def parse_pass(record_path, base_dir="."):
             summary["contests"] += 1
             emit("state", "", oid, lst, dict(office_row(oid), level="state", source_sha256=sha["state"],
                                               reporting_status=op.get(oid, "")), seen)
-            for e in lst or []:
-                for cid, v in (e or {}).items():
-                    state_lines[(oid, cid)] = _int((v or {}).get("V"))
+            for cid, v in entries("state", "", oid, lst, quiet=True):
+                state_lines[(oid, cid)] = _int(v.get("V"))
         summary["choices"] = len(state_lines)
         summary["in_scope_offices_without_state_entry"] = sorted(in_scope - set(data["state"]))
         names = {}
@@ -181,8 +227,14 @@ def parse_pass(record_path, base_dir="."):
         summary["multi_line_names"] = [(o, n, ids) for (o, n), ids in names.items() if len(ids) > 1]
     else:
         not_checked("contests", "choices", "in_scope_offices_without_state_entry", "multi_line_names")
-    summary["office_precincts_below_100"] = (sum(1 for oid in in_scope if oid in op and "(100" not in op[oid])
-                                             if "officeprecincts" in data else None)
+    if "officeprecincts" in data:
+        summary["office_precincts_below_100"] = sum(1 for oid in in_scope if oid in op and "(100" not in op[oid])
+        if "state" in data:
+            summary["offices_without_precinct_status"] = sorted(o for o in in_scope & set(data["state"]) if o not in op)
+        else:
+            not_checked("offices_without_precinct_status")
+    else:
+        not_checked("office_precincts_below_100", "offices_without_precinct_status")
 
     # Town rows.
     town_sums = {}
@@ -193,7 +245,10 @@ def parse_pass(record_path, base_dir="."):
                 summary["unknown_towns"].append(tid)
             row = dict(base, level="town", source_sha256=sha["town"], county_id=tid, county_name=towns.get(tid, ""),
                        reporting_status=(ts.get(tid) or {}).get("PR", ""))
-            for oid, lst in (offs or {}).items():
+            if not isinstance(offs, dict):
+                summary["malformed_entries"].append(("town", tid))
+                continue
+            for oid, lst in offs.items():
                 if usable(oid):
                     emit("town", tid, oid, lst, dict(row, contest_id=oid, contest_name=offices[oid].get("NM", ""),
                                                       contest_type=offices[oid].get("OT", "")), seen, town_sums)
@@ -209,8 +264,9 @@ def parse_pass(record_path, base_dir="."):
                 summary["state_lines_missing_from_towns"].append((oid, cid))
             elif n is not None and town_sums[(oid, cid)] != n:
                 summary["mismatches_state_vs_town"].append((oid, cid, n, town_sums[(oid, cid)]))
-        town_lines |= {(oid, cid) for tid, offs in data["town"].items() for oid, lst in (offs or {}).items()
-                       if oid in in_scope for e in lst or [] for cid in (e or {})}
+        town_lines |= {(oid, cid) for tid, offs in data["town"].items() if isinstance(offs, dict)
+                       for oid, lst in offs.items() if oid in in_scope
+                       for e in (lst if isinstance(lst, list) else []) if isinstance(e, dict) for cid in e}
         summary["town_lines_missing_from_state"] = sorted(town_lines - set(state_lines))
     else:
         not_checked("mismatches_state_vs_town", "state_lines_missing_from_towns", "town_lines_missing_from_state")
@@ -230,6 +286,8 @@ def parse_pass(record_path, base_dir="."):
                         continue
                     grouped.add((oid, name))
                     g, s = _int((v or {}).get("V")), [state_lines[(oid, c)] for c in lines]
+                    if g is None:
+                        summary["non_numeric_votes"].append(("grouping", "", oid, cid, (v or {}).get("V")))
                     if g is not None and None not in s and g != sum(s):
                         summary["grouping_mismatches"].append((oid, name, g, sum(s)))
         summary["multi_line_names_without_grouping"] = [(o, n) for o, n, _ in summary["multi_line_names"]

@@ -85,7 +85,8 @@ class RealFixtureTest(unittest.TestCase):
         self.assertIn(("19663", "44186", 742437), [m[:3] for m in s["mismatches_state_vs_town"]])
         for k in ("grouping_mismatches", "non_numeric_votes", "duplicate_lines",
                   "unknown_towns", "unknown_offices", "unknown_candidates", "unknown_office_types",
-                  "in_scope_offices_without_state_entry", "unreadable_files", "missing_files"):
+                  "in_scope_offices_without_state_entry", "unreadable_files", "missing_files",
+                  "parties_without_code", "malformed_entries"):
             self.assertEqual(s[k], [], k)
 
     def test_every_row_and_no_addresses(self):
@@ -168,6 +169,46 @@ class SyntheticTest(unittest.TestCase):
         rows, s, _ = parse_data(self, self.d)
         self.assertEqual(s["unknown_office_types"], [("19663", "XX")])
         self.assertEqual(find(rows, contest_id="19663"), [])
+
+    def test_offices_without_precinct_status_listed(self):
+        oid = next(iter(self.d["officeprecincts"]))
+        del self.d["officeprecincts"][oid]
+        rows, s, _ = parse_data(self, self.d)
+        self.assertIn(oid, s["offices_without_precinct_status"])
+
+    def test_party_without_code_listed(self):
+        self.d["lookup"]["partyIds"]["1"] = None
+        rows, s, _ = parse_data(self, self.d)
+        self.assertEqual(s["parties_without_code"], ["1"])
+
+    def test_lookup_wrong_shape_unreadable(self):
+        rows, s, _ = parse_data(self, self.d, raw={"lookup": '{"Message": "An error has occurred."}'})
+        self.assertEqual(rows, [])
+        self.assertEqual([x[0] for x in s["unreadable_files"]], ["lookup"])
+        self.assertIsNone(s["mismatches_state_vs_town"])
+
+    def test_non_numeric_grouping_listed(self):
+        self.d["grouping"]["19663"][0]["44186"]["V"] = "n/a"
+        rows, s, _ = parse_data(self, self.d)
+        self.assertIn(("grouping", "", "19663", "44186", "n/a"), s["non_numeric_votes"])
+
+    def test_malformed_entries_listed_not_fatal(self):
+        oid = next(iter(self.d["officeprecincts"]))
+        self.d["officeprecincts"][oid] = None
+        self.d["townstatus"]["64"] = "oops"
+        self.d["lookup"]["officeList"].append({"77777": None})
+        self.d["state"]["19826"] = {"not": "a list"}
+        rows, s, _ = parse_data(self, self.d)
+        self.assertTrue(find(rows, level="town", county_id="64"))
+        self.assertEqual(find(rows, level="town", county_id="64")[0]["reporting_status"], "")
+        kinds = {m[0] for m in s["malformed_entries"]}
+        self.assertEqual(kinds, {"officeprecincts", "townstatus", "lookup.officeList", "state"})
+
+    def test_addresses_never_copied(self):
+        for c in self.d["lookup"]["candidateIds"].values():
+            c["AD"] = "MARKER-ADDRESS 1 Main Street"
+        rows, s, t = parse_data(self, self.d)
+        self.assertNotIn("MARKER-ADDRESS", json.dumps([rows, s, t]))
 
     def test_missing_file_listed(self):
         rows, s, _ = parse_data(self, self.d, kinds=[k for k in KINDS if k != "grouping"])
