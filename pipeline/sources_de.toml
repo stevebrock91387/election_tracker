@@ -1,0 +1,16 @@
+# Delaware Department of Elections election-night results (elections.delaware.gov/results/enr/),
+# 2026 general election. See docs/superpowers/specs/2026-11-24-step2-de-reader-design.md and
+# sources/registry.csv. A pass reads Election_StatewideResults_ID_<id>.json (ids, vote types),
+# Election_ByElectionDistrict_ID_<id>.json (530 election districts), Election_ByCountyWithWilmington
+# _ID_<id>.json and Election_VoterTurnout_ID_<id>.json, each with ?t=<unix ms> as the page does.
+# County offices (titles starting with a county name) are out of scope; district_title_prefixes mark
+# legislative contests, which get no county rows.
+
+[de-2026-general]
+state = "DE"
+base_url = "https://elections.delaware.gov/results/enr/"
+election_id = "GE2026"
+exclude_title_prefixes = ["New Castle County", "Kent County", "Sussex County"]
+district_title_prefixes = ["State Senator", "State Representative"]
+min_interval_s = 120
+request_gap_s = 10
