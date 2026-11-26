@@ -14,15 +14,18 @@ loaded. Values are stored as the CSV has them, except votes: "" -> NULL, digits 
 """
 import csv
 import hashlib
+import json
 import os
 import re
 import sqlite3
 import sys
 import time
+import tomllib
 
 from pipeline.schema import COLUMNS
 
 csv.field_size_limit(sys.maxsize)
+DEFAULT_TURNOUT_MAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "turnout_map.toml")
 KEEP = 2  # snapshots per source that keep their rows (Steve, 2026-11-25: option A)
 STAMP = re.compile(r"^\d{8}T\d{6}Z\.csv$")
 
@@ -97,6 +100,8 @@ def _done(conn, sha, path):
 def load(conn, parsed_dir="data/parsed", manifest="data/raw/manifest.csv", turnout_map=None):
     """Load every new parsed CSV. Returns lists of CSV paths: loaded, skipped_known, replaced, not_loaded."""
     out = {"loaded": [], "skipped_known": [], "replaced": [], "not_loaded": []}
+    if turnout_map is None:
+        turnout_map = load_turnout_map()
     first_seen = _manifest_first_seen(manifest)
     known = {sha for (sha,) in conn.execute("SELECT csv_sha256 FROM loaded_csv")}
     # Pass 1: each new CSV's snapshot key; within one load only the newest parse of a key is read.
@@ -171,8 +176,42 @@ def _load_one(conn, source_id, t, c, out, turnout_map):
         _prune(conn, source_id)
 
 
+def load_turnout_map(path=DEFAULT_TURNOUT_MAP):
+    """{layout name: layout}, in file order (the order layout_for tries them)."""
+    with open(path, "rb") as f:
+        return tomllib.load(f)["layout"]
+
+
+def layout_for(turnout_map, source_id, header):
+    """(name, layout) of the first layout matching the source id prefix and the exact header, else None."""
+    for name, layout in turnout_map.items():
+        if any(source_id.startswith(p) for p in layout["prefixes"]) and layout["header"] == header:
+            return name, layout
+    return None
+
+
+def _count(v):
+    return int(v) if v is not None and v.isascii() and v.isdigit() else None
+
+
+TURNOUT_UNIT_COLUMNS = ["county_id", "county_name", "precinct_id", "precinct_name", "contest_id"]
+
+
 def _load_turnout(conn, sid, source_id, path, turnout_map):
-    pass  # Task 2
+    """Turnout rows: unit columns copied when the CSV has them, registered voters and ballots cast from the
+    columns the layout names, and the whole row as JSON. No layout: raw only, noted."""
+    with open(path, newline="") as f:
+        r = csv.DictReader(f)
+        found = layout_for(turnout_map, source_id, r.fieldnames or [])
+        if found is None:
+            _note(conn, path, "turnout_layout_unknown", ",".join(r.fieldnames or []))
+        name, layout = found or (None, {})
+        reg, bal = layout.get("registered"), layout.get("ballots")
+        conn.executemany(
+            "INSERT INTO turnout VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            ((sid, name, *(row.get(c) if found else None for c in TURNOUT_UNIT_COLUMNS),
+              _count(row.get(reg)) if reg else None, _count(row.get(bal)) if bal else None, json.dumps(row))
+             for row in r))
 
 
 def _prune(conn, source_id):

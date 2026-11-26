@@ -168,5 +168,57 @@ class ResultLoadTest(LoadTestBase):
         self.assertEqual(self.q("SELECT COUNT(*) FROM result"), [(1,)])
 
 
+
+HI_HEADER = ["state", "source_id", "source_sha256", "precinct_id", "precinct_name", "registered_voters", "ballots",
+             "reporting"]
+
+
+class TurnoutTest(LoadTestBase):
+    def load(self):
+        return db.load(self.conn, self.parsed, self.manifest, db.load_turnout_map(db.DEFAULT_TURNOUT_MAP))
+
+    def test_map_covers_every_reader_layout(self):
+        import importlib, pkgutil
+        import pipeline.readers as readers
+        headers = [l["header"] for l in db.load_turnout_map(db.DEFAULT_TURNOUT_MAP).values()]
+        n = 0
+        for m in pkgutil.iter_modules(readers.__path__):
+            mod = importlib.import_module(f"pipeline.readers.{m.name}")
+            for name in ("TURNOUT_COLUMNS", "COUNTY_TURNOUT_COLUMNS"):
+                if hasattr(mod, name):
+                    n += 1
+                    self.assertIn(getattr(mod, name), headers, f"{m.name}.{name}")
+        self.assertEqual(n, 14)
+
+    def test_turnout_loaded_with_mapped_columns(self):
+        write_manifest(self.manifest, [("A", "2026-11-24T15:02:22Z")])
+        trow = {"state": "HI", "source_id": "hi-2026-general", "source_sha256": "A", "precinct_id": "1",
+                "precinct_name": "01-01", "registered_voters": "6555", "ballots": "3046", "reporting": "1"}
+        write_parse(self.parsed, "hi-2026-general", "20261124T150300Z", [row(source_sha256="A")],
+                    turnout=(HI_HEADER, [trow]))
+        self.load()
+        got = self.q("SELECT layout, precinct_id, precinct_name, county_id, registered_voters, ballots_cast, raw "
+                     "FROM turnout")
+        self.assertEqual(got[0][:6], ("hi", "1", "01-01", None, 6555, 3046))
+        import json
+        self.assertEqual(json.loads(got[0][6]), trow)
+
+    def test_unknown_turnout_header(self):
+        write_manifest(self.manifest, [("A", "2026-11-24T15:02:22Z")])
+        write_parse(self.parsed, "hi-2026-general", "20261124T150300Z", [row(source_sha256="A")],
+                    turnout=(["state", "odd"], [{"state": "HI", "odd": "1"}]))
+        self.load()
+        self.assertEqual(self.q("SELECT layout, registered_voters, ballots_cast, raw FROM turnout"),
+                         [(None, None, None, '{"state": "HI", "odd": "1"}')])
+        self.assertIn(("turnout_layout_unknown",), self.q("SELECT kind FROM load_note"))
+
+    def test_wv_layout_chosen_before_clarity_state(self):
+        m = db.load_turnout_map(db.DEFAULT_TURNOUT_MAP)
+        header = m["clarity_state"]["header"]
+        self.assertEqual(db.layout_for(m, "clarity-WV-2026-general", header)[0], "clarity_wv")
+        self.assertEqual(db.layout_for(m, "clarity-CO-2026-general", header)[0], "clarity_state")
+        self.assertIsNone(db.layout_for(m, "zz-2026", header))
+
+
 if __name__ == "__main__":
     unittest.main()

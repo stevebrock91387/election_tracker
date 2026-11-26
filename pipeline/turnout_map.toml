@@ -1,0 +1,152 @@
+# How each reader's turnout table joins to its results (step 3, check 2).
+# Design: docs/superpowers/specs/2026-11-25-step3-checks-database-design.md.
+#
+# A turnout CSV uses the first layout (in file order) one of whose prefixes starts its source id and
+# whose header is exactly the CSV's header.
+#   result_level     the result rows' level that the turnout units describe
+#   key              columns present in both the result rows and the turnout rows; both sides are grouped
+#                    (and summed) by them, so result units finer than the turnout unit add up into it
+#   strip_suffix     {column = suffix} removed on both sides before grouping (only where a reader's doc
+#                    says the units add up)
+#   registered       turnout column with registered voters (absent: none published)
+#   ballots          turnout column with ballots cast (absent: none, or meaning unknown)
+#   total_vote_type  the vote_type holding a unit's whole count (default "TOTAL")
+#   not_joinable     reason the turnout units can't be matched to result units
+
+[layout.ak]
+prefixes = ["ak-"]
+header = ["state", "source_id", "source_sha256", "precinct_id", "precinct_name", "registered_voters", "ballots"]
+result_level = "precinct"
+key = ["precinct_id"]
+registered = "registered_voters"
+ballots = "ballots"
+
+[layout.al]
+prefixes = ["al-"]
+header = ["state", "source_id", "source_sha256", "county_id", "county_name", "precinct_id", "registered_voters",
+          "ballots_cast", "ballots_blank"]
+result_level = "precinct"
+key = ["county_id", "precinct_id"]
+registered = "registered_voters"
+ballots = "ballots_cast"
+
+# Listed before clarity_state: same header. WV's county rows carry every vote under "Election Day"
+# (docs/clarity.md); only its state rows have TOTAL.
+[layout.clarity_wv]
+prefixes = ["clarity-WV-"]
+header = ["state", "source_id", "source_sha256", "county_name", "registered_voters", "ballots_cast",
+          "precincts_participating", "precincts_reported"]
+result_level = "county"
+key = ["county_name"]
+registered = "registered_voters"
+ballots = "ballots_cast"
+total_vote_type = "Election Day"
+
+[layout.clarity_state]
+prefixes = ["clarity-"]
+header = ["state", "source_id", "source_sha256", "county_name", "registered_voters", "ballots_cast",
+          "precincts_participating", "precincts_reported"]
+result_level = "county"
+key = ["county_name"]
+registered = "registered_voters"
+ballots = "ballots_cast"
+
+[layout.clarity_county]
+prefixes = ["clarity-NJ-"]
+header = ["state", "source_id", "source_sha256", "county_name", "precinct_name", "registered_voters",
+          "ballots_cast", "percent_reporting"]
+result_level = "precinct"
+key = ["precinct_name"]
+registered = "registered_voters"
+ballots = "ballots_cast"
+
+[layout.ct]
+prefixes = ["ct-"]
+header = ["state", "source_id", "source_sha256", "county_id", "county_name", "county", "registered_voters",
+          "ballots", "abr", "abc", "ebr", "ebc", "edr", "edc", "precincts_reporting"]
+result_level = "town"
+key = ["county_id"]
+registered = "registered_voters"
+ballots = "ballots"
+
+[layout.dc]
+prefixes = ["dc-"]
+header = ["state", "source_id", "source_sha256", "precinct_id", "ward", "registered_voters", "ballots_cast"]
+result_level = "precinct"
+key = ["precinct_id"]
+registered = "registered_voters"
+ballots = "ballots_cast"
+
+[layout.de]
+prefixes = ["de-"]
+header = ["state", "source_id", "source_sha256", "representative_district", "ballots_cast", "registered_voters"]
+not_joinable = "turnout per representative district, results per election district"
+
+# A precinct is two units, "01-01" (registered voters, mail votes) and "01-01 VSC" (in-person votes):
+# docs/hi.md says to add them.
+[layout.hi]
+prefixes = ["hi-"]
+header = ["state", "source_id", "source_sha256", "precinct_id", "precinct_name", "registered_voters", "ballots",
+          "reporting"]
+result_level = "precinct"
+key = ["precinct_name"]
+strip_suffix = { precinct_name = " VSC" }
+registered = "registered_voters"
+ballots = "ballots"
+
+[layout.in]
+prefixes = ["in-"]
+header = ["state", "source_id", "source_sha256", "county_id", "county_name", "registered_voters", "voters_voting",
+          "in_person", "absentee"]
+result_level = "county"
+key = ["county_id"]
+registered = "registered_voters"
+ballots = "voters_voting"
+
+# Turnout is per race and parish.
+[layout.la]
+prefixes = ["la-"]
+header = ["state", "source_id", "source_sha256", "contest_id", "county_id", "county_name", "voters_qualified",
+          "voters_voted", "precincts_reporting", "precincts_expected", "absentee_reporting", "absentee_expected"]
+result_level = "county"
+key = ["county_id", "contest_id"]
+registered = "voters_qualified"
+ballots = "voters_voted"
+
+[layout.oh]
+prefixes = ["oh-"]
+header = ["state", "source_id", "source_sha256", "county_id", "county_name", "registered_voters", "ballots_cast",
+          "provisional_outstanding", "uocava_absentee_outstanding", "absentee_ballots_cast_as_published",
+          "precincts_reported", "precincts_total"]
+result_level = "county"
+key = ["county_id"]
+registered = "registered_voters"
+ballots = "ballots_cast"
+
+# "voters" sums to exactly the US Senate total, so it may not be ballots cast (docs/tx.md): not used.
+[layout.tx]
+prefixes = ["tx-"]
+header = ["state", "source_id", "source_sha256", "county_id", "county_name", "registered_voters", "voters",
+          "precincts_reporting", "polling_locations_reporting", "polling_locations_total"]
+result_level = "county"
+key = ["county_id"]
+registered = "registered_voters"
+
+# Results are per town part (precinct_id); grouping by county_id adds the parts into the town.
+[layout.vt]
+prefixes = ["vt-"]
+header = ["state", "source_id", "source_sha256", "county_id", "county_name", "registered_voters", "ballots",
+          "absentee", "districts_reporting"]
+result_level = "town"
+key = ["county_id"]
+registered = "registered_voters"
+ballots = "ballots"
+
+# No registered voters published.
+[layout.wy]
+prefixes = ["wy-"]
+header = ["state", "source_id", "source_sha256", "county_id", "county_name", "precinct_id", "precinct_name",
+          "ballots_cast"]
+result_level = "precinct"
+key = ["county_id", "precinct_id"]
+ballots = "ballots_cast"
