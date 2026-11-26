@@ -125,6 +125,16 @@ class PartsTest(CheckTestBase):
         self.assertEqual(exc, [])
         self.assertEqual([n["reason"] for n in nc], ["precinct>county: no precinct rows"])
 
+    def test_party_spelling_differs_between_levels(self):
+        self.snap("s1", 1, [co("A", 10, party="D"), co("B", 20, party="D"), st(31, party="Democratic")])
+        exc, nc = self.check()
+        self.assertEqual([(e["part_sum"], e["whole"]) for e in exc], [(30, 31)])
+        self.assertEqual([n for n in nc if n["scope"] == "line"], [])
+
+    def test_repeated_whole_listed_not_compared(self):
+        self.snap("s1", 1, [co("A", 10), st(10), st(10)])
+        self.assertEqual([e["kind"] for e in self.check()[0]], ["duplicate_whole"])
+
     def test_local_contest_joins_within_county(self):
         self.snap("s1", 1, [co("A", 10, contest_scope="local"), co("B", 3, contest_scope="local"),
                             pr("A", "p1", 10, contest_scope="local"), pr("B", "p2", 4, contest_scope="local")])
@@ -223,12 +233,23 @@ class RegisteredTest(CheckTestBase):
         self.snap("ak-t", 1, [ak("p1", 5)])
         self.assertEqual([n["reason"] for n in self.check()[1]], ["no turnout table"])
 
-    def test_wv_uses_election_day_total(self):
+    def test_wv_election_day_used_without_total(self):
         def wv(t, v):
             return row(level="county", county_name="Ohio", vote_for="1", vote_type=t, votes=str(v))
-        t = turnout("clarity_wv", [{"county_name": "Ohio", "registered_voters": "100", "ballots_cast": "50"}])
+        t = turnout("clarity_state", [{"county_name": "Ohio", "registered_voters": "100", "ballots_cast": "50"}])
         self.snap("clarity-WV-t", 1, [wv("Election Day", 101)], t)
         self.assertEqual(self.kinds(), [("contest_over_registered", "Ohio", 101)])
+
+    def test_vote_types_summed_when_no_total(self):
+        t = turnout("ak", [{"precinct_id": "p1", "registered_voters": "100", "ballots": "100"}])
+        self.snap("ak-t", 1, [ak("p1", 60, vote_type="Election Day"), ak("p1", 50, vote_type="Mail")], t)
+        self.assertEqual(self.kinds(), [("contest_over_registered", "p1", 110)])
+
+    def test_total_preferred_over_vote_types(self):
+        t = turnout("ak", [{"precinct_id": "p1", "registered_voters": "100", "ballots": "100"}])
+        self.snap("ak-t", 1, [ak("p1", 90), ak("p1", 60, vote_type="Election Day"),
+                              ak("p1", 30, vote_type="Mail")], t)
+        self.assertEqual(self.kinds(), [])
 
     def test_turnout_total_row_ignored(self):
         t = turnout("clarity_county", [{"county_name": "A", "precinct_name": "p1", "registered_voters": "100",
@@ -237,6 +258,34 @@ class RegisteredTest(CheckTestBase):
                                         "ballots_cast": "50"}])
         self.snap("clarity-NJ-t", 1, [ak("p1", 50)], t)
         self.assertEqual(self.check(), ([], []))
+
+
+
+class RunChecksTest(CheckTestBase):
+    def test_run_checks_writes_every_report(self):
+        import csv as _csv
+        self.snap("s1", 1, [row(votes="100")])
+        self.snap("s1", 2, [row(votes="99")])
+        out = os.path.join(self.tmp, "reports")
+        counts = db_checks.run_checks(self.conn, out)
+        self.assertEqual(list(counts), ["decreases", "registered", "parts"])
+        self.assertEqual(counts["decreases"], (1, 0))
+        files = sorted(os.listdir(out))
+        self.assertEqual(files, sorted(f"{n}{s}.csv" for n in counts for s in ("", "-not-checked")))
+        for f in files:
+            with open(os.path.join(out, f), newline="") as fh:
+                self.assertTrue(next(_csv.reader(fh)), f)
+        with open(os.path.join(out, "decreases.csv"), newline="") as fh:
+            rows = list(_csv.DictReader(fh))
+        self.assertEqual((rows[0]["kind"], rows[0]["old_votes"], rows[0]["new_votes"]), ("decrease", "100", "99"))
+
+    def test_cli_load_and_check(self):
+        self.snap("s1", 1, [row(votes="100")])
+        dbp, rep = os.path.join(self.tmp, "cli.sqlite"), os.path.join(self.tmp, "rep")
+        db.main(["load", "--db", dbp, "--parsed-dir", self.parsed, "--manifest", self.manifest])
+        counts = db.main(["check", "--db", dbp, "--reports-dir", rep, "--source", "s1"])
+        self.assertEqual(counts["decreases"], (0, 1))
+        self.assertEqual(len(os.listdir(rep)), 1)
 
 
 if __name__ == "__main__":

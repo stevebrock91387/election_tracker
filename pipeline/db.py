@@ -167,9 +167,13 @@ def _load_one(conn, source_id, t, c, out, turnout_map):
                                (source_id, c["state"], t, path, c["sha"], turnout_path, now)).lastrowid
             out["loaded"].append(path)
         with open(path, newline="") as f:
+            reader = csv.DictReader(f)
+            missing = [k for k in COLUMNS if k not in (reader.fieldnames or [])]
+            if missing:  # a parse written before a column was added: stored NULL, noted
+                _note(conn, path, "columns_missing", ",".join(missing))
             conn.executemany(
                 f"INSERT INTO result VALUES (?, {', '.join('?' * len(COLUMNS))})",
-                ((sid, *(_votes(r[k]) if k == "votes" else r[k] for k in COLUMNS)) for r in csv.DictReader(f)))
+                ((sid, *(_votes(r[k]) if k == "votes" and k in r else r.get(k) for k in COLUMNS)) for r in reader))
         if turnout_path:
             _load_turnout(conn, sid, source_id, turnout_path, turnout_map)
         _done(conn, c["sha"], path)
@@ -221,3 +225,40 @@ def _prune(conn, source_id):
         conn.execute("DELETE FROM result WHERE snapshot_id = ?", (sid,))
         conn.execute("DELETE FROM turnout WHERE snapshot_id = ?", (sid,))
         conn.execute("UPDATE snapshot SET pruned = 1 WHERE snapshot_id = ?", (sid,))
+
+
+def main(argv=None):
+    import argparse
+    from collections import Counter
+    from pipeline import db_checks
+    p = argparse.ArgumentParser(prog="python3 -m pipeline.db")
+    p.add_argument("command", choices=["load", "check"])
+    p.add_argument("--db", default="data/results.sqlite")
+    p.add_argument("--parsed-dir", default="data/parsed")
+    p.add_argument("--manifest", default="data/raw/manifest.csv")
+    p.add_argument("--source", help="check: one source id")
+    p.add_argument("--reports-dir", default="data/reports")
+    a = p.parse_args(argv)
+    conn = connect(a.db)
+    if a.command == "load":
+        t0 = time.time()
+        out = load(conn, a.parsed_dir, a.manifest)
+        for k, v in out.items():
+            print(f"{k}: {len(v)}")
+        notes = conn.execute("SELECT kind, COUNT(*) FROM load_note GROUP BY kind").fetchall()
+        print(f"notes: {dict(notes)}  ({time.time() - t0:.0f} s)")
+        return out
+    out_dir = os.path.join(a.reports_dir, time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()))
+    counts = db_checks.run_checks(conn, out_dir, a.source)
+    for name, (n_exc, n_nc) in counts.items():
+        print(f"{name}: {n_exc} exceptions, {n_nc} not checked")
+        with open(os.path.join(out_dir, f"{name}-not-checked.csv"), newline="") as f:
+            reasons = Counter((r["scope"], r["reason"]) for r in csv.DictReader(f) if r["scope"] != "line")
+        for (scope, reason), n in sorted(reasons.items()):
+            print(f"  not checked ({scope}): {reason}" + (f" x{n}" if n > 1 else ""))
+    print(f"reports -> {out_dir}")
+    return counts
+
+
+if __name__ == "__main__":
+    main()

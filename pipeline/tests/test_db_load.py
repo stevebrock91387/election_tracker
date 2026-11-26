@@ -137,6 +137,21 @@ class ResultLoadTest(LoadTestBase):
         self.load()
         self.assertEqual(self.q("SELECT COUNT(*) FROM loaded_csv WHERE csv_path = ?", old), [(1,)])
 
+    def test_csv_missing_a_column_loads_it_empty_and_notes(self):
+        write_manifest(self.manifest, [("A", "2026-11-24T15:02:22Z")])
+        d = os.path.join(self.parsed, "s1")
+        os.makedirs(d)
+        cols = [c for c in COLUMNS if c != "contest_scope"]
+        path = os.path.join(d, "20261124T150300Z.csv")
+        with open(path, "w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
+            w.writeheader()
+            w.writerow(row(source_sha256="A", source_id="s1"))
+        out = self.load()
+        self.assertEqual(out["loaded"], [path])
+        self.assertEqual(self.q("SELECT contest_scope, votes FROM result"), [(None, 5)])
+        self.assertEqual(self.q("SELECT kind, detail FROM load_note"), [("columns_missing", "contest_scope")])
+
     def snapshots(self, n):
         write_manifest(self.manifest, [(f"H{i}", f"2026-11-2{i}T00:00:00Z") for i in range(1, n + 1)])
         return [write_parse(self.parsed, "s1", f"2026112{i}T000100Z", [row(source_sha256=f"H{i}", votes=str(i))])
@@ -212,11 +227,12 @@ class TurnoutTest(LoadTestBase):
                          [(None, None, None, '{"state": "HI", "odd": "1"}')])
         self.assertIn(("turnout_layout_unknown",), self.q("SELECT kind FROM load_note"))
 
-    def test_wv_layout_chosen_before_clarity_state(self):
+    def test_layout_needs_prefix_and_header(self):
         m = db.load_turnout_map(db.DEFAULT_TURNOUT_MAP)
         header = m["clarity_state"]["header"]
-        self.assertEqual(db.layout_for(m, "clarity-WV-2026-general", header)[0], "clarity_wv")
-        self.assertEqual(db.layout_for(m, "clarity-CO-2026-general", header)[0], "clarity_state")
+        self.assertEqual(db.layout_for(m, "clarity-WV-2026-general", header)[0], "clarity_state")
+        self.assertEqual(db.layout_for(m, "clarity-NJ-Essex-2026-general", m["clarity_county"]["header"])[0],
+                         "clarity_county")
         self.assertIsNone(db.layout_for(m, "zz-2026", header))
 
 

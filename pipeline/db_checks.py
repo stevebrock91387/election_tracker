@@ -73,24 +73,28 @@ def _levels(conn, snapshot_id):
 
 
 def _grouped(conn, snapshot_id, level, by_county, statewide_only):
-    """{(county, contest_id, choice, party, vote_type): (n_rows, sum, n_not_integer, max)} for one level."""
+    """{(county, contest_id, choice, vote_type): (n_repeated, sum, n_not_integer)} for one level; n_repeated
+    counts rows beyond one per party line. Party isn't
+    part of the key: readers spell it differently across levels (IN: "D" vs "Democratic"), and a choice on
+    several party lines (CT, DC) is summed the same way on both sides."""
     where = "snapshot_id = ? AND level = ?" + (" AND contest_scope = 'statewide'" if statewide_only else "")
     county = f"{dict(KEY)['county']}" if by_county else "''"
-    sql = f"""SELECT {county} AS k_county, contest_id, {dict(KEY)['choice']} AS k_choice, party, vote_type,
-                     COUNT(*), SUM(CASE WHEN typeof(votes) = 'integer' THEN votes ELSE 0 END),
-                     SUM(typeof(votes) != 'integer'), MAX(votes)
-              FROM result WHERE {where} GROUP BY k_county, contest_id, k_choice, party, vote_type"""
-    return {tuple(r[:5]): r[5:] for r in conn.execute(sql, (snapshot_id, level))}
+    sql = f"""SELECT {county} AS k_county, contest_id, {dict(KEY)['choice']} AS k_choice, vote_type,
+                     COUNT(*) - COUNT(DISTINCT party),
+                     SUM(CASE WHEN typeof(votes) = 'integer' THEN votes ELSE 0 END),
+                     SUM(typeof(votes) != 'integer')
+              FROM result WHERE {where} GROUP BY k_county, contest_id, k_choice, vote_type"""
+    return {tuple(r[:4]): r[4:] for r in conn.execute(sql, (snapshot_id, level))}
 
 
-PARTS_KEY = ["county", "contest_id", "choice", "party", "vote_type"]
+PARTS_KEY = ["county", "contest_id", "choice", "vote_type"]
 
 
 def check_parts(conn, source_id=None):
     """Check 3, on each source's latest snapshot: precinct rows summed per county against the county row
-    (key: county, contest, choice, party, vote type), and county (or town) rows summed against the state row
-    (statewide contests only). Exceptions: kind "mismatch" (part_sum != whole) and "duplicate_whole" (the
-    whole occurs more than once). A missing level makes the pair not checked; a line with an empty count, or
+    (key: county, contest, choice, vote type), and county (or town) rows summed against the state row
+    (statewide contests only). Exceptions: kind "mismatch" (part_sum != whole) and "duplicate_whole" (a whole
+    line repeats for one party). A missing level makes the pair not checked; a line with an empty count, or
     with parts but no whole (or the reverse), is a not-checked line. Precinct rows with no county are left
     out of the precinct pair and counted in a not-checked entry."""
     exceptions, not_checked = [], []
@@ -121,12 +125,12 @@ def check_parts(conn, source_id=None):
                 if p is None or w is None:
                     not_checked.append({"source_id": src, "scope": "line",
                                         "reason": f"no {part if p is None else whole} rows", **base})
-                elif w[0] > 1:
+                elif w[0] > 0:
                     exceptions.append(dict(base, kind="duplicate_whole", part_sum=None, whole=None))
                 elif p[2] or w[2]:
                     not_checked.append({"source_id": src, "scope": "line", "reason": "empty count", **base})
-                elif p[1] != w[3]:
-                    exceptions.append(dict(base, kind="mismatch", part_sum=p[1], whole=w[3]))
+                elif p[1] != w[1]:
+                    exceptions.append(dict(base, kind="mismatch", part_sum=p[1], whole=w[1]))
     return exceptions, not_checked
 
 
@@ -144,9 +148,10 @@ def _unit(values, key, strip):
 
 def check_registered(conn, source_id=None, turnout_map=None):
     """Check 2, on each source's latest snapshot, at the turnout units its layout names (pipeline/turnout_map.toml).
-    Both sides are grouped by the layout's key (summing finer units into the turnout unit). Exceptions (kind):
-    zero_registered (listed, not compared), ballots_over_registered, contest_over_registered (a contest's
-    total-vote-type rows, every choice row as published, > registered x vote_for), blank_vote_for (counted as 1,
+    Both sides are grouped by the layout's key (summing finer units into the turnout unit). A choice counts its
+    TOTAL rows, or the sum of its vote-type rows when it has no TOTAL. Exceptions (kind): zero_registered
+    (listed, not compared), ballots_over_registered, contest_over_registered (a contest's choices, every
+    choice row as published, > registered x vote_for), blank_vote_for (counted as 1,
     listed once per contest), result_unit_without_turnout, turnout_unit_without_results. Turnout rows whose key
     is all empty are totals, not units, and are ignored. Not checked: no turnout table, unknown layout, a layout
     that can't be joined, no registered voters published; per line, an empty count."""
@@ -185,17 +190,26 @@ def check_registered(conn, source_id=None, turnout_map=None):
             cur[0] = None if cur[0] is None or reg is None else cur[0] + reg
             cur[1] = None if cur[1] is None or bal is None else cur[1] + bal
 
-        contests = {}  # (unit, contest_id) -> [sum, any_bad, vote_for]
-        for r in conn.execute(f"SELECT {cols}, contest_id, vote_for, votes FROM result WHERE snapshot_id = ? AND "
-                              f"level = ? AND vote_type = ?",
-                              (sid, layout["result_level"], layout.get("total_vote_type", "TOTAL"))):
+        # Per choice: its TOTAL rows when it has any, else the sum of its vote-type rows (CO county rows
+        # carry only "Total Votes", WV only "Election Day", NJ XML precincts only their vote types).
+        choices = {}  # (unit, contest_id, choice) -> [total, total_bad, has_total, types, types_bad, vote_for]
+        for r in conn.execute(f"SELECT {cols}, contest_id, {dict(KEY)['choice']}, vote_type, vote_for, votes "
+                              f"FROM result WHERE snapshot_id = ? AND level = ?", (sid, layout["result_level"])):
             u = _unit(r[:len(key)], key, strip)
-            cid, vf, v = r[len(key):]
-            cur = contests.setdefault((u, cid), [0, False, vf])
+            cid, ch, vt, vf, v = r[len(key):]
+            cur = choices.setdefault((u, cid, ch), [0, False, False, 0, False, vf])
+            i = 0 if vt == "TOTAL" else 3
+            if i == 0:
+                cur[2] = True
             if isinstance(v, int):
-                cur[0] += v
+                cur[i] += v
             else:
-                cur[1] = True
+                cur[i + 1] = True
+        contests = {}  # (unit, contest_id) -> [sum, any_bad, vote_for]
+        for (u, cid, _), (tot, tot_bad, has_tot, types, types_bad, vf) in choices.items():
+            cur = contests.setdefault((u, cid), [0, False, vf])
+            cur[0] += tot if has_tot else types
+            cur[1] = cur[1] or (tot_bad if has_tot else types_bad)
 
         def exc(kind, unit, **kw):
             exceptions.append(dict({"source_id": src, "snapshot_id": sid, "kind": kind, "unit": "|".join(unit),
@@ -237,3 +251,36 @@ def check_registered(conn, source_id=None, turnout_map=None):
                 exc("contest_over_registered", u, contest_id=cid, registered=units[u][0], votes=total, vote_for=vf)
     exceptions.sort(key=lambda e: (e["source_id"], e["kind"], e["unit"], e["contest_id"]))
     return exceptions, not_checked
+
+
+CHECKS = {"decreases": check_decreases, "registered": check_registered, "parts": check_parts}
+REPORT_COLUMNS = {
+    "decreases": ["source_id", "old_snapshot", "new_snapshot", "kind"] + KEY_NAMES + ["old_votes", "new_votes"],
+    "registered": ["source_id", "snapshot_id", "kind", "unit", "contest_id", "registered", "ballots", "votes",
+                   "vote_for"],
+    "parts": ["source_id", "snapshot_id", "pair", "kind"] + PARTS_KEY + ["part_sum", "whole"],
+}
+NOT_CHECKED_COLUMNS = ["source_id", "scope", "reason", "pair", "unit", "county", "contest_id", "choice", "party",
+                       "vote_type"]
+
+
+def _write(path, columns, rows):
+    import csv
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=columns, restval="", extrasaction="ignore")
+        w.writeheader()
+        w.writerows(rows)
+
+
+def run_checks(conn, out_dir, source_id=None):
+    """Run every check; write <name>.csv and <name>-not-checked.csv (headers even when empty) to out_dir.
+    Returns {name: (n_exceptions, n_not_checked)}."""
+    import os
+    os.makedirs(out_dir, exist_ok=True)
+    counts = {}
+    for name, fn in CHECKS.items():
+        exc, nc = fn(conn, source_id)
+        _write(os.path.join(out_dir, f"{name}.csv"), REPORT_COLUMNS[name], exc)
+        _write(os.path.join(out_dir, f"{name}-not-checked.csv"), NOT_CHECKED_COLUMNS, nc)
+        counts[name] = (len(exc), len(nc))
+    return counts

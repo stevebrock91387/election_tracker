@@ -10,7 +10,6 @@
 #                    says the units add up)
 #   registered       turnout column with registered voters (absent: none published)
 #   ballots          turnout column with ballots cast (absent: none, or meaning unknown)
-#   total_vote_type  the vote_type holding a unit's whole count (default "TOTAL")
 #   not_joinable     reason the turnout units can't be matched to result units
 
 [layout.ak]
@@ -29,18 +28,6 @@ result_level = "precinct"
 key = ["county_id", "precinct_id"]
 registered = "registered_voters"
 ballots = "ballots_cast"
-
-# Listed before clarity_state: same header. WV's county rows carry every vote under "Election Day"
-# (docs/clarity.md); only its state rows have TOTAL.
-[layout.clarity_wv]
-prefixes = ["clarity-WV-"]
-header = ["state", "source_id", "source_sha256", "county_name", "registered_voters", "ballots_cast",
-          "precincts_participating", "precincts_reported"]
-result_level = "county"
-key = ["county_name"]
-registered = "registered_voters"
-ballots = "ballots_cast"
-total_vote_type = "Election Day"
 
 [layout.clarity_state]
 prefixes = ["clarity-"]
