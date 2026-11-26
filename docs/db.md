@@ -39,22 +39,26 @@ Report only: the checks never block or change anything. Each check writes `<name
   contest, choice and vote type. Party is not in the key: readers spell it differently across levels
   (IN "D" vs "Democratic"), and party lines (CT, DC) are summed alike on both sides.
 
-## 2026 run (2026-11-26 22:33 UTC, every parse in data/parsed)
+## 2026 run (2026-11-26 22:37 UTC, every parse in data/parsed)
 
-Rebuilt with the download-based snapshot rule (first run 03:45 UTC under the old rule: 48 snapshots,
-0 decreases). Load: 49 snapshots from 47 sources in 69 s; database 1.9 GB. Before this run, the five Enhanced Voting
+Rebuilt with the download-based snapshot rule. Load: 48 snapshots from 47 sources in 67 s; database
+1.8 GB. Before this run, the five Enhanced Voting
 parses dated 2026-11-20 (no `contest_scope` column) and Maryland's parse (no `source_sha256`, written by an
 older reader version) were re-parsed from their saved raw files with the current readers. Not loaded, and
 reported as "not loaded" by every check: AZ and UT (parsed from browser downloads made before the fetcher,
 so their hashes aren't in the manifest). Checks: about 9 s.
 
-**Check 1:** NC and MA have two snapshots. NC: 0 decreases, 0 disappeared lines. MA: 391 exceptions, all
-from a reader change, not the source: the first MA pass (07:54 UTC 11-25) was fetched and parsed by the
+**Check 1:** only NC has two snapshots: 0 decreases, 0 disappeared lines. The other 46 sources: not
+checked (one snapshot).
+
+MA's first parse was moved to `data/parsed-superseded/ma-2026-general/` (Steve, 2026-11-26; nothing
+deleted), so it isn't loaded. Before the move, check 1 reported 391 MA exceptions, all from a reader change,
+not the source: the first MA pass (07:54 UTC 11-25) was fetched and parsed by the
 reader before its review fix (commit ec14576), which also downloaded the two special elections (State
 Senate 1st Middlesex, State Representative 5th Essex: download ids 171923, 171924) and merged them into
 the regular contests of the same name; the second pass (08:20) is the fixed reader's and doesn't download
 them. So the file sets differ, they are two snapshots, and check 1 reports 359 `duplicate_key` lines (in
-the first parse) and 32 `disappeared` lines (5th Essex). The other 45 sources: not checked (one snapshot).
+the first parse) and 32 `disappeared` lines (5th Essex).
 
 **Check 2:** 2,367 exceptions. Not checked: 17 sources without a turnout table (EV ×5, ResultsAjax ×5,
 Tally ×2, FL, MA, MD, NC, IA), DE (units don't meet), WY (no registered voters), 2 AL units.
