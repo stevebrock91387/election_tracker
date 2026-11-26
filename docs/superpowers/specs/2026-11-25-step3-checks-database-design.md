@@ -2,7 +2,7 @@
 
 Date: 2026-11-25. Steve chose step 3 next (after the state readers) and, of three ways to build it,
 "C": load every reader's output into one database and write the checks as queries. Not covered by the
-standing approval for state readers: this design needs Steve's approval before a plan.
+standing approval for state readers. **Approved by Steve 2026-11-25** with retention option A.
 
 ## Intent
 
@@ -115,7 +115,8 @@ blocked or changed.
    any roll-up the map names; result and turnout units that don't meet are counted and listed, and a
    source whose units don't meet at all (DE: turnout per representative district, results per
    election district) is "not checked" with that reason. A source with registered voters but no
-   usable ballots column (TX, WY) still gets the contest half of the check.
+   usable ballots column (TX) still gets the contest half of the check; WY publishes no registered
+   voters, so check 2 is "not checked" for WY.
 3. **Parts add up:** within each snapshot, for each contest, choice and vote type: precinct sum vs the
    county row, and county (or town) sum vs the state row, where both levels exist. A source missing a
    level is "not checked" for that pair (AK FL HI and the NJ counties have no state rows). Rows with
@@ -125,13 +126,14 @@ blocked or changed.
    the precinct-to-county pair "not checked"; no keys are derived. Units that aren't a clean partition
    (AL columns holding two districts) show as mismatches, which the AL reader already explains.
 
-### Snapshot retention (Steve's call, open)
+### Snapshot retention (Steve chose A, 2026-11-25)
 
 Every new version is a full copy (Burlington about 1.29M rows, NC about 439k). Check 1 needs only the
 latest two snapshots per source; every download stays in `data/raw/` regardless and can be re-parsed
-and reloaded. Options: keep only the latest two per source in the database (recommended), keep every
-snapshot (the whole night queryable, possibly hundreds of GB), or keep every snapshot as changed rows
-only (compact, more complex queries).
+and reloaded. **The database keeps the result and turnout rows of the latest two snapshots per source**
+(by `first_seen_utc`); older snapshots keep their `snapshot` row, marked pruned. A CSV older than both
+kept snapshots isn't loaded (noted). Rejected: every snapshot (possibly hundreds of GB a night); every
+snapshot as changed rows only (compact, more complex queries).
 
 ### Election night
 
