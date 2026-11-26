@@ -12,9 +12,13 @@ Report only: the checks never block or change anything. Each check writes `<name
 
 ## How it decides things
 
-- **Snapshots:** a snapshot's time is when its content first appeared (per downloaded file, its earliest
-  fetch in `data/raw/manifest.csv`; then the latest of those). Two parses with the same time are one
-  snapshot; the newest parse wins. Only the latest two snapshots per source keep their rows (Steve,
+- **Snapshots:** a snapshot is the download a parse read. Its time: per downloaded file in the parse, the
+  latest fetch in `data/raw/manifest.csv` at or before the parse's file name stamp (the earliest fetch if
+  none is), then the earliest of those. A download whose files are exactly those of the source's previous
+  snapshot (nothing changed) joins that snapshot (Steve, 2026-11-26, option B); content that comes back
+  after a different download in between (a source reverting) is a new snapshot, so check 1 sees it. Two
+  parses of one snapshot: the newest parse wins (reader fixes take effect), and a re-parse of an older
+  download joins it when its files match. Only the latest two snapshots per source keep their rows (Steve,
   2026-11-25); older ones are marked pruned. Every raw download stays in `data/raw/`.
 - **A parse missing a column** (written before the column existed) loads it as NULL, with a
   `columns_missing` note. A CSV that can't be read to the end (e.g. still being written) is noted
@@ -35,17 +39,22 @@ Report only: the checks never block or change anything. Each check writes `<name
   contest, choice and vote type. Party is not in the key: readers spell it differently across levels
   (IN "D" vs "Democratic"), and party lines (CT, DC) are summed alike on both sides.
 
-## 2026 run (2026-11-26 03:45 UTC, every parse in data/parsed)
+## 2026 run (2026-11-26 22:33 UTC, every parse in data/parsed)
 
-Load: 48 snapshots from 47 sources in 64 s; database 1.8 GB. Before this run, the five Enhanced Voting
+Rebuilt with the download-based snapshot rule (first run 03:45 UTC under the old rule: 48 snapshots,
+0 decreases). Load: 49 snapshots from 47 sources in 69 s; database 1.9 GB. Before this run, the five Enhanced Voting
 parses dated 2026-11-20 (no `contest_scope` column) and Maryland's parse (no `source_sha256`, written by an
 older reader version) were re-parsed from their saved raw files with the current readers. Not loaded, and
 reported as "not loaded" by every check: AZ and UT (parsed from browser downloads made before the fetcher,
 so their hashes aren't in the manifest). Checks: about 9 s.
 
-**Check 1:** only NC has two snapshots (its dashboard changed between the 11-24 and 11-26 downloads);
-0 decreases, 0 disappeared lines. MA's second download had identical content, so it is the same snapshot.
-The other 46 sources: not checked (one snapshot).
+**Check 1:** NC and MA have two snapshots. NC: 0 decreases, 0 disappeared lines. MA: 391 exceptions, all
+from a reader change, not the source: the first MA pass (07:54 UTC 11-25) was fetched and parsed by the
+reader before its review fix (commit ec14576), which also downloaded the two special elections (State
+Senate 1st Middlesex, State Representative 5th Essex: download ids 171923, 171924) and merged them into
+the regular contests of the same name; the second pass (08:20) is the fixed reader's and doesn't download
+them. So the file sets differ, they are two snapshots, and check 1 reports 359 `duplicate_key` lines (in
+the first parse) and 32 `disappeared` lines (5th Essex). The other 45 sources: not checked (one snapshot).
 
 **Check 2:** 2,367 exceptions. Not checked: 17 sources without a turnout table (EV ×5, ResultsAjax ×5,
 Tally ×2, FL, MA, MD, NC, IA), DE (units don't meet), WY (no registered voters), 2 AL units.
@@ -85,8 +94,9 @@ Not compared:
 - Check 1 compares only the latest two snapshots. If one load brings in two or more new snapshots of a
   source, the older ones are never the newer side of a comparison (noted as `pruned_unchecked`); run
   `check` after every `load`.
-- A source that reverts to content it published before maps to that earlier snapshot's time, so check 1
-  doesn't see the reversion (open: Steve's call).
+- A change in a reader's scope (which files a pass downloads) makes the passes before and after it
+  differ, so check 1 reports the change as decreases or disappeared lines (MA above).
+- A download that changed nothing leaves no snapshot of its own (it stays in the manifest).
 - `check` reads without a transaction; don't run it while a `load` is running.
 
 ## Not done

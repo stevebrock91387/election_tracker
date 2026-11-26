@@ -106,14 +106,75 @@ class ResultLoadTest(LoadTestBase):
         self.load()
         self.assertEqual(self.q("SELECT votes FROM result"), [(2,)])
 
-    def test_unchanged_file_keeps_first_fetch_time(self):
+    def test_snapshot_time_is_the_download_the_parse_read(self):
+        # Per file, the latest fetch at or before the parse; the snapshot is the earliest of those.
         write_manifest(self.manifest, [("A", "2026-11-24T15:00:00Z"), ("B", "2026-11-24T15:00:10Z"),
                                        ("A", "2026-11-26T03:07:35Z"), ("C", "2026-11-26T03:07:46Z")])
         write_parse(self.parsed, "s1", "20261124T150100Z", [row(source_sha256="A"), row(source_sha256="B")])
         write_parse(self.parsed, "s1", "20261126T030800Z", [row(source_sha256="A"), row(source_sha256="C")])
         self.load()
         self.assertEqual(self.q("SELECT first_seen_utc FROM snapshot ORDER BY first_seen_utc"),
-                         [("2026-11-24T15:00:10Z",), ("2026-11-26T03:07:46Z",)])
+                         [("2026-11-24T15:00:00Z",), ("2026-11-26T03:07:35Z",)])
+
+    def test_reversion_to_earlier_content_is_a_new_snapshot(self):
+        write_manifest(self.manifest, [("A", "2026-11-21T00:00:00Z"), ("B", "2026-11-22T00:00:00Z"),
+                                       ("A", "2026-11-23T00:00:00Z")])
+        write_parse(self.parsed, "s1", "20261121T000100Z", [row(source_sha256="A", votes="5")])
+        write_parse(self.parsed, "s1", "20261122T000100Z", [row(source_sha256="B", votes="9")])
+        write_parse(self.parsed, "s1", "20261123T000100Z", [row(source_sha256="A", votes="5")])
+        self.load()
+        self.assertEqual(self.q("SELECT first_seen_utc, pruned FROM snapshot ORDER BY first_seen_utc"),
+                         [("2026-11-21T00:00:00Z", 1), ("2026-11-22T00:00:00Z", 0), ("2026-11-23T00:00:00Z", 0)])
+        self.assertEqual(sorted(self.q("SELECT votes FROM result")), [(5,), (9,)])
+
+    def test_identical_back_to_back_downloads_are_one_snapshot(self):
+        # Steve, 2026-11-26 (option B): nothing changed, so one snapshot; the newest parse wins (reader fixes).
+        write_manifest(self.manifest, [("A", "2026-11-21T00:00:00Z"), ("A", "2026-11-22T00:00:00Z")])
+        write_parse(self.parsed, "s1", "20261121T000100Z", [row(source_sha256="A", votes="1")])
+        new = write_parse(self.parsed, "s1", "20261122T000100Z", [row(source_sha256="A", votes="2")])
+        self.load()
+        self.assertEqual(self.q("SELECT first_seen_utc, csv_path FROM snapshot"), [("2026-11-21T00:00:00Z", new)])
+        self.assertEqual(self.q("SELECT votes FROM result"), [(2,)])
+
+    def test_identical_back_to_back_download_in_a_later_load_replaces(self):
+        write_manifest(self.manifest, [("A", "2026-11-21T00:00:00Z"), ("A", "2026-11-22T00:00:00Z")])
+        write_parse(self.parsed, "s1", "20261121T000100Z", [row(source_sha256="A", votes="1")])
+        self.load()
+        new = write_parse(self.parsed, "s1", "20261122T000100Z", [row(source_sha256="A", votes="2")])
+        out = self.load()
+        self.assertEqual(out["replaced"], [new])
+        self.assertEqual(self.q("SELECT first_seen_utc, csv_path FROM snapshot"), [("2026-11-21T00:00:00Z", new)])
+
+    def test_late_parse_of_earlier_identical_download_joins_loaded_snapshot(self):
+        write_manifest(self.manifest, [("A", "2026-11-21T00:00:00Z"), ("A", "2026-11-22T00:00:00Z")])
+        kept = write_parse(self.parsed, "s1", "20261122T000100Z", [row(source_sha256="A", votes="2")])
+        self.load()
+        old = write_parse(self.parsed, "s1", "20261121T000100Z", [row(source_sha256="A", votes="1")])
+        out = self.load()
+        self.assertIn(old, out["skipped_known"])
+        self.assertEqual(self.q("SELECT first_seen_utc, csv_path FROM snapshot"), [("2026-11-22T00:00:00Z", kept)])
+
+    def test_reparse_of_older_pass_replaces_that_pass(self):
+        # File X didn't change between passes, so the re-parse's own time (Y1's fetch, 5 s after pass 1's) is
+        # off; its files equal pass 1's, the snapshot just before it, so it joins pass 1. Pass 2 is untouched.
+        write_manifest(self.manifest, [("X", "2026-11-21T00:00:00Z"), ("Y1", "2026-11-21T00:00:05Z"),
+                                       ("X", "2026-11-22T00:00:00Z"), ("Y2", "2026-11-22T00:00:05Z")])
+        write_parse(self.parsed, "s1", "20261121T000100Z", [row(source_sha256="X"), row(source_sha256="Y1", votes="1")])
+        p2 = write_parse(self.parsed, "s1", "20261122T000100Z",
+                         [row(source_sha256="X"), row(source_sha256="Y2", votes="2")])
+        self.load()
+        new = write_parse(self.parsed, "s1", "20261125T000000Z",
+                          [row(source_sha256="X"), row(source_sha256="Y1", votes="7")])
+        out = self.load()
+        self.assertEqual(out["replaced"], [new])
+        self.assertEqual(self.q("SELECT first_seen_utc, csv_path, pruned FROM snapshot ORDER BY first_seen_utc"),
+                         [("2026-11-21T00:00:00Z", new, 0), ("2026-11-22T00:00:00Z", p2, 0)])
+
+    def test_parse_stamped_before_every_fetch_uses_earliest_fetch(self):
+        write_manifest(self.manifest, [("A", "2026-11-24T15:02:22Z"), ("A", "2026-11-25T15:02:22Z")])
+        write_parse(self.parsed, "s1", "20261124T010000Z", [row(source_sha256="A")])
+        self.load()
+        self.assertEqual(self.q("SELECT first_seen_utc FROM snapshot"), [("2026-11-24T15:02:22Z",)])
 
     def test_hash_not_in_manifest(self):
         write_manifest(self.manifest, [])

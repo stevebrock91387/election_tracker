@@ -2,9 +2,13 @@
 
 Design: docs/superpowers/specs/2026-11-25-step3-checks-database-design.md.
 
-A snapshot is one downloaded state of a source. Its time (first_seen_utc) is when its content first
-existed: for each source_sha256 in the CSV, the earliest fetched_utc of that hash in the manifest, then the
-latest of those. Two parses with the same (source_id, first_seen_utc) are the same snapshot: the parse whose
+A snapshot is one download (pass) of a source. Its time (first_seen_utc, kept as the column name) is when
+the pass that the parse read was fetched: for each source_sha256 in the CSV, the latest fetched_utc of that
+hash in the manifest at or before the parse's file name stamp (the earliest fetch if none is), then the
+earliest of those. A download whose files are exactly those of the source's previous snapshot (nothing
+changed) joins that snapshot (Steve, 2026-11-26, option B), so a reader fix's newer parse still replaces the
+old one; content that comes back after a different download in between (a source reverting) is a new
+snapshot that check 1 compares. Two parses with the same (source_id, first_seen_utc) are the same snapshot: the parse whose
 file name stamp is newest wins (reader fixes take effect). Only the latest two snapshots per source keep
 their result and turnout rows; older ones are marked pruned, and a CSV older than both kept snapshots isn't
 loaded. Values are stored as the CSV has them, except votes: "" -> NULL, digits -> INTEGER.
@@ -33,7 +37,7 @@ SCHEMA = f"""
 CREATE TABLE IF NOT EXISTS snapshot (
     snapshot_id INTEGER PRIMARY KEY, source_id TEXT NOT NULL, state TEXT, first_seen_utc TEXT NOT NULL,
     csv_path TEXT, csv_sha256 TEXT, turnout_path TEXT, turnout_sha256 TEXT, loaded_utc TEXT,
-    pruned INTEGER NOT NULL DEFAULT 0,
+    pruned INTEGER NOT NULL DEFAULT 0, source_hashes TEXT,
     UNIQUE (source_id, first_seen_utc));
 CREATE TABLE IF NOT EXISTS result (snapshot_id INTEGER NOT NULL, {", ".join(
     c + (" INTEGER" if c == "votes" else " TEXT") for c in COLUMNS)});
@@ -51,6 +55,8 @@ def connect(path):
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.executescript(SCHEMA)
+    if "source_hashes" not in [r[1] for r in conn.execute("PRAGMA table_info(snapshot)")]:
+        conn.execute("ALTER TABLE snapshot ADD COLUMN source_hashes TEXT")  # a database built before it
     return conn
 
 
@@ -62,14 +68,31 @@ def _sha256(path):
     return h.hexdigest()
 
 
-def _manifest_first_seen(path):
-    first = {}
+def _manifest_fetches(path):
+    """{sha256: sorted fetched_utc list}."""
+    fetches = {}
     with open(path, newline="") as f:
         for r in csv.DictReader(f):
-            t, sha = r["fetched_utc"], r["sha256"]
-            if sha not in first or t < first[sha]:
-                first[sha] = t
-    return first
+            fetches.setdefault(r["sha256"], []).append(r["fetched_utc"])
+    for ts in fetches.values():
+        ts.sort()
+    return fetches
+
+
+def _stamp_utc(path):
+    """20261124T150546Z.csv -> 2026-11-24T15:05:46Z (the manifest's format)."""
+    n = os.path.basename(path)
+    return f"{n[0:4]}-{n[4:6]}-{n[6:8]}T{n[9:11]}:{n[11:13]}:{n[13:15]}Z"
+
+
+def _snapshot_time(fetches, hashes, path):
+    """Per hash, the latest fetch at or before the parse (else its earliest fetch); the earliest of those."""
+    parsed = _stamp_utc(path)
+    times = []
+    for h in hashes:
+        before = [t for t in fetches[h] if t <= parsed]
+        times.append(before[-1] if before else fetches[h][0])
+    return min(times)
 
 
 def _votes(v):
@@ -116,11 +139,11 @@ def load(conn, parsed_dir="data/parsed", manifest="data/raw/manifest.csv", turno
     out = {"loaded": [], "skipped_known": [], "replaced": [], "not_loaded": []}
     if turnout_map is None:
         turnout_map = load_turnout_map()
-    first_seen = _manifest_first_seen(manifest)
+    fetches = _manifest_fetches(manifest)
     known = {sha for (sha,) in conn.execute("SELECT csv_sha256 FROM loaded_csv")}
     fresh = set()  # snapshot ids loaded by this call
-    # Pass 1: each new CSV's snapshot key; within one load only the newest parse of a key is read.
-    candidates = {}
+    # Pass 1: each new CSV's download time and file set.
+    items = []
     for source_id, path in _parsed_csvs(parsed_dir):
         sha = _sha256(path)
         if sha in known:
@@ -137,18 +160,23 @@ def load(conn, parsed_dir="data/parsed", manifest="data/raw/manifest.csv", turno
             out["not_loaded"].append(path)
             continue
         changed = _forget_changed(conn, path, sha)
-        missing = sorted(h for h in hashes if h not in first_seen)
+        missing = sorted(h for h in hashes if h not in fetches)
         if missing or not hashes:
             _note(conn, path, "hash_not_in_manifest",
                   ",".join("empty source_sha256" if h == "" else h for h in missing) or "no rows")
             out["not_loaded"].append(path)
             continue
-        key = (source_id, max(first_seen[h] for h in hashes))
+        items.append({"source_id": source_id, "t": _snapshot_time(fetches, hashes, path), "path": path,
+                      "sha": sha, "state": state, "changed": changed, "hashes": ",".join(sorted(hashes))})
+    # Pass 2: snapshot keys (identical back-to-back downloads share one); only the newest parse of a key is read.
+    candidates = {}
+    for it in sorted(_merge_unchanged(conn, items), key=lambda it: os.path.basename(it["path"])):
+        key = (it["source_id"], it["t"])
         prev = candidates.get(key)
         if prev is not None:
             out["skipped_known"].append(prev["path"])  # an older parse of the same snapshot
             _done(conn, prev["sha"], prev["path"])
-        candidates[key] = {"path": path, "sha": sha, "state": state, "changed": changed}
+        candidates[key] = it
     for (source_id, t), c in sorted(candidates.items()):
         try:
             _load_one(conn, source_id, t, c, out, turnout_map, fresh)
@@ -158,6 +186,34 @@ def load(conn, parsed_dir="data/parsed", manifest="data/raw/manifest.csv", turno
     _refresh_turnout(conn, turnout_map)
     conn.commit()
     return out
+
+
+def _merge_unchanged(conn, items):
+    """Give each item the time of the snapshot it belongs to: walking a source's downloads (loaded snapshots
+    and new parses) in time order, one whose file set equals the previous one's joins it. A group's time is
+    its loaded snapshot's, else its earliest download's."""
+    by_source = {}
+    for it in items:
+        by_source.setdefault(it["source_id"], []).append(it)
+    for source_id, its in by_source.items():
+        loaded = [(t, 0, h or "", None) for t, h in conn.execute(
+            "SELECT first_seen_utc, source_hashes FROM snapshot WHERE source_id = ?", (source_id,))]
+        entries = sorted(loaded + [(it["t"], 1, it["hashes"], it) for it in its], key=lambda e: (e[0], e[1]))
+        groups = []
+        for t, is_new, h, it in entries:
+            if groups and h and groups[-1]["hashes"] == h:
+                g = groups[-1]
+            else:
+                g = {"hashes": h, "time": t, "has_loaded": False, "new": []}
+                groups.append(g)
+            if is_new:
+                g["new"].append(it)
+            elif not g["has_loaded"]:
+                g["time"], g["has_loaded"] = t, True  # a loaded snapshot keeps its time
+        for g in groups:
+            for it in g["new"]:
+                it["t"] = g["time"]
+    return items
 
 
 def _forget_changed(conn, path, sha):
@@ -220,12 +276,14 @@ def _load_one(conn, source_id, t, c, out, turnout_map, fresh):
             conn.execute("DELETE FROM result WHERE snapshot_id = ?", (sid,))
             conn.execute("DELETE FROM turnout WHERE snapshot_id = ?", (sid,))
             conn.execute("UPDATE snapshot SET csv_path = ?, csv_sha256 = ?, turnout_path = '', turnout_sha256 = '', "
-                         "loaded_utc = ? WHERE snapshot_id = ?", (path, c["sha"], now, sid))
+                         "loaded_utc = ?, source_hashes = ? WHERE snapshot_id = ?",
+                         (path, c["sha"], now, c["hashes"], sid))
             _note(conn, path, "replaced_parse", existing[1])
         else:
             sid = conn.execute("INSERT INTO snapshot (source_id, state, first_seen_utc, csv_path, csv_sha256, "
-                               "turnout_path, turnout_sha256, loaded_utc) VALUES (?, ?, ?, ?, ?, '', '', ?)",
-                               (source_id, c["state"], t, path, c["sha"], now)).lastrowid
+                               "turnout_path, turnout_sha256, loaded_utc, source_hashes) "
+                               "VALUES (?, ?, ?, ?, ?, '', '', ?, ?)",
+                               (source_id, c["state"], t, path, c["sha"], now, c["hashes"])).lastrowid
         with open(path, newline="") as f:
             reader = csv.DictReader(f)
             missing = [k for k in COLUMNS if k not in (reader.fieldnames or [])]
