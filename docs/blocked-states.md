@@ -25,3 +25,21 @@ KS MO TN NV MI OK).
 
 Requests to a state (CA media feed, KS email, MO purchase, PA Right-to-Know) would go out from Steve;
 none has been sent.
+
+## Minnesota follow-up (2026-11-26)
+
+- Project fetcher, one request: `electionresultsfiles.sos.mn.gov/20261103/allracesbycounty.txt` returned
+  200, 714,945 bytes (sha256 `ba71d3fa…`, `data/raw/mn-2026-general/20261126T223911Z.txt`): ISO-8859
+  text, CRLF, 8,285 lines, 16 semicolon-separated fields, no header; 87 counties (U.S. Senator has 435
+  lines = 87 × 5 choices). Offices include U.S. Senator, U.S. Representative, Governor, constitutional
+  officers, amendment, judges, and county and soil-and-water offices. Field meanings are not verified
+  (no spec read yet); the rows look like state; county id; precinct (empty); office id; office name;
+  district; choice id; choice name; …; party; precincts reporting; precincts total; votes; percent;
+  office total.
+- Built-in browser: `electionresults.sos.mn.gov/20261103` (the official results site) loads and links
+  "Downloadable Text Results" (`/Select/MediaFiles/Index?ersElectionId=201`), but that page, and the SOS
+  2026 general results page on sos.mn.gov, went to a Radware CAPTCHA page ("validate.perfdrive.com").
+  Not solved; not retried. The file host's directory listing is 403 (listing off).
+- So the file itself answers scripts, but the page that lists the files and (likely) describes their
+  format sits behind a bot check. Whether to read the file host directly is Steve's call.
+
