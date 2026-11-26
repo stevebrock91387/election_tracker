@@ -66,3 +66,65 @@ def check_decreases(conn, source_id=None):
             elif ot == "integer" and wt == "integer" and wv < ov:
                 exceptions.append(dict(base, kind="decrease", old_votes=ov, new_votes=wv))
     return exceptions, not_checked
+
+
+def _levels(conn, snapshot_id):
+    return {r[0] for r in conn.execute("SELECT DISTINCT level FROM result WHERE snapshot_id = ?", (snapshot_id,))}
+
+
+def _grouped(conn, snapshot_id, level, by_county, statewide_only):
+    """{(county, contest_id, choice, party, vote_type): (n_rows, sum, n_not_integer, max)} for one level."""
+    where = "snapshot_id = ? AND level = ?" + (" AND contest_scope = 'statewide'" if statewide_only else "")
+    county = f"{dict(KEY)['county']}" if by_county else "''"
+    sql = f"""SELECT {county} AS k_county, contest_id, {dict(KEY)['choice']} AS k_choice, party, vote_type,
+                     COUNT(*), SUM(CASE WHEN typeof(votes) = 'integer' THEN votes ELSE 0 END),
+                     SUM(typeof(votes) != 'integer'), MAX(votes)
+              FROM result WHERE {where} GROUP BY k_county, contest_id, k_choice, party, vote_type"""
+    return {tuple(r[:5]): r[5:] for r in conn.execute(sql, (snapshot_id, level))}
+
+
+PARTS_KEY = ["county", "contest_id", "choice", "party", "vote_type"]
+
+
+def check_parts(conn, source_id=None):
+    """Check 3, on each source's latest snapshot: precinct rows summed per county against the county row
+    (key: county, contest, choice, party, vote type), and county (or town) rows summed against the state row
+    (statewide contests only). Exceptions: kind "mismatch" (part_sum != whole) and "duplicate_whole" (the
+    whole occurs more than once). A missing level makes the pair not checked; a line with an empty count, or
+    with parts but no whole (or the reverse), is a not-checked line. Precinct rows with no county are left
+    out of the precinct pair and counted in a not-checked entry."""
+    exceptions, not_checked = [], []
+    for src in _sources(conn, source_id):
+        sid = _kept(conn, src)[0]
+        levels = _levels(conn, sid)
+        upper = "town" if "town" in levels else "county"
+        for part, whole, by_county in (("precinct", "county", True), (upper, "state", False)):
+            pair = f"{part}>{whole}"
+            missing = [lv for lv in (part, whole) if lv not in levels]
+            if missing:
+                not_checked.append({"source_id": src, "scope": "pair", "reason": f"{pair}: no {missing[0]} rows"})
+                continue
+            if by_county:
+                (n_blank,) = conn.execute(
+                    f"SELECT COUNT(*) FROM result WHERE snapshot_id = ? AND level = 'precinct' AND "
+                    f"{dict(KEY)['county']} = ''", (sid,)).fetchone()
+                if n_blank:
+                    not_checked.append({"source_id": src, "scope": "pair",
+                                        "reason": f"{pair}: {n_blank} precinct rows have no county"})
+            parts = _grouped(conn, sid, part, by_county, not by_county)
+            wholes = _grouped(conn, sid, whole, by_county, not by_county)
+            if by_county:
+                parts = {k: v for k, v in parts.items() if k[0] != ""}
+            for key in sorted(set(parts) | set(wholes)):
+                base = dict(zip(PARTS_KEY, key), source_id=src, snapshot_id=sid, pair=pair)
+                p, w = parts.get(key), wholes.get(key)
+                if p is None or w is None:
+                    not_checked.append({"source_id": src, "scope": "line",
+                                        "reason": f"no {part if p is None else whole} rows", **base})
+                elif w[0] > 1:
+                    exceptions.append(dict(base, kind="duplicate_whole", part_sum=None, whole=None))
+                elif p[2] or w[2]:
+                    not_checked.append({"source_id": src, "scope": "line", "reason": "empty count", **base})
+                elif p[1] != w[3]:
+                    exceptions.append(dict(base, kind="mismatch", part_sum=p[1], whole=w[3]))
+    return exceptions, not_checked

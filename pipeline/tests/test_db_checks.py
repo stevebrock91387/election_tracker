@@ -76,5 +76,68 @@ class DecreasesTest(CheckTestBase):
         self.assertEqual((exc, [n["source_id"] for n in nc]), ([], ["s2"]))
 
 
+
+def st(v, **kw):
+    return row(level="state", county_name="", votes=str(v), **kw)
+
+
+def co(name, v, **kw):
+    return row(level="county", county_name=name, votes=str(v), **kw)
+
+
+def pr(county, name, v, **kw):
+    return row(level="precinct", county_name=county, precinct_id=name, precinct_name=name, votes=str(v), **kw)
+
+
+class PartsTest(CheckTestBase):
+    def check(self):
+        return db_checks.check_parts(self.conn)
+
+    def test_county_sum_mismatch_listed(self):
+        self.snap("s1", 1, [co("A", 10), co("B", 20), st(31)])
+        exc, _ = self.check()
+        self.assertEqual([(e["pair"], e["part_sum"], e["whole"]) for e in exc], [("county>state", 30, 31)])
+
+    def test_clean_sum_no_exception(self):
+        self.snap("s1", 1, [co("A", 10), co("B", 20), st(30), pr("A", "p1", 4), pr("A", "p2", 6),
+                            pr("B", "p3", 20)])
+        self.assertEqual(self.check(), ([], []))
+
+    def test_null_part_not_checked(self):
+        self.snap("s1", 1, [co("A", 10), row(level="county", county_name="B", votes=""), st(30)])
+        exc, nc = self.check()
+        self.assertEqual(exc, [])
+        self.assertEqual([(n["scope"], n["reason"]) for n in nc],
+                         [("pair", "precinct>county: no precinct rows"), ("line", "empty count")])
+
+    def test_missing_state_level_not_checked(self):
+        self.snap("s1", 1, [co("A", 10), pr("A", "p1", 10)])
+        exc, nc = self.check()
+        self.assertEqual(exc, [])
+        self.assertEqual([(n["scope"], n["reason"]) for n in nc], [("pair", "county>state: no state rows")])
+
+    def test_party_lines_kept_apart(self):
+        self.snap("s1", 1, [row(level="town", county_id="1", votes="5", party="D"),
+                            row(level="town", county_id="2", votes="7", party="D"),
+                            row(level="town", county_id="1", votes="1", party="WF"),
+                            st(12, party="D"), st(1, party="WF")])
+        exc, nc = self.check()
+        self.assertEqual(exc, [])
+        self.assertEqual([n["reason"] for n in nc], ["precinct>county: no precinct rows"])
+
+    def test_local_contest_joins_within_county(self):
+        self.snap("s1", 1, [co("A", 10, contest_scope="local"), co("B", 3, contest_scope="local"),
+                            pr("A", "p1", 10, contest_scope="local"), pr("B", "p2", 4, contest_scope="local")])
+        exc, _ = self.check()
+        self.assertEqual([(e["county"], e["part_sum"], e["whole"]) for e in exc], [("B", 4, 3)])
+
+    def test_precinct_rows_without_county_not_checked(self):
+        self.snap("s1", 1, [co("A", 10), pr("", "p1", 10), st(10)])
+        exc, nc = self.check()
+        self.assertEqual(exc, [])
+        self.assertEqual([n["reason"] for n in nc], ["precinct>county: 1 precinct rows have no county",
+                                                     "no precinct rows"])
+
+
 if __name__ == "__main__":
     unittest.main()
