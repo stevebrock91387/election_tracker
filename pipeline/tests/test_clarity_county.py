@@ -48,6 +48,14 @@ class FixtureTest(unittest.TestCase):
 
     def test_columns(self):
         self.assertTrue(all(list(r) == COLUMNS for r in self.rows))
+
+    def test_sink_receives_every_row_and_none_are_kept(self):
+        got = []
+        rows, summary, turnout = parse_county_xml(ATL, "NJ", "Atlantic", "nj-test", sink=got.append)
+        self.assertEqual(rows, [])
+        self.assertEqual(got, self.rows)
+        self.assertEqual(summary, self.summary)
+        self.assertEqual(turnout, self.turnout)
         self.assertTrue(all(list(r) == COUNTY_TURNOUT_COLUMNS for r in self.turnout))
 
     def test_precinct_rows(self):

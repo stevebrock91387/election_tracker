@@ -4,7 +4,7 @@ Seen 2026-11-20 in the built-in browser (page network requests) and with one rec
 
 ## Where the files are
 
-Each election has a base URL; `<base>/current_ver.txt` holds the current version number, and every file lives under `<base>/<version>/`. A fetch pass reads the version first, then builds the data URLs from it.
+Each election has a base URL; `<base>/current_ver.txt` holds the current version number, and every file lives under `<base>/<version>/`. A fetch pass reads the version first, then builds the data URLs from it. `fetch-parse` skips the rest of a pass when the version is the one it last parsed (`data/raw/<id>/last-pass-version.txt`; `--force` overrides; see `docs/nj.md`).
 
 | State | Base (2026 general) | Data file(s) | Version fetched |
 |---|---|---|---|

@@ -210,7 +210,7 @@ def _count(v):
     return int(v) if v is not None and v.isascii() and v.isdigit() else None
 
 
-def parse_county_xml(zip_path, state, county, source_id):
+def parse_county_xml(zip_path, state, county, source_id, sink=None):
     """One county's Clarity detail XML (New Jersey counties): units are <Precinct>, not <County>.
 
     Design: docs/superpowers/specs/2026-11-25-step2-nj-clarity-counties-design.md.
@@ -223,6 +223,8 @@ def parse_county_xml(zip_path, state, county, source_id):
     Nothing is corrected. A count that isn't ASCII digits gives votes "" and is listed; a comparison it
     (or a total with no published breakdown) prevents goes to a *_not_checked list, never a mismatch.
     Without a turnout table the turnout comparisons are None.
+    With sink, each row is passed to sink(row) as it is made and the returned row list is empty: one
+    county with every write-in name listed (Burlington, 2026) is over a million rows.
     """
     summary = {"region": None, "timestamp": None, "contests": 0, "precincts": 0, "vote_types": [],
                "contest_vote_types": {}, "contest_vote_types_emitted": [], "turnout_table": None, "unreadable": []}
@@ -265,6 +267,7 @@ def parse_county_xml(zip_path, state, county, source_id):
     reporting = {t["precinct_name"]: t["percent_reporting"] for t in turnout if t["precinct_name"]}
 
     rows, vote_types, result_names = [], set(), set()
+    emit = sink if sink is not None else rows.append
 
     def units(cid, chid, vtype, el, row):
         """Emit precinct rows under one VoteType element; return (sum or None, number of precincts)."""
@@ -286,7 +289,7 @@ def parse_county_xml(zip_path, state, county, source_id):
             elif total is not None:
                 total += v
             if row is not None:
-                rows.append(dict(row, level="precinct", precinct_id=name, precinct_name=name,
+                emit(dict(row, level="precinct", precinct_id=name, precinct_name=name,
                                  vote_type=row["vote_type"] or vtype,  # contest-level rows carry TOTAL
                                  votes="" if v is None else v, reporting_status=reporting.get(name, "")))
         return total, len(seen)
@@ -319,7 +322,7 @@ def parse_county_xml(zip_path, state, county, source_id):
                     if name not in summary["contest_vote_types_emitted"]:
                         summary["contest_vote_types_emitted"].append(name)
                     row = dict(contest, choice=name, choice_id="", party="", vote_type="TOTAL")
-                    rows.append(dict(row, level="county", votes="" if v is None else v, reporting_status=status))
+                    emit(dict(row, level="county", votes="" if v is None else v, reporting_status=status))
                 check_units(cid, "", name, v, el, row)
             elif el.tag != "Choice":
                 summary["unknown_elements"].append((cid, el.tag))
@@ -329,7 +332,7 @@ def parse_county_xml(zip_path, state, county, source_id):
             total = _count(ch.get("totalVotes"))
             if total is None:
                 summary["non_numeric"].append((cid, chid, "TOTAL", "", ch.get("totalVotes")))
-            rows.append(dict(choice, level="county", vote_type="TOTAL", votes="" if total is None else total,
+            emit(dict(choice, level="county", vote_type="TOTAL", votes="" if total is None else total,
                              reporting_status=status))
             vt_sum, n_types = 0, 0
             for el in ch:
@@ -348,7 +351,7 @@ def parse_county_xml(zip_path, state, county, source_id):
                     vt_sum = None
                 elif vt_sum is not None:
                     vt_sum += votes
-                rows.append(dict(choice, level="county", vote_type=name, votes="" if votes is None else votes,
+                emit(dict(choice, level="county", vote_type=name, votes="" if votes is None else votes,
                                  reporting_status=status))
                 check_units(cid, chid, name, votes, el, choice)
             if n_types == 0 and vt_sum is not None:

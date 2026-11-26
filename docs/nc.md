@@ -64,6 +64,8 @@ The dashboard keys are:
 
 The cause is unknown. The ZIP's member is dated 2026-11-13, but the dashboard file was last modified 2026-11-24 (per recon). That fits a ZIP that hasn't been refreshed since later count changes, but this has **not been verified**. The reader lists every difference and doesn't choose between the two.
 
+**Re-fetch 2026-11-26 03:07 UTC** (Steve: test the stale-ZIP idea first): the ZIP is byte-identical to the 11-24 download (SHA-256 `4fcc5999bbaf`, member still dated 2026-11-13). The dashboard changed (`bff9b35e0b58`, same size): 27 choices in 16 contests moved, only in provisional counts, +1 or +2 each (e.g. Cooper 2,480,648 → 2,480,649, Whatley 1,648,865 → 1,648,867). Differences against the ZIP are now 272. So the dashboard is still taking provisional changes and the ZIP is not; that supports a stale ZIP but doesn't prove it (the ZIP could be a fixed snapshot by design). Neither file is preferred yet; re-check after state certification.
+
 ## Quirks
 
 - **No choice ids** in either file. The check joins on (contest group id, choice name as published); all 601 dashboard names match the ZIP exactly today. A spelling change in either file shows up as orphans.

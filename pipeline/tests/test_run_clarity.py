@@ -64,6 +64,22 @@ class FetchPassTest(unittest.TestCase):
                                 s["base"] + "/387368/json/ALL.json"])
         self.assertEqual(set(out["paths"]), {"sum", "all"})
 
+    def test_unchanged_version_fetches_nothing_more(self):
+        seen = []
+        s = self.src["clarity-CO-2026-general"]
+        out = fetch_pass("clarity-CO-2026-general", s, raw_dir=self.raw, opener=opener_for(b"387376\r\n", seen),
+                         last_version="387376")
+        self.assertEqual(seen, [s["base"] + "/current_ver.txt"])
+        self.assertEqual(out, {"version": "387376", "unchanged": True})
+
+    def test_changed_version_fetches(self):
+        seen = []
+        s = self.src["clarity-CO-2026-general"]
+        out = fetch_pass("clarity-CO-2026-general", s, raw_dir=self.raw, opener=opener_for(b"387376", seen),
+                         last_version="387375")
+        self.assertEqual(len(seen), 2)
+        self.assertNotIn("unchanged", out)
+
     def test_bad_version_stops_pass(self):
         seen = []
         s = self.src["clarity-WV-2026-general"]
@@ -175,12 +191,81 @@ class ParseCommandTest(unittest.TestCase):
         raw, out = tempfile.mkdtemp(), tempfile.mkdtemp()
         import pipeline.run_clarity as rc
         real = rc.fetch_pass
-        rc.fetch_pass = lambda sid, src, raw_dir: real(sid, src, raw_dir=raw_dir, opener=json_opener([]))
+        rc.fetch_pass = lambda sid, src, raw_dir, **kw: real(sid, src, raw_dir=raw_dir, opener=json_opener([]), **kw)
         try:
             main(["fetch-parse", "clarity-NJ-Morris-2026-general", "--raw-dir", raw, "--parsed-dir", out])
         finally:
             rc.fetch_pass = real
         self.assertEqual(len(glob.glob(os.path.join(out, "clarity-NJ-Morris-2026-general", "*.csv"))), 2)
+
+
+
+def atlantic_opener(version):
+    with open(os.path.join(FX, "clarity_nj_atlantic.zip"), "rb") as f:
+        body = f.read()
+    return lambda url: (200, version if url.endswith("/current_ver.txt") else body)
+
+
+class VersionSkipTest(unittest.TestCase):
+    """fetch-parse remembers the last parsed version and skips a pass whose version hasn't changed."""
+    sid = "clarity-NJ-Atlantic-2026-general"
+
+    def setUp(self):
+        import pipeline.run_clarity as rc
+        self.rc, self.real = rc, rc.fetch_pass
+        self.raw, self.out = tempfile.mkdtemp(), tempfile.mkdtemp()
+        self.clock = [1_000_000.0]
+        self.version = b"1"
+
+        def fake(sid, src, raw_dir, last_version=None):
+            self.clock[0] += 1000
+            return self.real(sid, src, raw_dir=raw_dir, now=lambda: self.clock[0],
+                             opener=atlantic_opener(self.version), last_version=last_version)
+        rc.fetch_pass = fake
+
+    def tearDown(self):
+        self.rc.fetch_pass = self.real
+
+    def run_main(self, *extra):
+        return main(["fetch-parse", self.sid, "--raw-dir", self.raw, "--parsed-dir", self.out, *extra])
+
+    def test_second_pass_same_version_is_skipped(self):
+        first = self.run_main()
+        self.assertIsInstance(first, list)
+        second = self.run_main()
+        self.assertEqual(second, {"version": "1", "unchanged": True})
+
+    def test_new_version_is_parsed(self):
+        self.run_main()
+        self.version = b"2"
+        self.assertIsInstance(self.run_main(), list)
+
+    def test_force_parses_same_version(self):
+        self.run_main()
+        self.assertIsInstance(self.run_main("--force"), list)
+
+    def test_failed_parse_does_not_record_version(self):
+        import pipeline.run_clarity as rc
+        real_parse = rc.parse_files
+        rc.parse_files = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom"))
+        try:
+            with self.assertRaises(RuntimeError):
+                self.run_main()
+        finally:
+            rc.parse_files = real_parse
+        self.assertIsInstance(self.run_main(), list)
+
+    def test_plain_fetch_does_not_mark_version_parsed(self):
+        main(["fetch", self.sid, "--raw-dir", self.raw, "--parsed-dir", self.out])
+        self.assertIsInstance(self.run_main(), list)
+
+    def test_county_xml_parse_streams_same_csv(self):
+        out = self.run_main()
+        with open(out[0], newline="") as f:
+            n = sum(1 for _ in csv.reader(f)) - 1
+        from pipeline.readers.clarity import parse_county_xml
+        rows, _, _ = parse_county_xml(os.path.join(FX, "clarity_nj_atlantic.zip"), "NJ", "Atlantic", self.sid)
+        self.assertEqual(n, len(rows))
 
 
 if __name__ == "__main__":
