@@ -108,7 +108,8 @@ class PartsTest(CheckTestBase):
         exc, nc = self.check()
         self.assertEqual(exc, [])
         self.assertEqual([(n["scope"], n["reason"]) for n in nc],
-                         [("pair", "precinct>county: no precinct rows"), ("line", "empty count")])
+                         [("pair", "precinct>county: no precinct rows"), ("line", "empty count"),
+                          ("pair", "county>state: nothing compared")])
 
     def test_missing_state_level_not_checked(self):
         self.snap("s1", 1, [co("A", 10), pr("A", "p1", 10)])
@@ -146,7 +147,7 @@ class PartsTest(CheckTestBase):
         exc, nc = self.check()
         self.assertEqual(exc, [])
         self.assertEqual([n["reason"] for n in nc], ["precinct>county: 1 precinct rows have no county",
-                                                     "no precinct rows"])
+                                                     "no precinct rows", "precinct>county: nothing compared"])
 
 
 
@@ -261,6 +262,42 @@ class RegisteredTest(CheckTestBase):
 
 
 
+class CoverageTest(CheckTestBase):
+    def test_unloaded_source_is_not_checked_everywhere(self):
+        write_manifest(self.manifest, [])
+        write_parse(self.parsed, "zz", "20261124T150300Z", [row(source_sha256="Q")])
+        db.load(self.conn, self.parsed, self.manifest)
+        for name, fn in db_checks.CHECKS.items():
+            _, nc = fn(self.conn)
+            self.assertIn({"source_id": "zz", "scope": "source", "reason": "not loaded (see load notes)"}, nc, name)
+
+    def test_requested_source_without_snapshot_is_not_checked(self):
+        for name, fn in db_checks.CHECKS.items():
+            self.assertEqual(fn(self.conn, "nope"),
+                             ([], [{"source_id": "nope", "scope": "source", "reason": "no snapshot"}]), name)
+
+    def test_parts_pair_with_nothing_compared_is_not_checked(self):
+        self.snap("s1", 1, [co("A", 10, contest_scope=""), st(999, contest_scope="")])
+        exc, nc = db_checks.check_parts(self.conn)
+        self.assertEqual(exc, [])
+        self.assertIn("county>state: nothing compared", [n["reason"] for n in nc])
+
+    def test_registered_with_nothing_compared_is_not_checked(self):
+        t = turnout("ak", [{"precinct_id": "p1", "registered_voters": "0", "ballots": "0"}])
+        self.snap("ak-t", 1, [ak("p1", 5)], t)
+        _, nc = db_checks.check_registered(self.conn)
+        self.assertIn("nothing compared", [n["reason"] for n in nc])
+
+    def test_snapshot_times_reported(self):
+        self.snap("s1", 1, [row()])
+        out = os.path.join(self.tmp, "rep")
+        db_checks.run_checks(self.conn, out)
+        import csv as _csv
+        with open(os.path.join(out, "snapshots.csv"), newline="") as f:
+            rows = list(_csv.DictReader(f))
+        self.assertEqual([(r["source_id"], r["first_seen_utc"]) for r in rows], [("s1", "2026-11-01T00:00:00Z")])
+
+
 class RunChecksTest(CheckTestBase):
     def test_run_checks_writes_every_report(self):
         import csv as _csv
@@ -271,7 +308,8 @@ class RunChecksTest(CheckTestBase):
         self.assertEqual(list(counts), ["decreases", "registered", "parts"])
         self.assertEqual(counts["decreases"], (1, 0))
         files = sorted(os.listdir(out))
-        self.assertEqual(files, sorted(f"{n}{s}.csv" for n in counts for s in ("", "-not-checked")))
+        self.assertEqual(files, sorted([f"{n}{s}.csv" for n in counts for s in ("", "-not-checked")]
+                                       + ["snapshots.csv"]))
         for f in files:
             with open(os.path.join(out, f), newline="") as fh:
                 self.assertTrue(next(_csv.reader(fh)), f)
@@ -285,7 +323,7 @@ class RunChecksTest(CheckTestBase):
         db.main(["load", "--db", dbp, "--parsed-dir", self.parsed, "--manifest", self.manifest])
         counts = db.main(["check", "--db", dbp, "--reports-dir", rep, "--source", "s1"])
         self.assertEqual(counts["decreases"], (0, 1))
-        self.assertEqual(len(os.listdir(rep)), 1)
+        self.assertEqual(len(os.listdir(rep)), 1)  # one timestamped report directory
 
 
 if __name__ == "__main__":

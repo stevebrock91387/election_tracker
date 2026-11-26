@@ -4,6 +4,8 @@ Design: docs/superpowers/specs/2026-11-25-step3-checks-database-design.md.
 Every check is check_<name>(conn, source_id=None) -> (exceptions, not_checked); a not_checked entry has
 source_id, scope and reason, so a check that couldn't run is never an empty, clean-looking list.
 """
+import csv
+import os
 
 # A row's identity across snapshots: ids where the source has them, names where it doesn't.
 KEY = [("level", "level"),
@@ -17,11 +19,21 @@ KEY_NAMES = [k for k, _ in KEY]
 
 
 def _sources(conn, source_id):
+    """(source ids with a kept snapshot, not-checked entries for the rest): a source whose parses were never
+    loaded (it has load notes but no snapshot), or a requested source with no snapshot, is reported, never
+    silently absent."""
     sql = "SELECT DISTINCT source_id FROM snapshot WHERE pruned = 0"
     args = ()
     if source_id is not None:
         sql, args = sql + " AND source_id = ?", (source_id,)
-    return [r[0] for r in conn.execute(sql + " ORDER BY source_id", args)]
+    have = [r[0] for r in conn.execute(sql + " ORDER BY source_id", args)]
+    noted = {os.path.basename(os.path.dirname(p)) for (p,) in conn.execute("SELECT DISTINCT csv_path FROM load_note")}
+    unloaded = sorted(s for s in noted - set(have) if source_id in (None, s)
+                      and not conn.execute("SELECT 1 FROM snapshot WHERE source_id = ?", (s,)).fetchone())
+    missing = [{"source_id": s, "scope": "source", "reason": "not loaded (see load notes)"} for s in unloaded]
+    if source_id is not None and not have and not unloaded:
+        missing.append({"source_id": source_id, "scope": "source", "reason": "no snapshot"})
+    return have, missing
 
 
 def _kept(conn, source_id):
@@ -34,11 +46,12 @@ def check_decreases(conn, source_id=None):
     """Check 1: each source's latest snapshot against the one before it. Lists every lower count
     (kind "decrease"), every key that disappeared ("disappeared"), and keys that occur more than once in
     either snapshot ("duplicate_key", not compared). A NULL or non-integer count on either side is skipped."""
-    exceptions, not_checked = [], []
+    sources, not_checked = _sources(conn, source_id)
+    exceptions = []
     # k_ aliases: GROUP BY a bare name like "choice" would resolve to the table column, not the alias.
     keys = ", ".join(f"{expr} AS k_{name}" for name, expr in KEY)
     group = ", ".join("k_" + k for k in KEY_NAMES)
-    for src in _sources(conn, source_id):
+    for src in sources:
         kept = _kept(conn, src)
         if len(kept) < 2:
             not_checked.append({"source_id": src, "scope": "source", "reason": "one snapshot"})
@@ -97,8 +110,9 @@ def check_parts(conn, source_id=None):
     line repeats for one party). A missing level makes the pair not checked; a line with an empty count, or
     with parts but no whole (or the reverse), is a not-checked line. Precinct rows with no county are left
     out of the precinct pair and counted in a not-checked entry."""
-    exceptions, not_checked = [], []
-    for src in _sources(conn, source_id):
+    sources, not_checked = _sources(conn, source_id)
+    exceptions = []
+    for src in sources:
         sid = _kept(conn, src)[0]
         levels = _levels(conn, sid)
         upper = "town" if "town" in levels else "county"
@@ -119,6 +133,7 @@ def check_parts(conn, source_id=None):
             wholes = _grouped(conn, sid, whole, by_county, not by_county)
             if by_county:
                 parts = {k: v for k, v in parts.items() if k[0] != ""}
+            compared = 0
             for key in sorted(set(parts) | set(wholes)):
                 base = dict(zip(PARTS_KEY, key), source_id=src, snapshot_id=sid, pair=pair)
                 p, w = parts.get(key), wholes.get(key)
@@ -129,8 +144,12 @@ def check_parts(conn, source_id=None):
                     exceptions.append(dict(base, kind="duplicate_whole", part_sum=None, whole=None))
                 elif p[2] or w[2]:
                     not_checked.append({"source_id": src, "scope": "line", "reason": "empty count", **base})
-                elif p[1] != w[1]:
-                    exceptions.append(dict(base, kind="mismatch", part_sum=p[1], whole=w[1]))
+                else:
+                    compared += 1
+                    if p[1] != w[1]:
+                        exceptions.append(dict(base, kind="mismatch", part_sum=p[1], whole=w[1]))
+            if not compared:
+                not_checked.append({"source_id": src, "scope": "pair", "reason": f"{pair}: nothing compared"})
     return exceptions, not_checked
 
 
@@ -157,8 +176,9 @@ def check_registered(conn, source_id=None, turnout_map=None):
     that can't be joined, no registered voters published; per line, an empty count."""
     from pipeline.db import load_turnout_map
     turnout_map = turnout_map or load_turnout_map()
-    exceptions, not_checked = [], []
-    for src in _sources(conn, source_id):
+    sources, not_checked = _sources(conn, source_id)
+    exceptions = []
+    for src in sources:
         sid = _kept(conn, src)[0]
         layouts = [r[0] for r in conn.execute("SELECT DISTINCT layout FROM turnout WHERE snapshot_id = ?", (sid,))]
         reason = None
@@ -221,7 +241,7 @@ def check_registered(conn, source_id=None, turnout_map=None):
             exc("result_unit_without_turnout", u)
         for u in sorted(set(units) - result_units):
             exc("turnout_unit_without_results", u)
-        blank_listed = set()
+        blank_listed, compared = set(), 0
         for u in sorted(set(units) & result_units):
             reg, bal = units[u]
             if reg is None:
@@ -231,8 +251,10 @@ def check_registered(conn, source_id=None, turnout_map=None):
             if reg == 0:
                 exc("zero_registered", u, ballots=bal)
                 continue
-            if has_ballots and bal is not None and bal > reg:
-                exc("ballots_over_registered", u, registered=reg, ballots=bal)
+            if has_ballots and bal is not None:
+                compared += 1
+                if bal > reg:
+                    exc("ballots_over_registered", u, registered=reg, ballots=bal)
         for (u, cid), (total, bad, vf) in sorted(contests.items()):
             if u not in units or units[u][0] in (None, 0):
                 continue
@@ -247,8 +269,11 @@ def check_registered(conn, source_id=None, turnout_map=None):
                 if cid not in blank_listed:
                     blank_listed.add(cid)
                     exc("blank_vote_for", (), contest_id=cid, vote_for=vf)
+            compared += 1
             if total > units[u][0] * n:
                 exc("contest_over_registered", u, contest_id=cid, registered=units[u][0], votes=total, vote_for=vf)
+        if not compared:
+            not_checked.append({"source_id": src, "scope": "source", "reason": "nothing compared"})
     exceptions.sort(key=lambda e: (e["source_id"], e["kind"], e["unit"], e["contest_id"]))
     return exceptions, not_checked
 
@@ -265,7 +290,6 @@ NOT_CHECKED_COLUMNS = ["source_id", "scope", "reason", "pair", "unit", "county",
 
 
 def _write(path, columns, rows):
-    import csv
     with open(path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=columns, restval="", extrasaction="ignore")
         w.writeheader()
@@ -273,10 +297,13 @@ def _write(path, columns, rows):
 
 
 def run_checks(conn, out_dir, source_id=None):
-    """Run every check; write <name>.csv and <name>-not-checked.csv (headers even when empty) to out_dir.
-    Returns {name: (n_exceptions, n_not_checked)}."""
-    import os
+    """Run every check; write <name>.csv and <name>-not-checked.csv (headers even when empty) to out_dir, plus
+    snapshots.csv (every snapshot's time, so a stale source shows). Returns {name: (n_exceptions, n_not_checked)}."""
     os.makedirs(out_dir, exist_ok=True)
+    cols = ["source_id", "snapshot_id", "first_seen_utc", "loaded_utc", "pruned", "csv_path"]
+    _write(os.path.join(out_dir, "snapshots.csv"), cols,
+           [dict(zip(cols, r)) for r in conn.execute(f"SELECT {', '.join(cols)} FROM snapshot "
+                                                    "ORDER BY source_id, first_seen_utc")])
     counts = {}
     for name, fn in CHECKS.items():
         exc, nc = fn(conn, source_id)

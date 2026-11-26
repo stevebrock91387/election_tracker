@@ -152,6 +152,55 @@ class ResultLoadTest(LoadTestBase):
         self.assertEqual(self.q("SELECT contest_scope, votes FROM result"), [(None, 5)])
         self.assertEqual(self.q("SELECT kind, detail FROM load_note"), [("columns_missing", "contest_scope")])
 
+    def test_rewritten_csv_same_name_replaces(self):
+        """A CSV read while its reader was still writing it is replaced once the finished file differs."""
+        write_manifest(self.manifest, [("A", "2026-11-24T15:02:22Z")])
+        write_parse(self.parsed, "s1", "20261124T150300Z", [row(source_sha256="A")])
+        self.load()
+        path = write_parse(self.parsed, "s1", "20261124T150300Z",
+                           [row(source_sha256="A"), row(source_sha256="A", choice_id="11")])
+        out = self.load()
+        self.assertEqual(out["replaced"], [path])
+        self.assertEqual(self.q("SELECT COUNT(*) FROM result"), [(2,)])
+
+    def test_turnout_arriving_after_results_is_loaded(self):
+        write_manifest(self.manifest, [("A", "2026-11-24T15:02:22Z")])
+        path = write_parse(self.parsed, "hi-2026-general", "20261124T150300Z", [row(source_sha256="A")])
+        self.load()
+        header = db.load_turnout_map()["hi"]["header"]
+        with open(path[:-4] + "-turnout.csv", "w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=header)
+            w.writeheader()
+            w.writerow(dict.fromkeys(header, "1"))
+        self.load()
+        self.assertEqual(self.q("SELECT COUNT(*) FROM turnout"), [(1,)])
+        self.assertEqual(self.q("SELECT turnout_path FROM snapshot"), [(path[:-4] + "-turnout.csv",)])
+
+    def test_truncated_csv_noted_and_others_still_load(self):
+        write_manifest(self.manifest, [("A", "2026-11-24T15:02:22Z"), ("B", "2026-11-24T15:02:22Z")])
+        bad = write_parse(self.parsed, "a1", "20261124T150300Z", [row(source_sha256="A")] * 3)
+        with open(bad) as f:
+            text = f.read()
+        with open(bad, "w") as f:
+            f.write(text[: text.rindex("\n", 0, len(text) - 1) + 12])  # cut mid-line
+        good = write_parse(self.parsed, "b1", "20261124T150300Z", [row(source_sha256="B")])
+        out = self.load()
+        self.assertEqual(out["loaded"], [good])
+        self.assertIn(bad, out["not_loaded"])
+        self.assertIn(("unreadable",), self.q("SELECT kind FROM load_note WHERE csv_path = ?", bad))
+        self.assertEqual(self.q("SELECT COUNT(*) FROM snapshot WHERE source_id = 'a1'"), [(0,)])
+
+    def test_empty_hash_noted_as_such(self):
+        write_manifest(self.manifest, [])
+        write_parse(self.parsed, "s1", "20261124T150300Z", [row(source_sha256="")])
+        self.load()
+        self.assertEqual(self.q("SELECT kind, detail FROM load_note"), [("hash_not_in_manifest", "empty source_sha256")])
+
+    def test_snapshot_pruned_unchecked_in_same_load_noted(self):
+        self.snapshots(3)
+        self.load()
+        self.assertIn(("pruned_unchecked",), self.q("SELECT kind FROM load_note"))
+
     def snapshots(self, n):
         write_manifest(self.manifest, [(f"H{i}", f"2026-11-2{i}T00:00:00Z") for i in range(1, n + 1)])
         return [write_parse(self.parsed, "s1", f"2026112{i}T000100Z", [row(source_sha256=f"H{i}", votes=str(i))])

@@ -32,7 +32,8 @@ STAMP = re.compile(r"^\d{8}T\d{6}Z\.csv$")
 SCHEMA = f"""
 CREATE TABLE IF NOT EXISTS snapshot (
     snapshot_id INTEGER PRIMARY KEY, source_id TEXT NOT NULL, state TEXT, first_seen_utc TEXT NOT NULL,
-    csv_path TEXT, csv_sha256 TEXT, turnout_path TEXT, loaded_utc TEXT, pruned INTEGER NOT NULL DEFAULT 0,
+    csv_path TEXT, csv_sha256 TEXT, turnout_path TEXT, turnout_sha256 TEXT, loaded_utc TEXT,
+    pruned INTEGER NOT NULL DEFAULT 0,
     UNIQUE (source_id, first_seen_utc));
 CREATE TABLE IF NOT EXISTS result (snapshot_id INTEGER NOT NULL, {", ".join(
     c + (" INTEGER" if c == "votes" else " TEXT") for c in COLUMNS)});
@@ -93,8 +94,21 @@ def _note(conn, path, kind, detail=""):
 
 
 def _done(conn, sha, path):
-    """Record a CSV as handled (loaded, or rejected for good) so later loads skip it unread."""
+    """Record a CSV as handled (loaded, or rejected for good) so later loads skip it after hashing it."""
     conn.execute("INSERT OR REPLACE INTO loaded_csv VALUES (?, ?)", (sha, path))
+
+
+# A CSV that can't be read to the end (e.g. read while its reader was still writing it): noted, not loaded,
+# not marked done, so the next load tries it again.
+UNREADABLE = (csv.Error, ValueError, KeyError, AttributeError, TypeError, UnicodeDecodeError)
+
+
+def _rows(reader):
+    """DictReader rows, refusing short or long rows (a truncated or malformed file)."""
+    for r in reader:
+        if None in r or None in r.values():
+            raise ValueError(f"line {reader.line_num}: wrong number of fields")
+        yield r
 
 
 def load(conn, parsed_dir="data/parsed", manifest="data/raw/manifest.csv", turnout_map=None):
@@ -104,6 +118,7 @@ def load(conn, parsed_dir="data/parsed", manifest="data/raw/manifest.csv", turno
         turnout_map = load_turnout_map()
     first_seen = _manifest_first_seen(manifest)
     known = {sha for (sha,) in conn.execute("SELECT csv_sha256 FROM loaded_csv")}
+    fresh = set()  # snapshot ids loaded by this call
     # Pass 1: each new CSV's snapshot key; within one load only the newest parse of a key is read.
     candidates = {}
     for source_id, path in _parsed_csvs(parsed_dir):
@@ -111,15 +126,21 @@ def load(conn, parsed_dir="data/parsed", manifest="data/raw/manifest.csv", turno
         if sha in known:
             out["skipped_known"].append(path)
             continue
-        with open(path, newline="") as f:
-            r = csv.DictReader(f)
-            hashes, state = set(), ""
-            for row in r:
-                hashes.add(row["source_sha256"])
-                state = state or row["state"]
+        try:
+            with open(path, newline="") as f:
+                hashes, state = set(), ""
+                for row in _rows(csv.DictReader(f)):
+                    hashes.add(row["source_sha256"])
+                    state = state or row["state"]
+        except UNREADABLE as e:
+            _note(conn, path, "unreadable", str(e))
+            out["not_loaded"].append(path)
+            continue
+        changed = _forget_changed(conn, path, sha)
         missing = sorted(h for h in hashes if h not in first_seen)
         if missing or not hashes:
-            _note(conn, path, "hash_not_in_manifest", ",".join(missing) or "no rows")
+            _note(conn, path, "hash_not_in_manifest",
+                  ",".join("empty source_sha256" if h == "" else h for h in missing) or "no rows")
             out["not_loaded"].append(path)
             continue
         key = (source_id, max(first_seen[h] for h in hashes))
@@ -127,14 +148,57 @@ def load(conn, parsed_dir="data/parsed", manifest="data/raw/manifest.csv", turno
         if prev is not None:
             out["skipped_known"].append(prev["path"])  # an older parse of the same snapshot
             _done(conn, prev["sha"], prev["path"])
-        candidates[key] = {"path": path, "sha": sha, "state": state}
+        candidates[key] = {"path": path, "sha": sha, "state": state, "changed": changed}
     for (source_id, t), c in sorted(candidates.items()):
-        _load_one(conn, source_id, t, c, out, turnout_map)
+        try:
+            _load_one(conn, source_id, t, c, out, turnout_map, fresh)
+        except UNREADABLE as e:  # the transaction for this CSV was rolled back
+            _note(conn, c["path"], "unreadable", str(e))
+            out["not_loaded"].append(c["path"])
+    _refresh_turnout(conn, turnout_map)
     conn.commit()
     return out
 
 
-def _load_one(conn, source_id, t, c, out, turnout_map):
+def _forget_changed(conn, path, sha):
+    """A CSV path already loaded with other content (it was read before its reader finished, or rewritten):
+    drop the snapshot made from the old content, so the new content is loaded in its place. Returns whether
+    one was dropped."""
+    dropped = False
+    for (sid,) in conn.execute("SELECT snapshot_id FROM snapshot WHERE csv_path = ? AND csv_sha256 != ?",
+                               (path, sha)).fetchall():
+        with conn:
+            conn.execute("DELETE FROM result WHERE snapshot_id = ?", (sid,))
+            conn.execute("DELETE FROM turnout WHERE snapshot_id = ?", (sid,))
+            conn.execute("DELETE FROM snapshot WHERE snapshot_id = ?", (sid,))
+            conn.execute("DELETE FROM loaded_csv WHERE csv_path = ?", (path,))
+            _note(conn, path, "csv_changed", "reloaded")
+        dropped = True
+    return dropped
+
+
+def _refresh_turnout(conn, turnout_map):
+    """Load a kept snapshot's turnout table when it appeared or changed after the results were loaded."""
+    for sid, source_id, csv_path, tpath, tsha in conn.execute(
+            "SELECT snapshot_id, source_id, csv_path, turnout_path, turnout_sha256 FROM snapshot "
+            "WHERE pruned = 0").fetchall():
+        path = csv_path[:-4] + "-turnout.csv"
+        if not os.path.exists(path):
+            continue
+        sha = _sha256(path)
+        if path == tpath and sha == tsha:
+            continue
+        try:
+            with conn:
+                conn.execute("DELETE FROM turnout WHERE snapshot_id = ?", (sid,))
+                _load_turnout(conn, sid, source_id, path, turnout_map)
+                conn.execute("UPDATE snapshot SET turnout_path = ?, turnout_sha256 = ? WHERE snapshot_id = ?",
+                             (path, sha, sid))
+        except UNREADABLE as e:
+            _note(conn, path, "unreadable", str(e))
+
+
+def _load_one(conn, source_id, t, c, out, turnout_map, fresh):
     path = c["path"]
     kept = [r[0] for r in conn.execute(
         "SELECT first_seen_utc FROM snapshot WHERE source_id = ? AND pruned = 0", (source_id,))]
@@ -145,27 +209,23 @@ def _load_one(conn, source_id, t, c, out, turnout_map):
         _done(conn, c["sha"], path)
         out["not_loaded"].append(path)
         return
-    if existing and os.path.basename(path) <= os.path.basename(existing[1]):
+    if existing and os.path.basename(path) < os.path.basename(existing[1]):
         out["skipped_known"].append(path)  # an older parse of a loaded snapshot
         _done(conn, c["sha"], path)
         return
-    turnout_path = path[:-4] + "-turnout.csv"
-    turnout_path = turnout_path if os.path.exists(turnout_path) else ""
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     with conn:
         if existing:
             sid = existing[0]
             conn.execute("DELETE FROM result WHERE snapshot_id = ?", (sid,))
             conn.execute("DELETE FROM turnout WHERE snapshot_id = ?", (sid,))
-            conn.execute("UPDATE snapshot SET csv_path = ?, csv_sha256 = ?, turnout_path = ?, loaded_utc = ? "
-                         "WHERE snapshot_id = ?", (path, c["sha"], turnout_path, now, sid))
+            conn.execute("UPDATE snapshot SET csv_path = ?, csv_sha256 = ?, turnout_path = '', turnout_sha256 = '', "
+                         "loaded_utc = ? WHERE snapshot_id = ?", (path, c["sha"], now, sid))
             _note(conn, path, "replaced_parse", existing[1])
-            out["replaced"].append(path)
         else:
             sid = conn.execute("INSERT INTO snapshot (source_id, state, first_seen_utc, csv_path, csv_sha256, "
-                               "turnout_path, loaded_utc) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                               (source_id, c["state"], t, path, c["sha"], turnout_path, now)).lastrowid
-            out["loaded"].append(path)
+                               "turnout_path, turnout_sha256, loaded_utc) VALUES (?, ?, ?, ?, ?, '', '', ?)",
+                               (source_id, c["state"], t, path, c["sha"], now)).lastrowid
         with open(path, newline="") as f:
             reader = csv.DictReader(f)
             missing = [k for k in COLUMNS if k not in (reader.fieldnames or [])]
@@ -173,11 +233,12 @@ def _load_one(conn, source_id, t, c, out, turnout_map):
                 _note(conn, path, "columns_missing", ",".join(missing))
             conn.executemany(
                 f"INSERT INTO result VALUES (?, {', '.join('?' * len(COLUMNS))})",
-                ((sid, *(_votes(r[k]) if k == "votes" and k in r else r.get(k) for k in COLUMNS)) for r in reader))
-        if turnout_path:
-            _load_turnout(conn, sid, source_id, turnout_path, turnout_map)
+                ((sid, *(_votes(r[k]) if k == "votes" and k in r else r.get(k) for k in COLUMNS))
+                 for r in _rows(reader)))
         _done(conn, c["sha"], path)
-        _prune(conn, source_id)
+        fresh.add(sid)
+        _prune(conn, source_id, fresh)
+    out["replaced" if existing or c.get("changed") else "loaded"].append(path)
 
 
 def load_turnout_map(path=DEFAULT_TURNOUT_MAP):
@@ -218,10 +279,14 @@ def _load_turnout(conn, sid, source_id, path, turnout_map):
              for row in r))
 
 
-def _prune(conn, source_id):
-    ids = [r[0] for r in conn.execute("SELECT snapshot_id FROM snapshot WHERE source_id = ? AND pruned = 0 "
-                                      "ORDER BY first_seen_utc DESC", (source_id,))]
-    for sid in ids[KEEP:]:
+def _prune(conn, source_id, fresh=()):
+    """Keep rows for the latest KEEP snapshots. A snapshot pruned in the same load that brought it in was never
+    compared by check 1: noted (pruned_unchecked)."""
+    rows = conn.execute("SELECT snapshot_id, csv_path FROM snapshot WHERE source_id = ? AND pruned = 0 "
+                        "ORDER BY first_seen_utc DESC", (source_id,)).fetchall()
+    for sid, path in rows[KEEP:]:
+        if sid in fresh:
+            _note(conn, path, "pruned_unchecked", "check 1 never saw it as the newer side")
         conn.execute("DELETE FROM result WHERE snapshot_id = ?", (sid,))
         conn.execute("DELETE FROM turnout WHERE snapshot_id = ?", (sid,))
         conn.execute("UPDATE snapshot SET pruned = 1 WHERE snapshot_id = ?", (sid,))
