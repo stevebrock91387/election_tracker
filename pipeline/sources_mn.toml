@@ -1,0 +1,16 @@
+# Minnesota Secretary of State results, 2026 general election. See docs/mn.md.
+# A pass fetches the all-races-by-county text file (one request). The page that lists the files
+# (electionresults.sos.mn.gov/Select/MediaFiles/Index?ersElectionId=201) sits behind a Radware bot check;
+# Steve approved reading the file host directly (2026-11-26).
+#
+# office_ranges: inclusive office-id ranges read (4-digit strings, compared as text). 2026 ids:
+# 0102 U.S. Senator, 0104-0111 U.S. Representative 1-8, 0121-0187 State Senator 1-67, 0188-0321 State
+# Representative 1A-67B, 0331-0335 Governor and constitutional officers, 0351 amendment, 7002-7027
+# Supreme Court and Court of Appeals. Not read: district courts (8100-9299), county and local offices.
+# 2028: check the President's id before the election.
+
+[mn-2026-general]
+state = "MN"
+txt_url = "https://electionresultsfiles.sos.mn.gov/20261103/allracesbycounty.txt"
+min_interval_s = 120
+office_ranges = [["0102", "0111"], ["0121", "0351"], ["7000", "7099"]]

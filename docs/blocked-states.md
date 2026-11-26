@@ -41,5 +41,6 @@ none has been sent.
   2026 general results page on sos.mn.gov, went to a Radware CAPTCHA page ("validate.perfdrive.com").
   Not solved; not retried. The file host's directory listing is 403 (listing off).
 - So the file itself answers scripts, but the page that lists the files and (likely) describes their
-  format sits behind a bot check. Whether to read the file host directly is Steve's call.
+  format sits behind a bot check. Steve approved reading the file host directly (2026-11-26): reader in
+  `docs/mn.md`.
 
