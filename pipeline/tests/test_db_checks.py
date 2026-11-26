@@ -139,5 +139,105 @@ class PartsTest(CheckTestBase):
                                                      "no precinct rows"])
 
 
+
+MAP = db.load_turnout_map(db.DEFAULT_TURNOUT_MAP)
+
+
+def turnout(layout, rows):
+    header = MAP[layout]["header"]
+    return header, [dict(dict.fromkeys(header, ""), **r) for r in rows]
+
+
+def ak(p, v, choice="10", vote_for="1", **kw):
+    return row(level="precinct", county_name="", precinct_id=p, precinct_name=p, choice_id=choice,
+               vote_for=vote_for, votes=str(v), **kw)
+
+
+class RegisteredTest(CheckTestBase):
+    def check(self):
+        return db_checks.check_registered(self.conn)
+
+    def kinds(self):
+        exc, _ = self.check()
+        return [(e["kind"], e["unit"], e.get("votes")) for e in exc]
+
+    def test_ballots_over_registered(self):
+        self.snap("ak-t", 1, [ak("p1", 50)], turnout("ak", [{"precinct_id": "p1", "registered_voters": "100",
+                                                              "ballots": "101"}]))
+        self.assertEqual(self.kinds(), [("ballots_over_registered", "p1", None)])
+
+    def test_contest_over_registered_uses_vote_for(self):
+        t = turnout("ak", [{"precinct_id": "p1", "registered_voters": "100", "ballots": "100"}])
+        self.snap("ak-t", 1, [ak("p1", 120, vote_for="2"), ak("p1", 70, "11", vote_for="2")], t)
+        self.assertEqual(self.kinds(), [])
+        self.snap("ak-u", 2, [ak("p1", 120, vote_for="2"), ak("p1", 90, "11", vote_for="2")], t)
+        self.assertEqual(self.kinds(), [("contest_over_registered", "p1", 210)])
+
+    def test_blank_vote_for_counts_as_one_and_is_listed(self):
+        t = turnout("ak", [{"precinct_id": "p1", "registered_voters": "100", "ballots": "90"}])
+        self.snap("ak-t", 1, [ak("p1", 80, vote_for="")], t)
+        self.assertEqual(self.kinds(), [("blank_vote_for", "", None)])
+
+    def test_zero_registered_listed_not_compared(self):
+        self.snap("ak-t", 1, [ak("p1", 50)], turnout("ak", [{"precinct_id": "p1", "registered_voters": "0",
+                                                              "ballots": "60"}]))
+        self.assertEqual(self.kinds(), [("zero_registered", "p1", None)])
+
+    def test_units_that_dont_meet_listed(self):
+        self.snap("ak-t", 1, [ak("p1", 5), ak("p2", 5)],
+                  turnout("ak", [{"precinct_id": "p1", "registered_voters": "100", "ballots": "9"},
+                                 {"precinct_id": "p3", "registered_voters": "100", "ballots": "9"}]))
+        self.assertEqual(self.kinds(), [("result_unit_without_turnout", "p2", None),
+                                        ("turnout_unit_without_results", "p3", None)])
+
+    def test_hi_vsc_units_rolled_up(self):
+        def hi(name, v):
+            return row(level="precinct", county_name="", precinct_id=name, precinct_name=name, vote_for="1",
+                       votes=str(v))
+        t = turnout("hi", [{"precinct_id": "1", "precinct_name": "01-01", "registered_voters": "100", "ballots": "40"},
+                           {"precinct_id": "2", "precinct_name": "01-01 VSC", "registered_voters": "0",
+                            "ballots": "30"}])
+        self.snap("hi-t", 1, [hi("01-01", 40), hi("01-01 VSC", 30)], t)
+        self.assertEqual(self.check(), ([], []))
+
+    def test_vt_town_parts_summed(self):
+        def part(p, v):
+            return row(level="town", county_id="5", county_name="T", precinct_id=p, vote_for="1", votes=str(v))
+        t = turnout("vt", [{"county_id": "5", "county_name": "T", "registered_voters": "100", "ballots": "100"}])
+        self.snap("vt-t", 1, [part("a", 60), part("b", 50)], t)
+        self.assertEqual(self.kinds(), [("contest_over_registered", "5", 110)])
+
+    def test_de_not_joinable(self):
+        self.snap("de-t", 1, [ak("p1", 5)], turnout("de", [{"representative_district": "1",
+                                                             "registered_voters": "9", "ballots_cast": "9"}]))
+        exc, nc = self.check()
+        self.assertEqual((exc, [n["reason"] for n in nc]), ([], [MAP["de"]["not_joinable"]]))
+
+    def test_wy_no_registered_not_checked(self):
+        self.snap("wy-t", 1, [ak("p1", 5)], turnout("wy", [{"county_id": "A", "precinct_id": "p1",
+                                                             "ballots_cast": "9"}]))
+        exc, nc = self.check()
+        self.assertEqual((exc, [n["reason"] for n in nc]), ([], ["no registered voters"]))
+
+    def test_no_turnout_table_not_checked(self):
+        self.snap("ak-t", 1, [ak("p1", 5)])
+        self.assertEqual([n["reason"] for n in self.check()[1]], ["no turnout table"])
+
+    def test_wv_uses_election_day_total(self):
+        def wv(t, v):
+            return row(level="county", county_name="Ohio", vote_for="1", vote_type=t, votes=str(v))
+        t = turnout("clarity_wv", [{"county_name": "Ohio", "registered_voters": "100", "ballots_cast": "50"}])
+        self.snap("clarity-WV-t", 1, [wv("Election Day", 101)], t)
+        self.assertEqual(self.kinds(), [("contest_over_registered", "Ohio", 101)])
+
+    def test_turnout_total_row_ignored(self):
+        t = turnout("clarity_county", [{"county_name": "A", "precinct_name": "p1", "registered_voters": "100",
+                                        "ballots_cast": "50"},
+                                       {"county_name": "A", "precinct_name": "", "registered_voters": "100",
+                                        "ballots_cast": "50"}])
+        self.snap("clarity-NJ-t", 1, [ak("p1", 50)], t)
+        self.assertEqual(self.check(), ([], []))
+
+
 if __name__ == "__main__":
     unittest.main()

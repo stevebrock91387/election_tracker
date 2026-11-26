@@ -128,3 +128,112 @@ def check_parts(conn, source_id=None):
                 elif p[1] != w[3]:
                     exceptions.append(dict(base, kind="mismatch", part_sum=p[1], whole=w[3]))
     return exceptions, not_checked
+
+
+def _unit(values, key, strip):
+    """Unit key tuple from a row's key columns, with any strip_suffix removed."""
+    out = []
+    for col, v in zip(key, values):
+        v = v or ""
+        suffix = strip.get(col)
+        if suffix and v.endswith(suffix):
+            v = v[: -len(suffix)]
+        out.append(v)
+    return tuple(out)
+
+
+def check_registered(conn, source_id=None, turnout_map=None):
+    """Check 2, on each source's latest snapshot, at the turnout units its layout names (pipeline/turnout_map.toml).
+    Both sides are grouped by the layout's key (summing finer units into the turnout unit). Exceptions (kind):
+    zero_registered (listed, not compared), ballots_over_registered, contest_over_registered (a contest's
+    total-vote-type rows, every choice row as published, > registered x vote_for), blank_vote_for (counted as 1,
+    listed once per contest), result_unit_without_turnout, turnout_unit_without_results. Turnout rows whose key
+    is all empty are totals, not units, and are ignored. Not checked: no turnout table, unknown layout, a layout
+    that can't be joined, no registered voters published; per line, an empty count."""
+    from pipeline.db import load_turnout_map
+    turnout_map = turnout_map or load_turnout_map()
+    exceptions, not_checked = [], []
+    for src in _sources(conn, source_id):
+        sid = _kept(conn, src)[0]
+        layouts = [r[0] for r in conn.execute("SELECT DISTINCT layout FROM turnout WHERE snapshot_id = ?", (sid,))]
+        reason = None
+        if not layouts:
+            reason = "no turnout table"
+        elif None in layouts or layouts[0] not in turnout_map:
+            reason = "turnout layout unknown"
+        else:
+            layout = turnout_map[layouts[0]]
+            if "not_joinable" in layout:
+                reason = layout["not_joinable"]
+            elif "registered" not in layout:
+                reason = "no registered voters"
+        if reason:
+            not_checked.append({"source_id": src, "scope": "source", "reason": reason})
+            continue
+        key, strip = layout["key"], layout.get("strip_suffix", {})
+        has_ballots = "ballots" in layout
+        cols = ", ".join(key)
+
+        units = {}  # unit -> [registered or None, ballots or None]
+        for r in conn.execute(f"SELECT {cols}, registered_voters, ballots_cast FROM turnout WHERE snapshot_id = ?",
+                              (sid,)):
+            u = _unit(r[:len(key)], key, strip)
+            if not any(u):
+                continue
+            reg, bal = r[len(key)], r[len(key) + 1]
+            cur = units.setdefault(u, [0, 0])
+            cur[0] = None if cur[0] is None or reg is None else cur[0] + reg
+            cur[1] = None if cur[1] is None or bal is None else cur[1] + bal
+
+        contests = {}  # (unit, contest_id) -> [sum, any_bad, vote_for]
+        for r in conn.execute(f"SELECT {cols}, contest_id, vote_for, votes FROM result WHERE snapshot_id = ? AND "
+                              f"level = ? AND vote_type = ?",
+                              (sid, layout["result_level"], layout.get("total_vote_type", "TOTAL"))):
+            u = _unit(r[:len(key)], key, strip)
+            cid, vf, v = r[len(key):]
+            cur = contests.setdefault((u, cid), [0, False, vf])
+            if isinstance(v, int):
+                cur[0] += v
+            else:
+                cur[1] = True
+
+        def exc(kind, unit, **kw):
+            exceptions.append(dict({"source_id": src, "snapshot_id": sid, "kind": kind, "unit": "|".join(unit),
+                                    "contest_id": "", "registered": None, "ballots": None, "votes": None,
+                                    "vote_for": None}, **kw))
+
+        result_units = {u for u, _ in contests}
+        for u in sorted(result_units - set(units)):
+            exc("result_unit_without_turnout", u)
+        for u in sorted(set(units) - result_units):
+            exc("turnout_unit_without_results", u)
+        blank_listed = set()
+        for u in sorted(set(units) & result_units):
+            reg, bal = units[u]
+            if reg is None:
+                not_checked.append({"source_id": src, "scope": "unit", "reason": "registered voters not a count",
+                                    "unit": "|".join(u)})
+                continue
+            if reg == 0:
+                exc("zero_registered", u, ballots=bal)
+                continue
+            if has_ballots and bal is not None and bal > reg:
+                exc("ballots_over_registered", u, registered=reg, ballots=bal)
+        for (u, cid), (total, bad, vf) in sorted(contests.items()):
+            if u not in units or units[u][0] in (None, 0):
+                continue
+            if bad:
+                not_checked.append({"source_id": src, "scope": "line", "reason": "empty count",
+                                    "unit": "|".join(u), "contest_id": cid})
+                continue
+            if vf and vf.isascii() and vf.isdigit():
+                n = int(vf)
+            else:
+                n = 1
+                if cid not in blank_listed:
+                    blank_listed.add(cid)
+                    exc("blank_vote_for", (), contest_id=cid, vote_for=vf)
+            if total > units[u][0] * n:
+                exc("contest_over_registered", u, contest_id=cid, registered=units[u][0], votes=total, vote_for=vf)
+    exceptions.sort(key=lambda e: (e["source_id"], e["kind"], e["unit"], e["contest_id"]))
+    return exceptions, not_checked
