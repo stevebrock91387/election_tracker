@@ -1,0 +1,17 @@
+# LiveVoterTurnout ENR, one county per source. See docs/lvt.md.
+# A pass fetches the county's summary XML (one request), the file its results page
+# (livevoterturnout.com/ENR/<site>/<id>/en/Index_<id>.html) reads. The election id changes per election:
+# take the new one from the county clerk's results page (Bergen: bergencountyclerk.gov/Election; Salem:
+# salemcountyclerk.org/election-results/).
+
+[lvt-NJ-Bergen-2026-general]
+state = "NJ"
+county = "Bergen"
+xml_url = "https://www.livevoterturnout.com/ENR/bergennjenr/20/summary_20.xml"
+min_interval_s = 120
+
+[lvt-NJ-Salem-2026-general]
+state = "NJ"
+county = "Salem"
+xml_url = "https://www.livevoterturnout.com/ENR/salemnjenr/13/summary_13.xml"
+min_interval_s = 120

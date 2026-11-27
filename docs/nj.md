@@ -8,7 +8,7 @@ New Jersey's Division of Elections posts no results; `https://nj.gov/state/elect
 
 - **Detail XML (8, format `county_xml`):** Atlantic 127487, Burlington 127582, Cape May 127585, Essex 127486, Hudson 127495, Mercer 127554, Ocean 127556, Union 127567. A pass reads `<version>/reports/detailxml.zip` (two requests).
 - **JSON only (7, format `county_json`):** Cumberland 127562, Gloucester 127298, Middlesex 127580, Monmouth 127586, Morris 127576, Passaic 127401, Somerset 127569. `detailxml.zip` is 404. A pass reads `json/sum.json` (county totals), `json/ALL.json` (precinct totals plus a `-1` county area), `json/vt.json` (vote types and county totals per type), `json/status.json` (per precinct: status code, registered voters, ballots cast), then one precinct file per vote type, named as the site names it (whitespace and `/` become `_`: `Early_Voting.json`, Morris's `State_Fed.json`). 5 to 11 requests; the pass record `data/raw/<source id>/pass-<UTC>.json` lists the files, and `parse` takes it.
-- **Not Clarity (6):** Bergen, Camden, Hunterdon, Salem, Sussex, Warren run their own sites.
+- **Not Clarity (6):** Bergen, Camden, Hunterdon, Salem, Sussex, Warren run their own sites. Bergen and Salem publish a summary XML on LiveVoterTurnout (county level, read since 2026-11-27: `docs/lvt.md`); Camden, Hunterdon, Sussex and Warren post PDFs only.
 
 ## Parsed (2026-11-25)
 
@@ -52,7 +52,7 @@ New Jersey's Division of Elections posts no results; `https://nj.gov/state/elect
 
 ## Not done
 
-- The six non-Clarity counties.
+- Camden, Hunterdon, Sussex, Warren (PDFs only); district results for Bergen (PDF) and Salem (page HTML). Bergen and Salem county totals: `docs/lvt.md`.
 - Statewide aggregation (contest name map) and a check against the state's certified results.
 - Election-night behaviour: these files are from after the count; the live pages are the same platform, but mid-count snapshots haven't been seen. Whether the privacy filter also hides counts mid-count is unknown.
 - **Size on election night (decided 2026-11-25, Steve: both options):** Burlington's write-ins make one parse 1.29M rows and a 441 MB CSV. (1) `county_xml` rows are now written to the CSV as they are made: peak memory 2.1 GB → 1.0 GB on the 2026 file (the rest is the 112 MB XML tree), output byte-identical. (2) `fetch-parse` remembers the last version it parsed (`data/raw/<id>/last-pass-version.txt`, written only after the parse succeeds) and, while `current_ver.txt` is unchanged, fetches and parses nothing else (one request per poll); `--force` overrides; plain `fetch` always fetches. Applies to every Clarity source. That an unchanged version means unchanged files is assumed (the data URLs carry the version), not verified; how often Burlington posts a new version on election night is unknown.

@@ -1,0 +1,2885 @@
+<?xml version="1.0" standalone="yes"?>
+<NewDataSet>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1</ContestantID>
+    <ContestantName>JUSTIN MURPHY</ContestantName>
+    <Party>REP</Party>
+    <PartyName>REP</PartyName>
+    <EarlyVotes>1855</EarlyVotes>
+    <MailBallotVotes>1065</MailBallotVotes>
+    <ElectionDayVotes>7758</ElectionDayVotes>
+    <ProvisionalVotes>48</ProvisionalVotes>
+    <CustomVotes>4</CustomVotes>
+    <TotalVotes>10730</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>50.27%</ContestantVotePercent>
+    <ContestantSeqNoExt>1</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2</ContestantID>
+    <ContestantName>CORY BOOKER</ContestantName>
+    <Party>DEM</Party>
+    <PartyName>DEM</PartyName>
+    <EarlyVotes>1761</EarlyVotes>
+    <MailBallotVotes>2522</MailBallotVotes>
+    <ElectionDayVotes>5630</ElectionDayVotes>
+    <ProvisionalVotes>128</ProvisionalVotes>
+    <CustomVotes>31</CustomVotes>
+    <TotalVotes>10072</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>47.06%</ContestantVotePercent>
+    <ContestantSeqNoExt>2</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>3</ContestantID>
+    <ContestantName>VERONICA FERNANDEZ</ContestantName>
+    <Party>ETC</Party>
+    <PartyName />
+    <EarlyVotes>54</EarlyVotes>
+    <MailBallotVotes>47</MailBallotVotes>
+    <ElectionDayVotes>269</ElectionDayVotes>
+    <ProvisionalVotes>6</ProvisionalVotes>
+    <CustomVotes>2</CustomVotes>
+    <TotalVotes>378</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>1.76%</ContestantVotePercent>
+    <ContestantSeqNoExt>3</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>4</ContestantID>
+    <ContestantName>JOANNE KUNIANSKY</ContestantName>
+    <Party>SWP</Party>
+    <PartyName />
+    <EarlyVotes>19</EarlyVotes>
+    <MailBallotVotes>21</MailBallotVotes>
+    <ElectionDayVotes>99</ElectionDayVotes>
+    <ProvisionalVotes>4</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>143</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.67%</ContestantVotePercent>
+    <ContestantSeqNoExt>4</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>134</ContestantID>
+    <ContestantName>Write-In</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>3</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>22</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>25</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.12%</ContestantVotePercent>
+    <ContestantSeqNoExt>5</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>152</ContestantID>
+    <ContestantName>WRITE-IN NAME 1</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>6</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>169</ContestantID>
+    <ContestantName>WRITE-IN NAME 2</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>7</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>248</ContestantID>
+    <ContestantName>WRITE-IN NAME 3</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>8</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>366</ContestantID>
+    <ContestantName>WRITE-IN NAME 4</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>1</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>9</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>476</ContestantID>
+    <ContestantName>WRITE-IN NAME 5</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>1</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>10</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>488</ContestantID>
+    <ContestantName>WRITE-IN NAME 6</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>1</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>11</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1088</ContestantID>
+    <ContestantName>WRITE-IN NAME 7</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>12</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1174</ContestantID>
+    <ContestantName>WRITE-IN NAME 8</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>13</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1215</ContestantID>
+    <ContestantName>WRITE-IN NAME 9</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>14</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1381</ContestantID>
+    <ContestantName>WRITE-IN NAME 10</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>15</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1391</ContestantID>
+    <ContestantName>WRITE-IN NAME 11</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>16</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1463</ContestantID>
+    <ContestantName>WRITE-IN NAME 12</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>17</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1483</ContestantID>
+    <ContestantName>WRITE-IN NAME 13</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>18</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1504</ContestantID>
+    <ContestantName>WRITE-IN NAME 14</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>19</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1587</ContestantID>
+    <ContestantName>WRITE-IN NAME 15</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>20</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1623</ContestantID>
+    <ContestantName>WRITE-IN NAME 16</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>21</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1740</ContestantID>
+    <ContestantName>WRITE-IN NAME 17</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>22</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1917</ContestantID>
+    <ContestantName>WRITE-IN NAME 18</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>23</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1992</ContestantID>
+    <ContestantName>WRITE-IN NAME 19</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>24</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2040</ContestantID>
+    <ContestantName>WRITE-IN NAME 20</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>25</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2095</ContestantID>
+    <ContestantName>WRITE-IN NAME 21</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>26</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2101</ContestantID>
+    <ContestantName>WRITE-IN NAME 22</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>28</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2176</ContestantID>
+    <ContestantName>WRITE-IN NAME 23</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>29</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2207</ContestantID>
+    <ContestantName>WRITE-IN NAME 24</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>30</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2236</ContestantID>
+    <ContestantName>WRITE-IN NAME 25</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>31</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>United States Senate</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2100</ContestantID>
+    <ContestantName>WRITE-IN NAME 26</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>0</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>8</OverVotes>
+    <UnderVotes>74</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>27</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>5</ContestantID>
+    <ContestantName>JEFF VAN DREW</ContestantName>
+    <Party>REP</Party>
+    <PartyName>REP</PartyName>
+    <EarlyVotes>1850</EarlyVotes>
+    <MailBallotVotes>1117</MailBallotVotes>
+    <ElectionDayVotes>7815</ElectionDayVotes>
+    <ProvisionalVotes>52</ProvisionalVotes>
+    <CustomVotes>4</CustomVotes>
+    <TotalVotes>10838</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>50.83%</ContestantVotePercent>
+    <ContestantSeqNoExt>32</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>6</ContestantID>
+    <ContestantName>ZACK MULLOCK</ContestantName>
+    <Party>DEM</Party>
+    <PartyName>DEM</PartyName>
+    <EarlyVotes>1796</EarlyVotes>
+    <MailBallotVotes>2476</MailBallotVotes>
+    <ElectionDayVotes>5698</ElectionDayVotes>
+    <ProvisionalVotes>126</ProvisionalVotes>
+    <CustomVotes>33</CustomVotes>
+    <TotalVotes>10129</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>47.36%</ContestantVotePercent>
+    <ContestantSeqNoExt>33</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>7</ContestantID>
+    <ContestantName>RAMON MORA, JR.</ContestantName>
+    <Party>IND</Party>
+    <PartyName />
+    <EarlyVotes>43</EarlyVotes>
+    <MailBallotVotes>61</MailBallotVotes>
+    <ElectionDayVotes>249</ElectionDayVotes>
+    <ProvisionalVotes>7</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>360</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>1.69%</ContestantVotePercent>
+    <ContestantSeqNoExt>34</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>115</ContestantID>
+    <ContestantName>Write-In</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>1</EarlyVotes>
+    <MailBallotVotes>1</MailBallotVotes>
+    <ElectionDayVotes>11</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>13</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.06%</ContestantVotePercent>
+    <ContestantSeqNoExt>35</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>171</ContestantID>
+    <ContestantName>WRITE-IN NAME 27</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>36</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>477</ContestantID>
+    <ContestantName>WRITE-IN NAME 28</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>1</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>37</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1179</ContestantID>
+    <ContestantName>WRITE-IN NAME 29</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>38</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1442</ContestantID>
+    <ContestantName>WRITE-IN NAME 30</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>39</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1485</ContestantID>
+    <ContestantName>WRITE-IN NAME 31</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>40</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1597</ContestantID>
+    <ContestantName>WRITE-IN NAME 32</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>41</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1612</ContestantID>
+    <ContestantName>WRITE-IN NAME 33</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>42</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1919</ContestantID>
+    <ContestantName>WRITE-IN NAME 34</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>43</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2030</ContestantID>
+    <ContestantName>WRITE-IN NAME 35</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>44</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2042</ContestantID>
+    <ContestantName>WRITE-IN NAME 36</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>45</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2103</ContestantID>
+    <ContestantName>WRITE-IN NAME 37</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>46</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2238</ContestantID>
+    <ContestantName>WRITE-IN NAME 38</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>47</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>United States House of Representatives</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2496</ContestantID>
+    <ContestantName>WRITE-IN NAME 39</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>1</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21430</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>7</OverVotes>
+    <UnderVotes>83</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>48</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>9</ContestantID>
+    <ContestantName>CHARLES HASSLER</ContestantName>
+    <Party>DEM</Party>
+    <PartyName>DEM</PartyName>
+    <EarlyVotes>1877</EarlyVotes>
+    <MailBallotVotes>2631</MailBallotVotes>
+    <ElectionDayVotes>6380</ElectionDayVotes>
+    <ProvisionalVotes>139</ProvisionalVotes>
+    <CustomVotes>12</CustomVotes>
+    <TotalVotes>11039</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>52.57%</ContestantVotePercent>
+    <ContestantSeqNoExt>50</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>8</ContestantID>
+    <ContestantName>ED RAMSAY</ContestantName>
+    <Party>REP</Party>
+    <PartyName>REP</PartyName>
+    <EarlyVotes>1747</EarlyVotes>
+    <MailBallotVotes>1005</MailBallotVotes>
+    <ElectionDayVotes>7062</ElectionDayVotes>
+    <ProvisionalVotes>47</ProvisionalVotes>
+    <CustomVotes>4</CustomVotes>
+    <TotalVotes>9865</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>47.02%</ContestantVotePercent>
+    <ContestantSeqNoExt>49</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>121</ContestantID>
+    <ContestantName>Write-In</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>4</EarlyVotes>
+    <MailBallotVotes>4</MailBallotVotes>
+    <ElectionDayVotes>35</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>43</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.21%</ContestantVotePercent>
+    <ContestantSeqNoExt>51</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1602</ContestantID>
+    <ContestantName>WRITE-IN NAME 40</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>2</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>3</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.01%</ContestantVotePercent>
+    <ContestantSeqNoExt>71</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>153</ContestantID>
+    <ContestantName>WRITE-IN NAME 41</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>2</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>2</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.01%</ContestantVotePercent>
+    <ContestantSeqNoExt>52</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>158</ContestantID>
+    <ContestantName>WRITE-IN NAME 42</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>53</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>172</ContestantID>
+    <ContestantName>WRITE-IN NAME 43</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>54</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>247</ContestantID>
+    <ContestantName>WRITE-IN NAME 44</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>55</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>314</ContestantID>
+    <ContestantName>WRITE-IN NAME 45</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>1</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>56</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>329</ContestantID>
+    <ContestantName>WRITE-IN NAME 46</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>1</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>57</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>406</ContestantID>
+    <ContestantName>WRITE-IN NAME 47</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>1</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>58</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>781</ContestantID>
+    <ContestantName>WRITE-IN NAME 48</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>59</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>867</ContestantID>
+    <ContestantName>WRITE-IN NAME 49</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>1</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>61</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>895</ContestantID>
+    <ContestantName>WRITE-IN NAME 50</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>62</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>905</ContestantID>
+    <ContestantName>WRITE-IN NAME 51</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>63</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1018</ContestantID>
+    <ContestantName>WRITE-IN NAME 52</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>64</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1098</ContestantID>
+    <ContestantName>WRITE-IN NAME 53</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>65</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1101</ContestantID>
+    <ContestantName>WRITE-IN NAME 54</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>66</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1115</ContestantID>
+    <ContestantName>WRITE-IN NAME 55</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>67</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1205</ContestantID>
+    <ContestantName>WRITE-IN NAME 56</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>68</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1487</ContestantID>
+    <ContestantName>WRITE-IN NAME 57</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>69</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1516</ContestantID>
+    <ContestantName>WRITE-IN NAME 58</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>70</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1614</ContestantID>
+    <ContestantName>WRITE-IN NAME 59</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>72</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1628</ContestantID>
+    <ContestantName>WRITE-IN NAME 60</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>73</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1779</ContestantID>
+    <ContestantName>WRITE-IN NAME 61</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>74</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1871</ContestantID>
+    <ContestantName>WRITE-IN NAME 62</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>75</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1924</ContestantID>
+    <ContestantName>WRITE-IN NAME 63</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>76</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1952</ContestantID>
+    <ContestantName>WRITE-IN NAME 64</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>77</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1986</ContestantID>
+    <ContestantName>WRITE-IN NAME 65</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>78</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1987</ContestantID>
+    <ContestantName>WRITE-IN NAME 66</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>79</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2027</ContestantID>
+    <ContestantName>WRITE-IN NAME 67</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>80</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2031</ContestantID>
+    <ContestantName>WRITE-IN NAME 68</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>81</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2043</ContestantID>
+    <ContestantName>WRITE-IN NAME 69</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>82</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2048</ContestantID>
+    <ContestantName>WRITE-IN NAME 70</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>83</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2078</ContestantID>
+    <ContestantName>WRITE-IN NAME 71</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>85</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2117</ContestantID>
+    <ContestantName>WRITE-IN NAME 72</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>86</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2136</ContestantID>
+    <ContestantName>WRITE-IN NAME 73</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>87</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2146</ContestantID>
+    <ContestantName>WRITE-IN NAME 74</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>88</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2147</ContestantID>
+    <ContestantName>WRITE-IN NAME 75</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>89</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2148</ContestantID>
+    <ContestantName>WRITE-IN NAME 76</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>90</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2177</ContestantID>
+    <ContestantName>WRITE-IN NAME 77</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>1</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>91</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2384</ContestantID>
+    <ContestantName>WRITE-IN NAME 78</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>1</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>92</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2438</ContestantID>
+    <ContestantName>WRITE-IN NAME 79</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>1</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>1</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>93</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>783</ContestantID>
+    <ContestantName>WRITE-IN NAME 80</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>0</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>60</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>13</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>Salem County Commissioner- 3 Year Term</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2050</ContestantID>
+    <ContestantName>WRITE-IN NAME 81</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotes>0</EarlyVotes>
+    <MailBallotVotes>0</MailBallotVotes>
+    <ElectionDayVotes>0</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <CustomVotes>0</CustomVotes>
+    <TotalVotes>0</TotalVotes>
+    <TimesCounted>21410</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>6</OverVotes>
+    <UnderVotes>456</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.00%</ContestantVotePercent>
+    <ContestantSeqNoExt>84</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table></NewDataSet>

@@ -1,0 +1,641 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<NewDataSet>
+  <TotalBallotsCast>323766</TotalBallotsCast>
+  <VoterTurnout>47.73%</VoterTurnout>
+  <RegisteredVoters>678327</RegisteredVoters>
+  <GeneratedDate>2026-11-18T11:13:38.434-05:00</GeneratedDate>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>UNITED STATES SENATOR</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1</ContestantID>
+    <ContestantName>JUSTIN MURPHY</ContestantName>
+    <Party>REP</Party>
+    <PartyName>REP</PartyName>
+    <EarlyVotingVotes>19999</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>13061</VotebyMailBallotsVotes>
+    <ElectionDayVotes>81002</ElectionDayVotes>
+    <ProvisionalVotes>1052</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>115114</TotalVotes>
+    <TimesCounted>323766</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>794</OverVotes>
+    <UnderVotes>5529</UnderVotes>
+    <ContestantColor>#FF0000</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>36.26%</ContestantVotePercent>
+    <ContestantSeqNoExt>1</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>UNITED STATES SENATOR</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>2</ContestantID>
+    <ContestantName>CORY BOOKER</ContestantName>
+    <Party>DEM</Party>
+    <PartyName>DEM</PartyName>
+    <EarlyVotingVotes>38191</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>43026</VotebyMailBallotsVotes>
+    <ElectionDayVotes>109833</ElectionDayVotes>
+    <ProvisionalVotes>2657</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>193707</TotalVotes>
+    <TimesCounted>323766</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>794</OverVotes>
+    <UnderVotes>5529</UnderVotes>
+    <ContestantColor>#0000FF</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>61.02%</ContestantVotePercent>
+    <ContestantSeqNoExt>2</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>UNITED STATES SENATOR</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>3</ContestantID>
+    <ContestantName>VERONICA FERNANDEZ</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>839</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>1033</VotebyMailBallotsVotes>
+    <ElectionDayVotes>4066</ElectionDayVotes>
+    <ProvisionalVotes>141</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>6079</TotalVotes>
+    <TimesCounted>323766</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>794</OverVotes>
+    <UnderVotes>5529</UnderVotes>
+    <ContestantColor>#FFFF00</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>1.91%</ContestantVotePercent>
+    <ContestantSeqNoExt>3</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>UNITED STATES SENATOR</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>4</ContestantID>
+    <ContestantName>JOANNE KUNIANSKY</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>370</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>417</VotebyMailBallotsVotes>
+    <ElectionDayVotes>1392</ElectionDayVotes>
+    <ProvisionalVotes>47</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>2226</TotalVotes>
+    <TimesCounted>323766</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>794</OverVotes>
+    <UnderVotes>5529</UnderVotes>
+    <ContestantColor>#FFFF99</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.70%</ContestantVotePercent>
+    <ContestantSeqNoExt>4</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>1</RaceID>
+    <RaceName>UNITED STATES SENATOR</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>880</ContestantID>
+    <ContestantName>Personal Choice</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>59</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>34</VotebyMailBallotsVotes>
+    <ElectionDayVotes>217</ElectionDayVotes>
+    <ProvisionalVotes>7</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>317</TotalVotes>
+    <TimesCounted>323766</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>794</OverVotes>
+    <UnderVotes>5529</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.10%</ContestantVotePercent>
+    <ContestantSeqNoExt>880</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>MEMBER OF THE HOUSE OF REPRESENTATIVES 5TH CONGRESSIONAL DISTRICT</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>5</ContestantID>
+    <ContestantName>SEAN KIRRANE</ContestantName>
+    <Party>REP</Party>
+    <PartyName>REP</PartyName>
+    <EarlyVotingVotes>12423</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>7669</VotebyMailBallotsVotes>
+    <ElectionDayVotes>48763</ElectionDayVotes>
+    <ProvisionalVotes>569</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>69424</TotalVotes>
+    <TimesCounted>228459</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>258</OverVotes>
+    <UnderVotes>4975</UnderVotes>
+    <ContestantColor>#FF0000</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>31.10%</ContestantVotePercent>
+    <ContestantSeqNoExt>5</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>MEMBER OF THE HOUSE OF REPRESENTATIVES 5TH CONGRESSIONAL DISTRICT</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>6</ContestantID>
+    <ContestantName>JOSH GOTTHEIMER</ContestantName>
+    <Party>DEM</Party>
+    <PartyName>DEM</PartyName>
+    <EarlyVotingVotes>30762</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>33367</VotebyMailBallotsVotes>
+    <ElectionDayVotes>80621</ElectionDayVotes>
+    <ProvisionalVotes>1886</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>146636</TotalVotes>
+    <TimesCounted>228459</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>258</OverVotes>
+    <UnderVotes>4975</UnderVotes>
+    <ContestantColor>#0000FF</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>65.69%</ContestantVotePercent>
+    <ContestantSeqNoExt>6</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>MEMBER OF THE HOUSE OF REPRESENTATIVES 5TH CONGRESSIONAL DISTRICT</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>7</ContestantID>
+    <ContestantName>ADAM RUEDA</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>1197</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>1599</VotebyMailBallotsVotes>
+    <ElectionDayVotes>4003</ElectionDayVotes>
+    <ProvisionalVotes>122</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>6921</TotalVotes>
+    <TimesCounted>228459</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>258</OverVotes>
+    <UnderVotes>4975</UnderVotes>
+    <ContestantColor>#FFFF00</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>3.10%</ContestantVotePercent>
+    <ContestantSeqNoExt>7</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>2</RaceID>
+    <RaceName>MEMBER OF THE HOUSE OF REPRESENTATIVES 5TH CONGRESSIONAL DISTRICT</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>754</ContestantID>
+    <ContestantName>Personal Choice</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>57</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>47</VotebyMailBallotsVotes>
+    <ElectionDayVotes>137</ElectionDayVotes>
+    <ProvisionalVotes>4</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>245</TotalVotes>
+    <TimesCounted>228459</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>258</OverVotes>
+    <UnderVotes>4975</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.11%</ContestantVotePercent>
+    <ContestantSeqNoExt>754</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>MEMBER OF THE HOUSE OF REPRESENTATIVES 9TH CONGRESSIONAL DISTRICT</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>8</ContestantID>
+    <ContestantName>ROSIE PINO</ContestantName>
+    <Party>REP</Party>
+    <PartyName>REP</PartyName>
+    <EarlyVotingVotes>4990</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>3796</VotebyMailBallotsVotes>
+    <ElectionDayVotes>25125</ElectionDayVotes>
+    <ProvisionalVotes>332</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>34243</TotalVotes>
+    <TimesCounted>95307</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>140</OverVotes>
+    <UnderVotes>3480</UnderVotes>
+    <ContestantColor>#FF0000</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>37.35%</ContestantVotePercent>
+    <ContestantSeqNoExt>8</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>MEMBER OF THE HOUSE OF REPRESENTATIVES 9TH CONGRESSIONAL DISTRICT</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>9</ContestantID>
+    <ContestantName>NELIDA POU</ContestantName>
+    <Party>DEM</Party>
+    <PartyName>DEM</PartyName>
+    <EarlyVotingVotes>9554</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>10895</VotebyMailBallotsVotes>
+    <ElectionDayVotes>34864</ElectionDayVotes>
+    <ProvisionalVotes>887</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>56200</TotalVotes>
+    <TimesCounted>95307</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>140</OverVotes>
+    <UnderVotes>3480</UnderVotes>
+    <ContestantColor>#0000FF</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>61.30%</ContestantVotePercent>
+    <ContestantSeqNoExt>9</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>MEMBER OF THE HOUSE OF REPRESENTATIVES 9TH CONGRESSIONAL DISTRICT</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>10</ContestantID>
+    <ContestantName>TERRISA BUKOVINAC</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>130</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>154</VotebyMailBallotsVotes>
+    <ElectionDayVotes>816</ElectionDayVotes>
+    <ProvisionalVotes>22</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>1122</TotalVotes>
+    <TimesCounted>95307</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>140</OverVotes>
+    <UnderVotes>3480</UnderVotes>
+    <ContestantColor>#FFFF00</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>1.22%</ContestantVotePercent>
+    <ContestantSeqNoExt>10</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>3</RaceID>
+    <RaceName>MEMBER OF THE HOUSE OF REPRESENTATIVES 9TH CONGRESSIONAL DISTRICT</RaceName>
+    <VoteFor>1</VoteFor>
+    <NumPositions>1</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1056</ContestantID>
+    <ContestantName>Personal Choice</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>20</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>12</VotebyMailBallotsVotes>
+    <ElectionDayVotes>87</ElectionDayVotes>
+    <ProvisionalVotes>3</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>122</TotalVotes>
+    <TimesCounted>95307</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>140</OverVotes>
+    <UnderVotes>3480</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.13%</ContestantVotePercent>
+    <ContestantSeqNoExt>1056</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>138</RaceID>
+    <RaceName>MAYWOOD BOARD OF EDUCATION</RaceName>
+    <VoteFor>2</VoteFor>
+    <NumPositions>2</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>395</ContestantID>
+    <ContestantName>MARK MITCHELL</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>208</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>244</VotebyMailBallotsVotes>
+    <ElectionDayVotes>902</ElectionDayVotes>
+    <ProvisionalVotes>11</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>1365</TotalVotes>
+    <TimesCounted>3580</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>16</OverVotes>
+    <UnderVotes>3015</UnderVotes>
+    <ContestantColor>#808080</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>33.07%</ContestantVotePercent>
+    <ContestantSeqNoExt>395</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>138</RaceID>
+    <RaceName>MAYWOOD BOARD OF EDUCATION</RaceName>
+    <VoteFor>2</VoteFor>
+    <NumPositions>2</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>396</ContestantID>
+    <ContestantName>GINA MARIE KIELY</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>277</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>367</VotebyMailBallotsVotes>
+    <ElectionDayVotes>805</ElectionDayVotes>
+    <ProvisionalVotes>17</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>1466</TotalVotes>
+    <TimesCounted>3580</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>16</OverVotes>
+    <UnderVotes>3015</UnderVotes>
+    <ContestantColor>#C0C0C0</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>35.51%</ContestantVotePercent>
+    <ContestantSeqNoExt>396</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>138</RaceID>
+    <RaceName>MAYWOOD BOARD OF EDUCATION</RaceName>
+    <VoteFor>2</VoteFor>
+    <NumPositions>2</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>397</ContestantID>
+    <ContestantName>LYNN O'CONNELL-SORIANO</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>240</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>338</VotebyMailBallotsVotes>
+    <ElectionDayVotes>652</ElectionDayVotes>
+    <ProvisionalVotes>15</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>1245</TotalVotes>
+    <TimesCounted>3580</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>16</OverVotes>
+    <UnderVotes>3015</UnderVotes>
+    <ContestantColor>#C0C0C0</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>30.16%</ContestantVotePercent>
+    <ContestantSeqNoExt>397</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>138</RaceID>
+    <RaceName>MAYWOOD BOARD OF EDUCATION</RaceName>
+    <VoteFor>2</VoteFor>
+    <NumPositions>2</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1299</ContestantID>
+    <ContestantName>Personal Choice</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>6</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>7</VotebyMailBallotsVotes>
+    <ElectionDayVotes>39</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>52</TotalVotes>
+    <TimesCounted>3580</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>16</OverVotes>
+    <UnderVotes>3015</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>1.26%</ContestantVotePercent>
+    <ContestantSeqNoExt>1299</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>150</RaceID>
+    <RaceName>OAKLAND BOARD OF EDUCATION</RaceName>
+    <VoteFor>2</VoteFor>
+    <NumPositions>2</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>421</ContestantID>
+    <ContestantName>JOHN A. SCERBO</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>421</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>532</VotebyMailBallotsVotes>
+    <ElectionDayVotes>1526</ElectionDayVotes>
+    <ProvisionalVotes>17</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>2496</TotalVotes>
+    <TimesCounted>5709</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>2</OverVotes>
+    <UnderVotes>6404</UnderVotes>
+    <ContestantColor>#808080</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>49.80%</ContestantVotePercent>
+    <ContestantSeqNoExt>421</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>150</RaceID>
+    <RaceName>OAKLAND BOARD OF EDUCATION</RaceName>
+    <VoteFor>2</VoteFor>
+    <NumPositions>2</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>422</ContestantID>
+    <ContestantName>TERESA KILDAY</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>485</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>548</VotebyMailBallotsVotes>
+    <ElectionDayVotes>1417</ElectionDayVotes>
+    <ProvisionalVotes>24</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>2474</TotalVotes>
+    <TimesCounted>5709</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>2</OverVotes>
+    <UnderVotes>6404</UnderVotes>
+    <ContestantColor>#C0C0C0</ContestantColor>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>49.36%</ContestantVotePercent>
+    <ContestantSeqNoExt>422</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table>
+  <Table>
+    <ElectionID>20</ElectionID>
+    <RaceID>150</RaceID>
+    <RaceName>OAKLAND BOARD OF EDUCATION</RaceName>
+    <VoteFor>2</VoteFor>
+    <NumPositions>2</NumPositions>
+    <NonPartisanRace>N</NonPartisanRace>
+    <ContestWithdrawn>N</ContestWithdrawn>
+    <RunOff>N</RunOff>
+    <MajorPercent>1</MajorPercent>
+    <MinimumVotes>0</MinimumVotes>
+    <ContestantID>1053</ContestantID>
+    <ContestantName>Personal Choice</ContestantName>
+    <Party />
+    <PartyName />
+    <EarlyVotingVotes>9</EarlyVotingVotes>
+    <VotebyMailBallotsVotes>19</VotebyMailBallotsVotes>
+    <ElectionDayVotes>14</ElectionDayVotes>
+    <ProvisionalVotes>0</ProvisionalVotes>
+    <Votes>0</Votes>
+    <TotalVotes>42</TotalVotes>
+    <TimesCounted>5709</TimesCounted>
+    <BlankVoted>0</BlankVoted>
+    <OverVotes>2</OverVotes>
+    <UnderVotes>6404</UnderVotes>
+    <ContestantWithdrawn>N</ContestantWithdrawn>
+    <ContestantVotePercent>0.84%</ContestantVotePercent>
+    <ContestantSeqNoExt>1053</ContestantSeqNoExt>
+    <ContestantWriteIn>N</ContestantWriteIn>
+    <ContestantWinner>N</ContestantWinner>
+  </Table></NewDataSet>
