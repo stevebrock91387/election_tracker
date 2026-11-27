@@ -42,7 +42,8 @@ SUSSEX = {
     "header_position": "after", "percent": True, "party": "prefix", "contest_end": "total votes cast",
     "summary_page": "Summary Results Report", "precinct_page": "Precinct Results Report",
 }
-LAYOUTS = {x["name"]: x for x in (CAMDEN, SUSSEX)}
+BERGEN = {"name": "bergen", "county": "Bergen"}  # statement-of-votes tables: pipeline/readers/sovtable.py
+LAYOUTS = {x["name"]: x for x in (CAMDEN, SUSSEX, BERGEN)}
 
 TURNOUT_COLUMNS = ["state", "source_id", "source_sha256", "county_name", "precinct_name", "registered_voters",
                    "ballots_cast"]
@@ -551,6 +552,8 @@ def parse_pass(record_path, base_dir=".", text_pages=page_texts):
     with open(record_path) as f:
         rec = json.load(f)
     layout = LAYOUTS[rec["layout"]]
+    if layout is BERGEN:
+        return _parse_bergen(rec, base_dir)
     kinds = ["report_pdf"] if layout is CAMDEN else ["summary_pdf", "precinct_pdf"]
     summary = {k: [] for k in LISTS}
     summary.update(contests=None, placeholders_dropped=0, report_times=[], unreadable_files=[], missing_files=[])
@@ -659,4 +662,20 @@ def parse_pass(record_path, base_dir=".", text_pages=page_texts):
     turnout = [{"state": rec["state"], "source_id": rec["source_id"], "source_sha256": precinct_sha,
                 "county_name": rec["county"], "precinct_name": u, "registered_voters": "" if reg is None else reg,
                 "ballots_cast": "" if bal is None else bal} for u, reg, bal in turnout_units]
+    return rows, summary, turnout
+
+
+def _parse_bergen(rec, base_dir):
+    from pipeline.readers import sovtable
+
+    files = {x["kind"]: (x["path"] if os.path.isabs(x["path"]) else os.path.join(base_dir, x["path"]))
+             for x in rec["files"]}
+    if "district_pdf" not in files:
+        return [], {"missing_files": ["district_pdf"], "unreadable_files": []}, []
+    try:
+        sha = _sha(files["district_pdf"])
+        rows, summary, turnout = sovtable.parse_pass(rec, files["district_pdf"], sha)
+    except Exception as e:  # a damaged or non-PDF download: listed, the pass yields no rows
+        return [], {"missing_files": [], "unreadable_files": [("district_pdf", f"{type(e).__name__}: {e}")]}, []
+    summary.update(missing_files=[], unreadable_files=[])
     return rows, summary, turnout

@@ -26,6 +26,15 @@ KS MO TN NV MI OK).
 Requests to a state (CA media feed, KS email, MO purchase, PA Right-to-Know) would go out from Steve;
 none has been sent.
 
+## Post-certification check (2026-11-27)
+
+Looked again at the post-cert leads; none has a 2026 general file yet:
+- **PA:** `pa.gov/agencies/dos/.../election-data` lists 2026 general voter registration only; election returns are posted for the 2026 primary. The 2024 general returns went up 2025-01-29 (`erstat_2024_g_268768_20250129.txt`), so expect late January.
+- **NY:** `vote.nyc/page/election-results-summary` has 2026 special and primary files (per-contest Recap/EDLevel CSV and PDF, a CVR ZIP for the primary) and nothing for the general.
+- **KS:** `sos.ks.gov/elections/election-results.html` lists the 2026 primary official totals PDF only.
+- **ME:** `lldc.mainelegislature.org/Open/Elections/Returns/2026/` has two primary folders (`20260224`, `20260609`).
+- **NV:** `nvsos.gov/.../precinct-level-results` answers the project fetcher with an Incapsula bot-check page: blocked like the results site.
+
 ## Minnesota follow-up (2026-11-26)
 
 - Project fetcher, one request: `electionresultsfiles.sos.mn.gov/20261103/allracesbycounty.txt` returned

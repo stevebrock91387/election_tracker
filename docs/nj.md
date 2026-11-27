@@ -52,7 +52,7 @@ New Jersey's Division of Elections posts no results; `https://nj.gov/state/elect
 
 ## Not done
 
-- Warren (403 to scripts) and Hunterdon (nothing posted); district results for Bergen (PDF) and Salem (page HTML). Camden and Sussex: `docs/pdfreport.md`. Bergen and Salem county totals: `docs/lvt.md`.
+- Warren (403 to scripts) and Hunterdon (nothing posted); Salem's district results (page HTML). Camden, Sussex and Bergen's districts: `docs/pdfreport.md`. Bergen and Salem county totals: `docs/lvt.md`.
 - Statewide aggregation (contest name map) and a check against the state's certified results.
 - Election-night behaviour: these files are from after the count; the live pages are the same platform, but mid-count snapshots haven't been seen. Whether the privacy filter also hides counts mid-count is unknown.
 - **Size on election night (decided 2026-11-25, Steve: both options):** Burlington's write-ins make one parse 1.29M rows and a 441 MB CSV. (1) `county_xml` rows are now written to the CSV as they are made: peak memory 2.1 GB → 1.0 GB on the 2026 file (the rest is the 112 MB XML tree), output byte-identical. (2) `fetch-parse` remembers the last version it parsed (`data/raw/<id>/last-pass-version.txt`, written only after the parse succeeds) and, while `current_ver.txt` is unchanged, fetches and parses nothing else (one request per poll); `--force` overrides; plain `fetch` always fetches. Applies to every Clarity source. That an unchanged version means unchanged files is assumed (the data URLs carry the version), not verified; how often Burlington posts a new version on election night is unknown.

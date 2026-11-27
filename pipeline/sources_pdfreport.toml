@@ -17,3 +17,11 @@ min_interval_s = 120
 # linked from sussexcountyclerk.org/939/General-Election ("OFFICIAL Results - Countywide Summary" / "District Report")
 files.summary_pdf = "https://www.sussexcountyclerk.org/DocumentCenter/View/4874/2026-NOV-3-GE---OFFICIAL-results---countywide-SUPP"
 files.precinct_pdf = "https://www.sussexcountyclerk.org/DocumentCenter/View/4875/2026-NOV-3-GE---OFFICIAL-results---district-SUPP"
+
+[pdf-NJ-Bergen-2026-general]
+state = "NJ"
+county = "Bergen"
+layout = "bergen"
+min_interval_s = 120
+# linked from bergencountyclerk.gov/Election ("2026 General District Report"); county totals: lvt-NJ-Bergen-2026-general
+files.district_pdf = "https://www.bergencountyclerk.gov/_Content/pdf/ElectionResult/2026%20General%20District%20Report.pdf"
