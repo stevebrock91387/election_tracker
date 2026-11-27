@@ -313,7 +313,7 @@ class TurnoutTest(LoadTestBase):
                 if hasattr(mod, name):
                     n += 1
                     self.assertIn(getattr(mod, name), headers, f"{m.name}.{name}")
-        self.assertEqual(n, 14)
+        self.assertEqual(n, 15)
 
     def test_turnout_loaded_with_mapped_columns(self):
         write_manifest(self.manifest, [("A", "2026-11-24T15:02:22Z")])

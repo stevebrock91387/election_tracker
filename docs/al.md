@@ -9,7 +9,7 @@ The workbooks are legacy BIFF `.xls`, which the standard library can't read. `re
     /opt/homebrew/bin/python3 -m venv .venv
     .venv/bin/python -m pip install --require-hashes --only-binary :all: -r requirements.txt
 
-Run the reader and the tests with `.venv/bin/python`. Under the bare interpreter the AL tests skip ("needs xlrd (.venv)") and everything else runs.
+Run the reader and the tests with `.venv/bin/python`. Under the bare interpreter the AL tests skip ("needs xlrd (.venv)") and everything else runs. The same command also installs pypdfium2 for the PDF reader (`docs/pdfreport.md`).
 
 ## Where the data is
 

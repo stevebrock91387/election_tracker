@@ -53,4 +53,4 @@ U.S. Senate, Bergen: Booker 193,707, Murphy 115,114; Salem: Murphy 10,730, Booke
 - Election-night behaviour: these are the final (official) files; whether the XML updates with the page during the count, and how partial reporting shows, is unseen. No reporting status field in the XML.
 - What `CustomVotes` counts; what Salem's party codes ETC and SWP stand for.
 - Salem's district results (in the page HTML only) and Bergen's district PDF.
-- Camden, Hunterdon, Sussex, Warren: PDFs only (a PDF reader would need a dependency: Steve's call).
+- Camden, Hunterdon, Sussex, Warren: PDFs only. Camden and Sussex are read by the PDF reader (`docs/pdfreport.md`, 2026-11-27); Warren's PDFs answer scripts with 403; Hunterdon has posted nothing yet.

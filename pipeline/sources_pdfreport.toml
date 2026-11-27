@@ -1,0 +1,19 @@
+# County results-report PDFs (docs/pdfreport.md). File URLs change per election; each county's
+# results page links them. layout: see pipeline/readers/pdfreport.py.
+
+[pdf-NJ-Camden-2026-general]
+state = "NJ"
+county = "Camden"
+layout = "camden"
+min_interval_s = 120
+# linked from camdencounty.com/service/voting-and-elections/election-results/ ("CLICK HERE FOR OFFICIAL RESULTS")
+files.report_pdf = "https://www.camdencounty.com/wp-content/elections/general2026/2026_General_Election_Canvasser.pdf"
+
+[pdf-NJ-Sussex-2026-general]
+state = "NJ"
+county = "Sussex"
+layout = "sussex"
+min_interval_s = 120
+# linked from sussexcountyclerk.org/939/General-Election ("OFFICIAL Results - Countywide Summary" / "District Report")
+files.summary_pdf = "https://www.sussexcountyclerk.org/DocumentCenter/View/4874/2026-NOV-3-GE---OFFICIAL-results---countywide-SUPP"
+files.precinct_pdf = "https://www.sussexcountyclerk.org/DocumentCenter/View/4875/2026-NOV-3-GE---OFFICIAL-results---district-SUPP"

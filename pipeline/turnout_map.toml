@@ -137,3 +137,11 @@ header = ["state", "source_id", "source_sha256", "county_id", "county_name", "pr
 result_level = "precinct"
 key = ["county_id", "precinct_id"]
 ballots = "ballots_cast"
+
+[layout.pdfreport]
+prefixes = ["pdf-"]
+header = ["state", "source_id", "source_sha256", "county_name", "precinct_name", "registered_voters", "ballots_cast"]
+result_level = "precinct"
+key = ["precinct_name"]
+registered = "registered_voters"
+ballots = "ballots_cast"
