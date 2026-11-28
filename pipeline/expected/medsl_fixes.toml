@@ -1,0 +1,17 @@
+# Recorded corrections to MEDSL precinct rows (step 4, Steve's option C). Applied visibly by
+# pipeline.expected.medsl.apply_fixes; every run reports how many rows each fix touched.
+# A fix must make its (state, year, office) match the FEC exactly, and needs an identified cause.
+#
+# Entry schema (all fields required):
+# [[fix]]
+# id = "<ST>-<year>-<n>"
+# state = "NJ"
+# year = 2022
+# office = "US HOUSE"            # US SENATE | US HOUSE | GOVERNOR
+# action = "drop"                # the only action so far: drop every row matching all of `match`
+# change = "what it changes"
+# evidence = "the official figure it restores, and the URL where it is published"
+# before = "the differences before the fix"
+# after = "the differences after the fix (none: exact match)"
+# [fix.match]
+# precinct = "COUNTY TOTAL"      # any normalized row field (see read_precincts); all must equal
