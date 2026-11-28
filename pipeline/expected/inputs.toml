@@ -19,3 +19,8 @@
 [medsl]
 2018 = "data/raw/medsl-2018-precinct"
 2022 = "data/raw/medsl-2022-precinct"
+
+# Provenance written into every baseline row.
+[medsl_source]
+2018 = "MEDSL/2018-elections-official@42055b11dcd5 (deprecated GitHub copy)"
+2022 = "MEDSL/2022-elections-official@a8126c5790b8"
