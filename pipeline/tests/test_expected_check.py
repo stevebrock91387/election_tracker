@@ -199,6 +199,19 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(notes["unopposed"], [("FL", "US HOUSE", "05", "Rutherford, John H.")])
         self.assertEqual(notes["territory_lines"], 1)
 
+    def test_fec_general_writein_party_labels(self):
+        # "primary label/general label": W(D)/W was a write-in in the general (WI-08 2022 Hancock),
+        # W(D)/D was on the general ballot; WF, WC, WEP are parties
+        house = [FEC_HEADER, fec_row("WI", "08", "Hancock, Julie", "W(D)/W", "3160"),
+                 fec_row("WI", "08", "Gallagher, Mike", "W(R)/R", "223981"),
+                 fec_row("NY", "01", "Zeldin, Lee", "WF", "10")]
+        d = tempfile.mkdtemp()
+        path = os.path.join(d, "fec.xlsx")
+        with open(path, "wb") as fh:
+            fh.write(xlsx([("7. US Senate Results by State", [FEC_HEADER]), ("8. US House Results by State", house)]))
+        got = {r["candidate"]: r["writein"] for r in read_fec(path, 2022)}
+        self.assertEqual(got, {"Hancock, Julie": True, "Gallagher, Mike": False, "Zeldin, Lee": False})
+
 
 if __name__ == "__main__":
     unittest.main()

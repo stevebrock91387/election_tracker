@@ -15,7 +15,9 @@ read_fec(path, year, notes=None) returns {state_po, office, district, special, c
 - a candidate's lines in one contest are summed, or, where the combined column is filled, the combined
   total is used once (every line must carry the same combined value, else ValueError).
 - names: clean_name (footnote markers * and # and non-breaking spaces removed), so a marked line joins its candidate.
-- writein: PARTY "W", or a candidate named "Scattered".
+- writein: PARTY "W" or ending "/W", or a candidate named "Scattered". Labels read "primary/general"
+  (inferred from the data, the FEC's legend not read): "W(D)/W" was a write-in in the general (WI-08 2022),
+  "W(D)/D" and "W(R)/R" were on the general ballot; WF, WC, WEP are parties.
 - district: district_key; special: DISTRICT contains "UNEXPIRED" (S-UNEXPIRED TERM, 13-UNEXPIRED TERM).
 - the territories' delegates (AS GU MP PR VI) are skipped and counted in notes["territory_lines"]; DC's is kept.
 - GENERAL VOTES is the November general; the GE runoff columns (GA, MS) are not read.
@@ -88,7 +90,8 @@ def parse_sheets(sheets, notes=None):
                 continue
             if not v["gen"].isdigit():
                 raise ValueError(f"FEC {office} {v['st']} {v['cand']}: GENERAL VOTES {v['gen']!r}")
-            writein = v["party"] == "W" or v["cand"].upper().startswith("SCATTERED")
+            writein = (v["party"] == "W" or v["party"].endswith("/W")
+                       or v["cand"].upper().startswith("SCATTERED"))
             key = (v["st"], office, district, "UNEXPIRED" in v["dist"].upper(), v["cand"], writein)
             lines[key].append((int(v["gen"]), int(float(v["comb"])) if v["comb"] else None))
     out = []

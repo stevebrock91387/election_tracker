@@ -63,12 +63,14 @@ def stage_check(year, a, medsl=None):
     _write(os.path.join(a.out_dir, f"check-{year}.csv"), ["state", "office", "passed", "reason", "differences"],
            [(st, off, c["passed"], c["reason"], json.dumps(c["differences"])) for (st, off), c in sorted(checks.items())])
     passed = sum(c["passed"] for c in checks.values())
-    print(f"check {year}: {passed}/{len(checks)} state-offices pass exactly (FEC {fec_path})")
+    named = sum(c["reason"] == "passed (named candidates)" for c in checks.values())
+    print(f"check {year}: {passed}/{len(checks)} state-offices pass, {named} of them on named candidates only "
+          f"(FEC {fec_path})")
     for st_off, c in sorted(checks.items()):
         if not c["passed"]:
             print(f"  {st_off[0]} {st_off[1]}: {c['reason']} ({len(c['differences'])} contest(s))")
     for fid, n in applied:
-        print(f"  fix {fid}: {n} row(s) dropped")
+        print(f"  fix {fid}: {n} row(s) matched")
     print(f"  MEDSL rows with no county, by state: {dict(notes['blank_county'])}")
     print(f"  FEC unopposed (no votes): {fec_notes['unopposed']}")
     prov = {"medsl_source": inputs.config()["medsl_source"][str(year)], "fec_file_sha256": _sha256(fec_path)}

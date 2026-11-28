@@ -6,18 +6,21 @@ county_name, jurisdiction_fips, precinct, office, district, special (bool), cand
 writein (bool), mode, votes (the string as published). The 2018 GitHub copy uses the same column names as
 2022 in a different order (COLUMNS_2018 is the identity map); MEDSL spells booleans TRUE/True/FALSE/False.
 
-load_fixes(path) / apply_fixes(rows, fixes, applied) apply medsl_fixes.toml. One action: "drop" removes
-every row of the fix's state, year and office whose fields equal all of `match`. `applied` receives
-(fix id, rows dropped) per fix, in file order, zero included.
+load_fixes(path) / apply_fixes(rows, fixes, applied) apply medsl_fixes.toml to the rows of the fix's state,
+year and office whose fields equal all of `match` (a list value matches any of its items). Actions: "drop"
+removes those rows; "set" replaces fields from the fix's `set` table (writein only, never votes). The first
+matching fix wins. `applied` receives (fix id, rows matched) per fix, in file order, zero included.
 
 county_totals(rows) sums with the rules of tools/medsl_county.py:
 - candidates in TALLIES (NON_CANDIDATES plus the tally lines listed there) are dropped; a blank writein flag
   is allowed only on those;
 - votes "*" (suppressed) are not counted; each such row adds 1 to its county's suppressed_rows and to
   notes["suppressed"][(state, office)];
-- within one (county, jurisdiction, precinct, office, district, special, candidate, party line), if any row
-  has mode TOTAL only TOTAL rows count, otherwise every mode is summed. The party line is party_detailed, so
-  a fusion candidate's lines each choose their own mode set before being added together;
+- within one (county, jurisdiction, precinct, office, district, special, candidate, writein flag, party line),
+  if any row has mode TOTAL only TOTAL rows count, otherwise every mode is summed. The party line is
+  party_detailed, so a fusion candidate's lines each choose their own mode set before being added together.
+  A name with both named and write-in rows (VT 2018: write-ins recorded as "BERNIE SANDERS") gives two
+  output rows, one per flag;
 - any other non-integer votes value raises ValueError (nothing is guessed).
 Rows with a blank county_fips go to county "" (kept for the state check, never a county baseline) and are
 counted in notes["blank_county"][state]. Output rows: state_po, county_fips, county_name, office, district,
@@ -48,7 +51,8 @@ TALLIES = NON_CANDIDATES | {
 }
 FIXES = os.path.join(os.path.dirname(__file__), "medsl_fixes.toml")
 FIX_FIELDS = ("id", "state", "year", "office", "action", "change", "evidence", "before", "after", "match")
-ACTIONS = {"drop"}
+ACTIONS = {"drop", "set"}
+SETTABLE = {"writein"}  # a "set" fix never changes a vote count
 
 
 def _bool(v):
@@ -89,7 +93,21 @@ def load_fixes(path=FIXES):
             raise ValueError(f"fix {fx.get('id', '?')}: missing {', '.join(missing)}")
         if fx["action"] not in ACTIONS:
             raise ValueError(f"fix {fx['id']}: unknown action {fx['action']!r}")
+        if fx["action"] == "set":
+            if not fx.get("set"):
+                raise ValueError(f"fix {fx['id']}: action set needs a [fix.set] table")
+            bad = set(fx["set"]) - SETTABLE
+            if bad:
+                raise ValueError(f"fix {fx['id']}: can't set {', '.join(sorted(bad))} (only {', '.join(sorted(SETTABLE))})")
     return fixes
+
+
+def _matches(r, fx):
+    for k, v in fx["match"].items():
+        allowed = [str(x) for x in v] if isinstance(v, list) else [str(v)]
+        if str(r.get(k)) not in allowed:
+            return False
+    return True
 
 
 def apply_fixes(rows, fixes, applied, year=None):
@@ -98,9 +116,10 @@ def apply_fixes(rows, fixes, applied, year=None):
         for r in rows:
             for fx in fixes:
                 if (r["state_po"] == fx["state"] and r["office"] == fx["office"]
-                        and (year is None or year == fx["year"])
-                        and all(str(r.get(k)) == str(v) for k, v in fx["match"].items())):
+                        and (year is None or year == fx["year"]) and _matches(r, fx)):
                     counts[fx["id"]] += 1
+                    if fx["action"] == "set":
+                        yield {**r, **fx["set"]}
                     break
             else:
                 yield r
@@ -121,7 +140,6 @@ def _int(v, r):
 
 def county_totals(rows):
     lines = collections.defaultdict(lambda: collections.defaultdict(int))
-    writein = {}
     suppressed = collections.Counter()
     notes = {"blank_county": collections.Counter(), "suppressed": collections.Counter()}
     for r in rows:
@@ -136,16 +154,15 @@ def county_totals(rows):
             suppressed[county + (r["office"],)] += 1
             notes["suppressed"][(r["state_po"], r["office"])] += 1
             continue
-        contest = (r["office"], r["district"], r["special"], r["candidate"])
+        contest = (r["office"], r["district"], r["special"], r["candidate"], r["writein"])
         lines[county + (r["jurisdiction_fips"], r["precinct"]) + contest + (r["party"],)][r["mode"]] += _int(r["votes"], r)
-        writein[county + contest] = writein.get(county + contest, False) or r["writein"]
     votes = collections.Counter()
     for key, modes in lines.items():
-        votes[key[:3] + key[5:9]] += modes["TOTAL"] if "TOTAL" in modes else sum(modes.values())
+        votes[key[:3] + key[5:10]] += modes["TOTAL"] if "TOTAL" in modes else sum(modes.values())
     out = []
     for key in sorted(votes, key=lambda k: tuple(str(x) for x in k)):
-        st, fips, name, office, district, special, cand = key
+        st, fips, name, office, district, special, cand, wi = key
         out.append({"state_po": st, "county_fips": fips, "county_name": name, "office": office,
-                    "district": district, "special": special, "candidate": cand, "writein": writein[key],
+                    "district": district, "special": special, "candidate": cand, "writein": wi,
                     "votes": votes[key], "suppressed_rows": suppressed[(st, fips, name, office)]})
     return out, notes

@@ -1,6 +1,8 @@
 # Recorded corrections to MEDSL precinct rows (step 4, Steve's option C). Applied visibly by
 # pipeline.expected.medsl.apply_fixes; every run reports how many rows each fix touched.
-# A fix must make its (state, year, office) match the FEC exactly, and needs an identified cause.
+# A fix needs an identified cause and must make its (state, year, office) pass the check (exactly, or on its
+# named candidates where only write-ins differ: Steve, 2026-11-27); otherwise it is not made and the office
+# stays failed, listed in docs/expected.md.
 #
 # Entry schema (all fields required):
 # [[fix]]
@@ -8,10 +10,144 @@
 # state = "NJ"
 # year = 2022
 # office = "US HOUSE"            # US SENATE | US HOUSE | GOVERNOR
-# action = "drop"                # the only action so far: drop every row matching all of `match`
+# action = "drop"                # drop every row matching all of `match`; or "set": replace fields from [fix.set]
+#                                # (writein only; never a vote count)
 # change = "what it changes"
 # evidence = "the official figure it restores, and the URL where it is published"
 # before = "the differences before the fix"
 # after = "the differences after the fix (none: exact match)"
 # [fix.match]
-# precinct = "COUNTY TOTAL"      # any normalized row field (see read_precincts); all must equal
+# precinct = "COUNTY TOTAL"      # any normalized row field (see read_precincts); all must equal; a list
+#                                # matches any of its items
+
+[[fix]]
+id = "NJ-2022-1"
+state = "NJ"
+year = 2022
+office = "US HOUSE"
+action = "drop"
+change = "drop the county and district total lines MEDSL stores as precincts (every county but Mercer: '<County> Totals', 'District N Totals', Monmouth's 'District Totals' and 'Ocean Totals'); each equals the sum of its county's town rows"
+evidence = "FEC Federal Elections 2022 (https://www.fec.gov/documents/5676/federalelections2022.xlsx, sha256 cdb258ea…): every district's candidates, e.g. NJ-01 Norcross 139,559"
+before = "all 12 districts about 3x the FEC (NJ-01 Norcross 418,677 vs 139,559)"
+after = "with NJ-2022-2: every NJ House contest equals the FEC exactly"
+[fix.match]
+precinct = [
+    "Atlantic Totals",
+    "Bergen Totals",
+    "Burlington Totals",
+    "Camden Totals",
+    "Cape May Totals",
+    "Cumberland Totals",
+    "District 1 Totals",
+    "District 10 Totals",
+    "District 11 Totals",
+    "District 12 Totals",
+    "District 2 Totals",
+    "District 3 Totals",
+    "District 4 Totals",
+    "District 5 Totals",
+    "District 7 Totals",
+    "District 8 Totals",
+    "District 9 Totals",
+    "District Totals",
+    "Essex Totals",
+    "Gloucester Totals",
+    "Hudson Totals",
+    "Hunterdon Totals",
+    "Middlesex Totals",
+    "Monmouth Totals",
+    "Morris Totals",
+    "Ocean Totals",
+    "Passaic Totals",
+    "Salem Totals",
+    "Somerset Totals",
+    "Sussex Totals",
+    "Union Totals",
+    "Warren Totals",
+]
+
+[[fix]]
+id = "NJ-2022-2"
+state = "NJ"
+year = 2022
+office = "US HOUSE"
+action = "drop"
+change = "Mercer: drop the town and 'Federal' rows, keep 'Mercer Totals'; the town rows lack votes the total has (NJ-03 Kim 31,845 by town vs 31,901 in the total)"
+evidence = "FEC Federal Elections 2022 (https://www.fec.gov/documents/5676/federalelections2022.xlsx, sha256 cdb258ea…): NJ-03 Kim 150,498, Healey 118,415, Sobocinski 1,116"
+before = "after NJ-2022-1 alone: NJ-03 Kim -56, Healey -7, Sobocinski -1"
+after = "every NJ House contest equals the FEC exactly"
+[fix.match]
+county_name = "MERCER"
+precinct = [
+    "City of Trenton",
+    "East Windsor Twp",
+    "Ewing Twp",
+    "Federal",
+    "Hamilton Twp",
+    "Hightstown Boro",
+    "Hopewell Boro",
+    "Hopewell Twp",
+    "Lawrence Twp",
+    "Pennington Boro",
+    "Princeton",
+    "Robbinsville Twp",
+    "West Windsor Twp",
+]
+
+[[fix]]
+id = "VT-2022-1"
+state = "VT"
+year = 2022
+office = "US HOUSE"
+action = "set"
+change = "Ericka Redic (on the ballot, Libertarian) is flagged as a write-in on all 245 MEDSL rows: clear the flag"
+evidence = "FEC Federal Elections 2022 (https://www.fec.gov/documents/5676/federalelections2022.xlsx, sha256 cdb258ea…): VT-00 Redic, Ericka, party LIB, 12,590 general votes"
+before = "Redic's 12,590 counted with write-ins (MEDSL write-ins 13,561 vs FEC 1,004); named candidates fail"
+after = "named candidates equal the FEC; write-ins still differ (passes on named candidates)"
+[fix.match]
+candidate = "ERICKA REDIC"
+[fix.set]
+writein = false
+
+[[fix]]
+id = "MI-2018-1"
+state = "MI"
+year = 2018
+office = "US HOUSE"
+action = "set"
+change = "three no-party-affiliation candidates on the ballot are flagged as write-ins on every MEDSL row (Peruski MI-10, 584 rows; Nye MI-11, 1,708; Niemuth MI-12, 1,335): clear the flag"
+evidence = "FEC Federal Elections 2018 (https://www.fec.gov/documents/2706/federalelections2018.xlsx, sha256 f2c42311…): party NPA, MI-10 Peruski 11,344, MI-11 Nye 4,727, MI-12 Niemuth 2,213"
+before = "MI-10, 11, 12: each candidate's votes counted with write-ins (MEDSL write-ins 11,344, 4,727, 2,213 vs FEC 0)"
+after = "every MI House contest equals the FEC exactly"
+[fix.match]
+candidate = ["JEREMY PERUSKI", "COOPER NYE", "NILES NIEMUTH"]
+[fix.set]
+writein = false
+
+[[fix]]
+id = "OR-2018-1"
+state = "OR"
+year = 2018
+office = "US HOUSE"
+action = "drop"
+change = "drop Tillamook County's 'TOTAL' precinct, which repeats the county's precinct sum (Schrader 6,802 in both)"
+evidence = "FEC Federal Elections 2018 (https://www.fec.gov/documents/2706/federalelections2018.xlsx, sha256 f2c42311…): OR-05 Schrader 197,187, Callahan 149,887, Souza 6,054, Sandnes 4,802"
+before = "OR-05 Schrader +6,802, Callahan +5,718, Souza +200, Sandnes +200"
+after = "every OR House contest equals the FEC exactly"
+[fix.match]
+county_name = "TILLAMOOK"
+precinct = "TOTAL"
+
+[[fix]]
+id = "OR-2018-2"
+state = "OR"
+year = 2018
+office = "GOVERNOR"
+action = "drop"
+change = "drop Tillamook County's 'TOTAL' precinct for Governor too: the same duplicate as OR-2018-1 (it equals the sum of the county's precincts for every line, e.g. Buehler 6,606, Brown 5,616)"
+evidence = "not in the FEC compilation; the duplicate is shown by the sum, and the same rows fail the House check (OR-2018-1)"
+before = "Tillamook's Governor votes doubled (OR has no 2018 Senate race, so Governor can be its top race)"
+after = "Tillamook Governor equals its precincts"
+[fix.match]
+county_name = "TILLAMOOK"
+precinct = "TOTAL"

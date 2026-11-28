@@ -97,6 +97,13 @@ class MedslTest(unittest.TestCase):
         flags = {r["candidate"]: (r["special"], r["writein"]) for r in t}
         self.assertEqual(flags, {"A": (True, True), "B": (False, False)})
 
+    def test_writein_line_of_a_named_candidate_kept_apart(self):
+        # VT 2018: one precinct also has a write-in vote recorded under "BERNIE SANDERS"; the county's named
+        # votes must stay named
+        t, _ = totals([rec("P1", "S", "100", party="INDEPENDENT"), rec("P2", "S", "50", party="INDEPENDENT"),
+                       rec("P2", "S", "1", party="", writein="TRUE")])
+        self.assertEqual(sorted((r["candidate"], r["writein"], r["votes"]) for r in t), [("S", False, 150), ("S", True, 1)])
+
     def test_unreadable_votes_raise(self):
         with self.assertRaisesRegex(ValueError, "votes"):
             totals([rec("P1", "A", "ten")])
@@ -116,6 +123,39 @@ class MedslTest(unittest.TestCase):
         t, _ = county_totals(apply_fixes(src, fixes, applied))
         self.assertEqual(by_candidate(t)[("16001", "A")]["votes"], 10)
         self.assertEqual(applied, [("NJ-2022-1", 1)])
+
+    def _fixes(self, d, body):
+        path = os.path.join(d, "fixes.toml")
+        with open(path, "w") as f:
+            f.write('[[fix]]\nid = "F-1"\nstate = "NJ"\nyear = 2022\noffice = "US HOUSE"\nchange = "c"\n'
+                    'evidence = "e"\nbefore = "b"\nafter = "a"\n' + body)
+        return load_fixes(path)
+
+    def test_match_list_drops_any_listed_value(self):
+        d = tempfile.mkdtemp()
+        fixes = self._fixes(d, 'action = "drop"\n[fix.match]\nprecinct = ["Atlantic Totals", "District 1 Totals"]\n')
+        rows = [rec(p, "A", "10", st="NJ", office="US HOUSE", district="002")
+                for p in ("P1", "Atlantic Totals", "District 1 Totals")]
+        applied = []
+        t, _ = county_totals(apply_fixes(read_precincts([write_zip(d, "x.zip", H2022, rows)], 2022), fixes, applied))
+        self.assertEqual(([r["votes"] for r in t], applied), ([10], [("F-1", 2)]))
+
+    def test_set_fix_changes_fields_and_keeps_row(self):
+        # MEDSL 2022 VT flags a ballot candidate (Redic, LIB) as a write-in
+        d = tempfile.mkdtemp()
+        fixes = self._fixes(d, 'action = "set"\n[fix.match]\ncandidate = "B"\n[fix.set]\nwritein = false\n')
+        rows = [rec("P1", "A", "10", st="NJ", office="US HOUSE"), rec("P1", "B", "4", st="NJ", office="US HOUSE", writein="TRUE")]
+        applied = []
+        t, _ = county_totals(apply_fixes(read_precincts([write_zip(d, "x.zip", H2022, rows)], 2022), fixes, applied))
+        self.assertEqual({r["candidate"]: (r["writein"], r["votes"]) for r in t}, {"A": (False, 10), "B": (False, 4)})
+        self.assertEqual(applied, [("F-1", 1)])
+
+    def test_set_fix_needs_known_fields(self):
+        d = tempfile.mkdtemp()
+        with self.assertRaisesRegex(ValueError, "set"):
+            self._fixes(d, 'action = "set"\n[fix.match]\ncandidate = "B"\n')
+        with self.assertRaisesRegex(ValueError, "votes"):
+            self._fixes(d, 'action = "set"\n[fix.match]\ncandidate = "B"\n[fix.set]\nvotes = "9"\n')
 
     def test_fix_without_required_field_rejected(self):
         d = tempfile.mkdtemp()
