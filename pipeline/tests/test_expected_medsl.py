@@ -66,6 +66,12 @@ class MedslTest(unittest.TestCase):
                        rec("P1", "TIMES BLANK VOTED", "2"), rec("P1", "REGISTERED VOTERS", "900")])
         self.assertEqual([r["candidate"] for r in t], ["A"])
 
+    def test_nyc_ballot_counts_dropped(self):
+        # NYC election districts in MEDSL 2018 and 2022: ballot counts by type filed as candidates
+        lines = ["PUBLIC COUNTER", "ABSENTEE / MILITARY", "AFFIDAVIT", "FEDERAL", "MANUALLY COUNTED EMERGENCY"]
+        t, _ = totals([rec("P1", "A", "10")] + [rec("P1", n, "500") for n in lines])
+        self.assertEqual([r["candidate"] for r in t], ["A"])
+
     def test_blank_writein_on_a_candidate_raises(self):
         with self.assertRaisesRegex(ValueError, "writein"):
             totals([rec("P1", "A", "10", writein="")])

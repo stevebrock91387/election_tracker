@@ -26,6 +26,11 @@ class BaselineTest(unittest.TestCase):
         got, _ = top(rows + [t("US SENATE", "W", 100, writein=True)], {("GA", "US SENATE"): OK, ("GA", "US HOUSE"): OK})
         self.assertEqual(got["13001"], ("US SENATE", 1000, "passed", ""))  # write-ins count
 
+    def test_check_column_names_a_named_candidates_pass(self):
+        named = {"passed": True, "differences": [{}], "reason": "passed (named candidates)"}
+        got, _ = top([t("US SENATE", "A", 900)], {("GA", "US SENATE"): named})
+        self.assertEqual(got["13001"], ("US SENATE", 900, "passed (named candidates)", ""))
+
     def test_governor_needs_both_federal_offices(self):
         rows = [t("GOVERNOR", "G", 2000), t("US SENATE", "A", 900), t("US HOUSE", "B", 950, district="001")]
         got, _ = top(rows, {("GA", "US SENATE"): OK, ("GA", "US HOUSE"): BAD})

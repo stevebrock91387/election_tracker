@@ -8,11 +8,18 @@ name over counties, county "" included, and party lines; FEC: by line, or its co
 added into one total, and the non-write-in totals are sorted. Names are not joined (spellings differ
 between the two); a contest passes when both sorted lists and both write-in totals are equal (a missing
 write-in line is 0). A blank MEDSL House district is the at-large seat when it is the state's only district and
-the FEC's only one is "00" (MEDSL 2022 AK, DC). An office passes when every contest on either side passes.
+the FEC's only one is "00" (MEDSL 2022 AK, DC).
 
-differences: one entry per failing contest {district, special, medsl, fec, medsl_writein, fec_writein},
-medsl and fec as [[name, votes]] sorted by votes (largest first).
-reason: "passed"; "not in FEC" (the FEC has no rows for the office, e.g. no Senate race that year);
+A contest that isn't equal still passes on its named candidates (Steve, 2026-11-27, option 1) when the FEC
+has at least one named candidate, every FEC named total appears among MEDSL's non-write-in totals (as a
+multiset), and every MEDSL line left over (medsl_extra: "ALL OTHERS", "SCATTERING", write-in names MEDSL
+doesn't flag) is smaller than the FEC's smallest named total. Write-in totals may then differ; the
+difference is recorded, not failed. An office passes when every contest passes either way.
+
+differences: one entry per contest that isn't equal {district, special, named, medsl, fec, medsl_writein,
+fec_writein, medsl_extra}, medsl, fec and medsl_extra as [[name, votes]] sorted by votes (largest first);
+named is True where the contest passed on its named candidates.
+reason: "passed"; "passed (named candidates)" (some contest passed only on its named candidates); "not in FEC" (the FEC has no rows for the office, e.g. no Senate race that year);
 "suppressed rows" (failed, and MEDSL suppressed some of the office's rows with "*": no fix can restore
 them); otherwise "differences".
 """
@@ -40,6 +47,20 @@ def _sorted(cands):
     return [[n, v] for n, v in sorted(cands.items(), key=lambda kv: (-kv[1], kv[0]))]
 
 
+def _named_extra(a, b):
+    """MEDSL's leftover lines when the contest passes on its named candidates, else None."""
+    fec = collections.Counter(b["cands"].values())
+    if not fec or fec - collections.Counter(a["cands"].values()):
+        return None
+    left = collections.Counter(a["cands"].values()) - fec
+    extra = []
+    for n, v in _sorted(a["cands"]):
+        if left[v]:
+            left[v] -= 1
+            extra.append([n, v])
+    return extra if all(v < min(fec) for _, v in extra) else None
+
+
 def _blank_at_large(med, off):
     """MEDSL 2022 AK and DC publish the House district blank; where that is the state's only MEDSL House
     district and the FEC's only one is "00", the blank is the at-large seat."""
@@ -62,15 +83,20 @@ def check(medsl_totals, fec, year, notes):
         for k in keys:
             a, b = med.get(k, empty), off.get(k, empty)
             if sorted(a["cands"].values()) != sorted(b["cands"].values()) or a["writein"] != b["writein"]:
-                diffs.append({"district": k[2], "special": k[3], "medsl": _sorted(a["cands"]),
-                              "fec": _sorted(b["cands"]), "medsl_writein": a["writein"], "fec_writein": b["writein"]})
+                extra = _named_extra(a, b)
+                diffs.append({"district": k[2], "special": k[3], "named": extra is not None,
+                              "medsl": _sorted(a["cands"]), "fec": _sorted(b["cands"]),
+                              "medsl_writein": a["writein"], "fec_writein": b["writein"], "medsl_extra": extra or []})
+        failing = [d for d in diffs if not d["named"]]
         if not diffs:
             reason = "passed"
+        elif not failing:
+            reason = "passed (named candidates)"
         elif not any(k in off for k in keys):
             reason = "not in FEC"
         elif notes["suppressed"].get((st, office)):
             reason = "suppressed rows"
         else:
             reason = "differences"
-        results[(st, office)] = {"passed": not diffs, "differences": diffs, "reason": reason}
+        results[(st, office)] = {"passed": not failing, "differences": diffs, "reason": reason}
     return results

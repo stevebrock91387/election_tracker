@@ -124,6 +124,40 @@ class CheckTest(unittest.TestCase):
         out = check([m("GA", "US SENATE", "A", 10)], [], 2018, NOTES)[("GA", "US SENATE")]
         self.assertEqual((out["passed"], out["reason"]), (False, "not in FEC"))
 
+    def test_writein_only_difference_passes_on_named_candidates(self):
+        # Steve 2026-11-27 (option 1): named candidates exact; write-in differences recorded, not failing
+        med = [m("AZ", "US SENATE", "A", 100), m("AZ", "US SENATE", "B", 50), m("AZ", "US SENATE", "W", 40, writein=True)]
+        fec = [f("AZ", "US SENATE", "A", 100), f("AZ", "US SENATE", "B", 50), f("AZ", "US SENATE", "W", 5, writein=True)]
+        out = check(med, fec, 2018, NOTES)[("AZ", "US SENATE")]
+        self.assertEqual((out["passed"], out["reason"]), (True, "passed (named candidates)"))
+        (d,) = out["differences"]
+        self.assertEqual((d["medsl_writein"], d["fec_writein"], d["medsl_extra"]), (40, 5, []))
+
+    def test_extra_medsl_lines_below_smallest_named_pass_and_are_listed(self):
+        # MEDSL lists "ALL OTHERS" (MA) or unflagged write-in names as candidates; the FEC counts them as write-ins
+        med = [m("MA", "US HOUSE", "A", 100, district="001"), m("MA", "US HOUSE", "ALL OTHERS", 7, district="001")]
+        fec = [f("MA", "US HOUSE", "A", 100, district="01"), f("MA", "US HOUSE", "All others", 7, district="01", writein=True)]
+        out = check(med, fec, 2018, NOTES)[("MA", "US HOUSE")]
+        self.assertEqual(out["reason"], "passed (named candidates)")
+        self.assertEqual(out["differences"][0]["medsl_extra"], [["ALL OTHERS", 7]])
+
+    def test_extra_line_as_large_as_a_named_candidate_fails(self):
+        med = [m("NY", "US HOUSE", "A", 100, district="001"), m("NY", "US HOUSE", "B", 20, district="001"),
+               m("NY", "US HOUSE", "X", 20, district="001")]
+        fec = [f("NY", "US HOUSE", "A", 100, district="01"), f("NY", "US HOUSE", "B", 20, district="01")]
+        self.assertEqual(check(med, fec, 2018, NOTES)[("NY", "US HOUSE")]["reason"], "differences")
+
+    def test_named_candidate_off_still_fails(self):
+        med = [m("AL", "US HOUSE", "A", 99, district="001"), m("AL", "US HOUSE", "W", 9, writein=True, district="001")]
+        fec = [f("AL", "US HOUSE", "A", 100, district="01"), f("AL", "US HOUSE", "W", 8, writein=True, district="01")]
+        self.assertFalse(check(med, fec, 2018, NOTES)[("AL", "US HOUSE")]["passed"])
+
+    def test_contest_missing_from_fec_with_named_lines_fails(self):
+        # MEDSL 2022 AZ and WA rows with a blank district beside numbered ones
+        med = [m("WA", "US HOUSE", "A", 10, district="001"), m("WA", "US HOUSE", "B", 3, district="")]
+        out = check(med, [f("WA", "US HOUSE", "A", 10, district="01")], 2022, NOTES)[("WA", "US HOUSE")]
+        self.assertEqual((out["passed"], out["reason"]), (False, "differences"))
+
     def test_governor_not_a_key(self):
         self.assertEqual(check([m("GA", "GOVERNOR", "A", 10)], [], 2018, NOTES), {})
 

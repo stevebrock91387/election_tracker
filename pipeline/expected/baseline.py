@@ -7,7 +7,8 @@ baselines(totals, checks, year, provenance) -> (rows, listed).
   contest is the office's votes in that county (the same voters cast both).
 - Eligible offices: US SENATE and US HOUSE whose (state, office) check passed; GOVERNOR when each federal
   office in the state passed or has no check entry (no race on either side). GOVERNOR isn't in the FEC
-  compilation: its rows are tagged check "not checked", checked_via "federal rows".
+  compilation: its rows are tagged check "not checked", checked_via "federal rows". A federal row's check is
+  its office's reason: "passed", or "passed (named candidates)" where write-ins differ from the FEC.
 - top_office: the eligible office with the most votes; a tie goes US SENATE, GOVERNOR, US HOUSE.
 - County "" (MEDSL rows with no county) is never a row. A county with no eligible office is listed as
   (state, county_fips, county_name, reason). A county with no MEDSL rows at all (e.g. every race
@@ -54,6 +55,6 @@ def baselines(totals, checks, year, provenance):
         gov = best == "GOVERNOR"
         rows.append({"state": st, "county_fips": fips, "county_name": names[(st, fips)], "year": year,
                      "top_office": best, "votes": offices[best], "suppressed_rows": suppressed[(st, fips, best)],
-                     "check": "not checked" if gov else "passed", "checked_via": "federal rows" if gov else "",
+                     "check": "not checked" if gov else checks[(st, best)]["reason"], "checked_via": "federal rows" if gov else "",
                      "medsl_source": provenance["medsl_source"], "fec_file_sha256": provenance["fec_file_sha256"]})
     return rows, listed

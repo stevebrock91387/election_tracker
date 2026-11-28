@@ -42,6 +42,9 @@ TALLIES = NON_CANDIDATES | {
     "BALLOTS CAST", "BLANK", "BLANK (2)", "BLANK VOTES", "BLANK/VOID", "BLANK WRITE-IN", "CONTEST TOTALS",
     "FEDERAL BALLOTS", "FEDERAL VOTES", "OVERVOTES", "REGISTERED VOTERS", "STATE BALLOTS", "STATE VOTES",
     "TIMES BLANK VOTED", "TOTAL", "TOTAL VOTES", "UNDER/OVER", "UNDER/OVER VOTES", "UNDERVOTES", "VOID", "VOIDS",
+    # NYC's five counties only, both years: ballots by type per election district (Queens 001/23, 2022 Senate:
+    # PUBLIC COUNTER 1,071 + ABSENTEE / MILITARY 57 + AFFIDAVIT 11 = 1,139 ballots, 1,121 candidate votes)
+    "PUBLIC COUNTER", "ABSENTEE / MILITARY", "AFFIDAVIT", "FEDERAL", "MANUALLY COUNTED EMERGENCY",
 }
 FIXES = os.path.join(os.path.dirname(__file__), "medsl_fixes.toml")
 FIX_FIELDS = ("id", "state", "year", "office", "action", "change", "evidence", "before", "after", "match")
