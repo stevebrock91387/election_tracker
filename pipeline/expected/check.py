@@ -7,7 +7,8 @@ Per contest, (district_key, special), on each side: votes are summed per candida
 name over counties, county "" included, and party lines; FEC: by line, or its combined total), write-ins are
 added into one total, and the non-write-in totals are sorted. Names are not joined (spellings differ
 between the two); a contest passes when both sorted lists and both write-in totals are equal (a missing
-write-in line is 0). An office passes when every contest on either side passes.
+write-in line is 0). A blank MEDSL House district is the at-large seat when it is the state's only district and
+the FEC's only one is "00" (MEDSL 2022 AK, DC). An office passes when every contest on either side passes.
 
 differences: one entry per failing contest {district, special, medsl, fec, medsl_writein, fec_writein},
 medsl and fec as [[name, votes]] sorted by votes (largest first).
@@ -39,8 +40,20 @@ def _sorted(cands):
     return [[n, v] for n, v in sorted(cands.items(), key=lambda kv: (-kv[1], kv[0]))]
 
 
+def _blank_at_large(med, off):
+    """MEDSL 2022 AK and DC publish the House district blank; where that is the state's only MEDSL House
+    district and the FEC's only one is "00", the blank is the at-large seat."""
+    for st in {k[0] for k in med if k[1] == "US HOUSE"}:
+        mk = [k for k in med if k[:2] == (st, "US HOUSE")]
+        fk = [k for k in off if k[:2] == (st, "US HOUSE")]
+        if {k[2] for k in mk} == {""} and {k[2] for k in fk} == {"00"}:
+            for k in mk:
+                med[k[:2] + ("00",) + k[3:]] = med.pop(k)
+
+
 def check(medsl_totals, fec, year, notes):
     med, off = _contests(medsl_totals), _contests(fec)
+    _blank_at_large(med, off)
     empty = {"cands": collections.Counter(), "writein": 0}
     results = {}
     for st, office in sorted({k[:2] for k in med} | {k[:2] for k in off}):

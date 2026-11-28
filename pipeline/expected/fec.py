@@ -14,6 +14,7 @@ read_fec(path, year, notes=None) returns {state_po, office, district, special, c
   VOTES (no votes counted) is listed in notes["unopposed"] as (state, office, district, candidate).
 - a candidate's lines in one contest are summed, or, where the combined column is filled, the combined
   total is used once (every line must carry the same combined value, else ValueError).
+- names: clean_name (footnote markers * and # and non-breaking spaces removed), so a marked line joins its candidate.
 - writein: PARTY "W", or a candidate named "Scattered".
 - district: district_key; special: DISTRICT contains "UNEXPIRED" (S-UNEXPIRED TERM, 13-UNEXPIRED TERM).
 - the territories' delegates (AS GU MP PR VI) are skipped and counted in notes["territory_lines"]; DC's is kept.
@@ -45,6 +46,12 @@ def district_key(office, district):
     return f"{int(mt.group()):02d}" if mt else s
 
 
+def clean_name(name):
+    """FEC candidate names carry footnote markers ("Corey, Matthew  *", "Gershon, Perry  #") and
+    non-breaking spaces ("Thompson, James\xa0A."): drop trailing markers, collapse whitespace."""
+    return re.sub(r"[\s*#]+$", "", " ".join(name.split()))
+
+
 def _col(header, name, prefix=False):
     for i, h in enumerate(header):
         h = (h or "").strip()
@@ -69,6 +76,7 @@ def parse_sheets(sheets, notes=None):
              "comb": _col(h, "COMBINED GE PARTY TOTALS", prefix=True)}
         for row in grid[1:]:
             v = {k: ((row[i] if i < len(row) else None) or "").strip() for k, i in c.items()}
+            v["cand"] = clean_name(v["cand"])
             if not v["cand"] or v["label"] or not v["gen"]:
                 continue
             if v["st"] in TERRITORIES:

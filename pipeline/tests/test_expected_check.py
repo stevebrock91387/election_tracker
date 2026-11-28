@@ -98,6 +98,15 @@ class CheckTest(unittest.TestCase):
         med = [m("WY", "US HOUSE", "A", 10, district="000")]
         self.assertTrue(check(med, [f("WY", "US HOUSE", "A", 10, district="00")], 2022, NOTES)[("WY", "US HOUSE")]["passed"])
 
+    def test_blank_house_district_is_at_large_when_fec_has_only_00(self):
+        # MEDSL 2022 AK and DC leave the House district blank; the FEC writes 00
+        med = [m("AK", "US HOUSE", "A", 10, district="")]
+        self.assertTrue(check(med, [f("AK", "US HOUSE", "A", 10, district="00")], 2022, NOTES)[("AK", "US HOUSE")]["passed"])
+        # a blank district beside numbered ones stays its own contest (a missing district)
+        med = [m("AZ", "US HOUSE", "A", 10, district="001"), m("AZ", "US HOUSE", "B", 3, district="")]
+        out = check(med, [f("AZ", "US HOUSE", "A", 10, district="01")], 2022, NOTES)[("AZ", "US HOUSE")]
+        self.assertEqual([d["district"] for d in out["differences"]], [""])
+
     def test_special_senate_contest_kept_apart(self):
         med = [m("MN", "US SENATE", "A", 10), m("MN", "US SENATE", "B", 9, special=True)]
         fec = [f("MN", "US SENATE", "A", 10), f("MN", "US SENATE", "B", 9, special=True)]
@@ -122,7 +131,8 @@ class CheckTest(unittest.TestCase):
         senate = [FEC_HEADER, [None, None, None, None, "n/a"],
                   fec_row("NY", "S", "Gillibrand, Kirsten E.", "D", "3755489", combined="3915617"),
                   fec_row("NY", "S", "Gillibrand, Kirsten E.", "WF", "160128", combined="3915617"),
-                  fec_row("NY", "S", "Farley, Chele", "R", "1730439"),
+                  fec_row("NY", "S", "Farley, Chele", "R", "1700000", combined="1730439"),
+                  fec_row("NY", "S", "Farley, Chele  #", "CRV", "30439", combined="1730439"),
                   fec_row("NY", "S", "Scattered", "W", "3872"),
                   fec_row("NY", "S", None, None, "6059023", label="Total State Votes:"),
                   fec_row("MN", "S-UNEXPIRED TERM", "Smith, Tina", "DFL", "1370540"),
@@ -132,6 +142,7 @@ class CheckTest(unittest.TestCase):
                  fec_row("FL", "05", "Rutherford, John H.", "R", "Unopposed"),
                  fec_row("MI", "13-UNEXPIRED TERM", "Jones, Brenda", "D", "165355"),
                  fec_row("KY", "08 ", "Comer, James", "R", "999"),
+                 fec_row("KS", "04", "Thompson, James\xa0A. *", "D", "98445"),
                  fec_row("GU", "00", "Moylan, James", "R", "19915")]
         d = tempfile.mkdtemp()
         path = os.path.join(d, "fec.xlsx")
@@ -144,6 +155,7 @@ class CheckTest(unittest.TestCase):
                      for r in rows)
         self.assertEqual(got, [
             ("AL", "US HOUSE", "01", False, "Carl, Jerry", False, 140592),
+            ("KS", "US HOUSE", "04", False, "Thompson, James A.", False, 98445),
             ("KY", "US HOUSE", "08", False, "Comer, James", False, 999),
             ("MI", "US HOUSE", "13", True, "Jones, Brenda", False, 165355),
             ("MN", "US SENATE", "", True, "Smith, Tina", False, 1370540),
