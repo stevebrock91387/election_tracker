@@ -60,6 +60,16 @@ class MedslTest(unittest.TestCase):
         t, _ = totals([rec("P1", "A", "10"), rec("P1", "UNDERVOTES", "4")])
         self.assertEqual([r["candidate"] for r in t], ["A"])
 
+    def test_step4_tallies_dropped_blank_flag_allowed(self):
+        # VT 2022 publishes BLANK VOTES / OVERVOTES with an empty writein flag; tallies are never votes
+        t, _ = totals([rec("P1", "A", "10"), rec("P1", "BLANK VOTES", "3", writein=""),
+                       rec("P1", "TIMES BLANK VOTED", "2"), rec("P1", "REGISTERED VOTERS", "900")])
+        self.assertEqual([r["candidate"] for r in t], ["A"])
+
+    def test_blank_writein_on_a_candidate_raises(self):
+        with self.assertRaisesRegex(ValueError, "writein"):
+            totals([rec("P1", "A", "10", writein="")])
+
     def test_other_offices_and_stages_skipped(self):
         t, _ = totals([rec("P1", "A", "10"), rec("P1", "B", "4", office="STATE HOUSE"),
                        rec("P1", "C", "4", stage="PRI")])
@@ -113,6 +123,15 @@ class MedslTest(unittest.TestCase):
     def test_2018_columns_mapped(self):
         rows = [rec("P1", "A", "10"), rec("P2", "A", "5")]
         self.assertEqual(totals(rows, 2018, H2018), totals(rows, 2022, H2022))
+
+    def test_macosx_metadata_member_skipped(self):
+        # 2022 WV's zip also holds __MACOSX/._2022-wv-local-precinct-general.csv (AppleDouble bytes, not UTF-8)
+        d = tempfile.mkdtemp()
+        path = write_zip(d, "x.zip", H2022, [rec("P1", "A", "10")])
+        with zipfile.ZipFile(path, "a") as z:
+            z.writestr("__MACOSX/._x.csv", b"\x00\x05\x16\x07\xb4")
+        t, _ = county_totals(read_precincts([path], 2022))
+        self.assertEqual([r["votes"] for r in t], [10])
 
     def test_repo_fixes_file_loads(self):
         self.assertIsInstance(load_fixes(), list)

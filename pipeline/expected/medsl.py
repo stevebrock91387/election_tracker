@@ -1,7 +1,7 @@
 """MEDSL precinct returns -> county candidate totals for US SENATE, US HOUSE and GOVERNOR (step 4).
 
 read_precincts(paths, year) yields normalized precinct rows from MEDSL zips (each member CSV is read in
-place; nothing is extracted). Kept: office in OFFICES and stage GEN. Fields: state_po, county_fips,
+place, nothing is extracted; macOS __MACOSX/ metadata members, as in 2022 WV's zip, are skipped). Kept: office in OFFICES and stage GEN. Fields: state_po, county_fips,
 county_name, jurisdiction_fips, precinct, office, district, special (bool), candidate, party (party_detailed),
 writein (bool), mode, votes (the string as published). The 2018 GitHub copy uses the same column names as
 2022 in a different order (COLUMNS_2018 is the identity map); MEDSL spells booleans TRUE/True/FALSE/False.
@@ -11,7 +11,8 @@ every row of the fix's state, year and office whose fields equal all of `match`.
 (fix id, rows dropped) per fix, in file order, zero included.
 
 county_totals(rows) sums with the rules of tools/medsl_county.py:
-- candidates in NON_CANDIDATES (undervotes, overvotes, blank ballots, tallies) are dropped;
+- candidates in TALLIES (NON_CANDIDATES plus the tally lines listed there) are dropped; a blank writein flag
+  is allowed only on those;
 - votes "*" (suppressed) are not counted; each such row adds 1 to its county's suppressed_rows and to
   notes["suppressed"][(state, office)];
 - within one (county, jurisdiction, precinct, office, district, special, candidate, party line), if any row
@@ -33,6 +34,15 @@ from tools.medsl_county import NON_CANDIDATES
 
 OFFICES = {"US SENATE", "US HOUSE", "GOVERNOR"}
 COLUMNS_2018 = {}  # identity: the 2018 headers already match 2022's
+# Tally lines in the 2018 and 2022 files that tools/medsl_county.NON_CANDIDATES doesn't name (surveyed
+# 2026-11-27 over US SENATE, US HOUSE and GOVERNOR): counts of ballots, blanks, over/under votes and voids,
+# never votes for a candidate. Write-in lines (REJECTED WRITE-INS, SCATTERING, ...) are not here: whether the
+# FEC counts them is for the exact check to show.
+TALLIES = NON_CANDIDATES | {
+    "BALLOTS CAST", "BLANK", "BLANK (2)", "BLANK VOTES", "BLANK/VOID", "BLANK WRITE-IN", "CONTEST TOTALS",
+    "FEDERAL BALLOTS", "FEDERAL VOTES", "OVERVOTES", "REGISTERED VOTERS", "STATE BALLOTS", "STATE VOTES",
+    "TIMES BLANK VOTED", "TOTAL", "TOTAL VOTES", "UNDER/OVER", "UNDER/OVER VOTES", "UNDERVOTES", "VOID", "VOIDS",
+}
 FIXES = os.path.join(os.path.dirname(__file__), "medsl_fixes.toml")
 FIX_FIELDS = ("id", "state", "year", "office", "action", "change", "evidence", "before", "after", "match")
 ACTIONS = {"drop"}
@@ -40,6 +50,8 @@ ACTIONS = {"drop"}
 
 def _bool(v):
     s = v.strip().upper()
+    if not s:
+        return None  # VT 2022 tally lines; county_totals refuses it on a candidate
     if s in ("TRUE", "FALSE"):
         return s == "TRUE"
     raise ValueError(f"not a MEDSL boolean: {v!r}")
@@ -50,7 +62,7 @@ def read_precincts(paths, year):
     for path in paths:
         with zipfile.ZipFile(path) as z:
             for name in z.namelist():
-                if not name.lower().endswith(".csv"):
+                if not name.lower().endswith(".csv") or name.startswith("__MACOSX/"):
                     continue
                 with z.open(name) as f:
                     for raw in csv.DictReader(io.TextIOWrapper(f, encoding="utf-8", newline="")):
@@ -110,8 +122,10 @@ def county_totals(rows):
     suppressed = collections.Counter()
     notes = {"blank_county": collections.Counter(), "suppressed": collections.Counter()}
     for r in rows:
-        if r["candidate"] in NON_CANDIDATES:
+        if r["candidate"] in TALLIES:
             continue
+        if r["writein"] is None:
+            raise ValueError(f"blank writein flag on a candidate: {r['state_po']} {r['precinct']} {r['candidate']}")
         county = (r["state_po"], r["county_fips"], r["county_name"])
         if not r["county_fips"]:
             notes["blank_county"][r["state_po"]] += 1
