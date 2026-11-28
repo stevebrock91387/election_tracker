@@ -9,7 +9,8 @@
     /opt/homebrew/bin/python3 -m pipeline.expected.run all TARGET       # every stage for TARGET's years
 
 Options: --raw-dir (data/raw), --out-dir (data/expected), --db (data/results.sqlite). Outputs in --out-dir:
-check-<year>.csv (state, office, passed, reason, differences as JSON), baseline-<year>.csv and
+check-<year>.csv (state, office, passed, reason, differences as JSON), check-<year>-no-county.csv,
+baseline-<year>.csv and
 -listed.csv, registration-2026.csv and -listed.csv, expected-<target>.csv and -listed.csv,
 actuals-<target>.csv and -listed.csv, score-<target>.csv, score-<target>-not-scored.csv and
 score-<target>-summary.csv. Each stage prints a summary, including every fix applied and its row count.
@@ -71,7 +72,10 @@ def stage_check(year, a, medsl=None):
             print(f"  {st_off[0]} {st_off[1]}: {c['reason']} ({len(c['differences'])} contest(s))")
     for fid, n in applied:
         print(f"  fix {fid}: {n} row(s) matched")
-    print(f"  MEDSL rows with no county, by state: {dict(notes['blank_county'])}")
+    print(f"  MEDSL rows with no county, by state: {dict(notes['blank_county'])} "
+          f"(votes per pseudo-county in check-{year}-no-county.csv)")
+    _write(os.path.join(a.out_dir, f"check-{year}-no-county.csv"), ["state", "county_fips", "county_name", "votes"],
+           [k + (v,) for k, v in sorted(notes["no_county"].items())])
     print(f"  FEC unopposed (no votes): {fec_notes['unopposed']}")
     prov = {"medsl_source": inputs.config()["medsl_source"][str(year)], "fec_file_sha256": _sha256(fec_path)}
     return totals, checks, prov
@@ -86,6 +90,11 @@ def stage_baseline(year, a, medsl=None):
     for r in rows:
         by[r["top_office"]] = by.get(r["top_office"], 0) + 1
     print(f"baseline {year}: {len(rows)} counties ({by}); {len(listed)} listed with no eligible office")
+    ratios = sorted((r["governor_vs_federal"], r["state"], r["county_name"]) for r in rows if r["governor_vs_federal"] != "")
+    if ratios:
+        hi = [f"{st} {n} {x}" for x, st, n in ratios[-3:][::-1]]
+        print(f"  Governor rows vs the county's larger federal office: {len(ratios)}, min {ratios[0][0]}, "
+              f"max {ratios[-1][0]} ({'; '.join(hi)}); {sum(x > 1.25 for x, _, _ in ratios)} above 1.25")
     return rows, listed
 
 

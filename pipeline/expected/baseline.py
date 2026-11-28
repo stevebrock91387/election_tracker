@@ -8,7 +8,9 @@ baselines(totals, checks, year, provenance) -> (rows, listed).
 - Eligible offices: US SENATE and US HOUSE whose (state, office) check passed; GOVERNOR when each federal
   office in the state passed or has no check entry (no race on either side). GOVERNOR isn't in the FEC
   compilation: its rows are tagged check "not checked", checked_via "federal rows". A federal row's check is
-  its office's reason: "passed", or "passed (named candidates)" where write-ins differ from the FEC.
+  its office's reason: "passed", or "passed (named candidates)" where write-ins differ from the FEC. A
+  Governor row carries governor_vs_federal, its votes over the county's larger federal office (blank when the
+  county has no federal votes): the only check on Governor rows, reported, never enforced.
 - top_office: the eligible office with the most votes; a tie goes US SENATE, GOVERNOR, US HOUSE.
 - County "" (MEDSL rows with no county) is never a row. A county with no eligible office is listed as
   (state, county_fips, county_name, reason). A county with no MEDSL rows at all (e.g. every race
@@ -17,7 +19,7 @@ baselines(totals, checks, year, provenance) -> (rows, listed).
 import collections
 
 BASELINE_COLUMNS = ["state", "county_fips", "county_name", "year", "top_office", "votes", "suppressed_rows",
-                    "check", "checked_via", "medsl_source", "fec_file_sha256"]
+                    "check", "checked_via", "governor_vs_federal", "medsl_source", "fec_file_sha256"]
 ORDER = ("US SENATE", "GOVERNOR", "US HOUSE")
 FEDERAL = ("US SENATE", "US HOUSE")
 
@@ -53,8 +55,10 @@ def baselines(totals, checks, year, provenance):
             continue
         best = max(ok, key=lambda o: (offices[o], -ORDER.index(o)))
         gov = best == "GOVERNOR"
+        fed = max(offices.get(o, 0) for o in FEDERAL)
         rows.append({"state": st, "county_fips": fips, "county_name": names[(st, fips)], "year": year,
                      "top_office": best, "votes": offices[best], "suppressed_rows": suppressed[(st, fips, best)],
                      "check": "not checked" if gov else checks[(st, best)]["reason"], "checked_via": "federal rows" if gov else "",
+                     "governor_vs_federal": round(offices[best] / fed, 3) if gov and fed else "",
                      "medsl_source": provenance["medsl_source"], "fec_file_sha256": provenance["fec_file_sha256"]})
     return rows, listed

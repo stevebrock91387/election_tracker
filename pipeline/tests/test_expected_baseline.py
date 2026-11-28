@@ -31,6 +31,14 @@ class BaselineTest(unittest.TestCase):
         got, _ = top([t("US SENATE", "A", 900)], {("GA", "US SENATE"): named})
         self.assertEqual(got["13001"], ("US SENATE", 900, "passed (named candidates)", ""))
 
+    def test_governor_row_carries_ratio_to_federal(self):
+        # Governor isn't FEC-checked: its ratio to the county's larger federal office is reported
+        rows = [t("GOVERNOR", "G", 1500), t("US SENATE", "A", 900), t("US HOUSE", "B", 1000, district="001")]
+        out, _ = baselines(rows, {("GA", "US SENATE"): OK, ("GA", "US HOUSE"): OK}, 2022, PROV)
+        self.assertEqual(out[0]["governor_vs_federal"], 1.5)
+        out, _ = baselines(rows[1:], {("GA", "US SENATE"): OK, ("GA", "US HOUSE"): OK}, 2022, PROV)
+        self.assertEqual(out[0]["governor_vs_federal"], "")
+
     def test_governor_needs_both_federal_offices(self):
         rows = [t("GOVERNOR", "G", 2000), t("US SENATE", "A", 900), t("US HOUSE", "B", 950, district="001")]
         got, _ = top(rows, {("GA", "US SENATE"): OK, ("GA", "US HOUSE"): BAD})

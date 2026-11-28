@@ -43,6 +43,14 @@ class ComputeTest(unittest.TestCase):
         self.assertEqual((r["point"], r["low"], r["high"], r["method"], r["years_used"]), (1200, 1200, 1200, "one year", "2022"))
         self.assertEqual(r["reason"], "no 2018 baseline")
 
+    def test_same_county_under_two_fips_listed_not_split(self):
+        # a FIPS spelling change between years (MEDSL 2022 published "1001" for "01001") must not make two
+        # "one year" counties
+        rows, listed = expected(2026, (2018, 2022), {2018: [b(2018, 1000, fips="01001", name="AUTAUGA", st="AL")],
+                                                     2022: [b(2022, 1200, fips="1001", name="AUTAUGA", st="AL")]}, {})
+        self.assertEqual(rows, [])
+        self.assertEqual(listed, [("AL", "01001 1001", "AUTAUGA", "county under two FIPS across years: 01001, 1001")])
+
     def test_both_years_missing_listed(self):
         rows, listed = expected(2026, (2018, 2022), {2018: [], 2022: []}, {},
                                 listed_in={2018: [("GA", "13001", "APPLING", "no eligible office (x)")],

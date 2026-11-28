@@ -73,23 +73,31 @@ Rules changed in the readers along the way (each with a test that failed first):
 - FEC party labels ending "/W" ("W(D)/W") are general-election write-ins ("primary/general" reading inferred
   from the labels; the FEC's legend not read).
 
-Not checked against anything: GOVERNOR. A scan of every county where Governor is eligible found none whose
-Governor votes exceed 1.28× its federal votes (the highest are GA 2018 counties with uncontested House races).
+Not checked against the FEC: GOVERNOR. Each Governor baseline row carries `governor_vs_federal`, its votes
+over the county's larger federal office, and the run prints the range. 2018: 853 rows, 1.0 to 1.518, 10 above
+1.25, all ten in GA-08, whose only House candidate was unopposed (GA had no 2018 Senate race). 2022: 814 rows,
+1.0 to 1.274 (MA Bristol). Nothing near 2×, which is what a duplicated total row would give.
+
+Pseudo-counties count in the state check but are never a county (`check-<year>-no-county.csv`, votes): AK
+(no county), ME 2018 "23000" STATE UOCAVA 4,751, MO "36000" KANSAS CITY (225,958 in 2018; 171,985 in 2022),
+RI "NAN" / "NA", GA 2022 STATE FLOATING 39. MEDSL 2022's 4-digit FIPS (AL, AR, CA) are zero-padded; a county
+name found under two FIPS across years is listed, not split.
 
 ## Baselines
 
-- 2018: 1,909 counties (Governor 853, Senate 532, House 524); 1,114 listed with no eligible office.
-- 2022: 1,416 counties (Governor 814, House 347, Senate 255); 1,644 listed.
+- 2018: 1,907 counties (Governor 853, Senate 530, House 524); 1,113 listed with no eligible office.
+- 2022: 1,415 counties (Governor 814, House 346, Senate 255); 1,643 listed.
 
 ## Registration
 
-2026 only: 715 counties in 9 states (AL CO IN LA NJ OH SC TX WV), from the step-3 database's turnout tables;
-62 listed (`registration-2026-listed.csv`). None for 2018 or 2022, so no county uses "rate × registration":
+2026 only: 712 counties in 9 states (AL CO IN LA NJ OH SC TX WV), from the step-3 database's turnout tables;
+65 listed (`registration-2026-listed.csv`), including AL Cleburne, Henry and Randolph (registered below ballots
+cast). NJ Clarity counties' county-total unit is used only to check the precincts, not added to them. None for 2018 or 2022, so no county uses "rate × registration":
 every expectation is "raw" (the 2022 votes, range the 2018 and 2022 votes) or "one year" (low = high).
 
 ## 2026 dry run (`python3 -m pipeline.expected.run all 2026`, 2026-11-27)
 
-Expected rows for 2,064 counties in 38 states (raw 1,261, one year 803); 1,198 listed with no baseline.
+Expected rows for 2,061 counties in 38 states (raw 1,261, one year 800); 998 listed with no baseline.
 Scored 1,133 counties in 18 states; 558 not scored (554 with no expected row, 4 with no 2026 actual); 8
 sources not scored at all (towns: CT MA RI VT; no county names: AK HI MN; NJ Bergen's two sources differ,
 317,443 vs 317,126).

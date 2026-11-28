@@ -7,7 +7,8 @@ norm_county(name), the county-name join key, rules in order:
    " city" is kept: independent cities ("Baltimore city", "St. Louis city") stay apart from same-named counties.
 
 expected(target, years, baselines, registration, listed_in=None) -> (rows, listed).
-- baselines: {year: baseline rows}; counties are joined across years on (state, county_fips).
+- baselines: {year: baseline rows}; counties are joined across years on (state, county_fips). A county name
+  (norm_county) found under more than one FIPS across the two years is listed, not split into two counties.
 - registration: {(state, norm_county(name), year): registered}.
 - Formulas (the design's, verbatim):
   "rate × registration" (registration for both years and the target): rate_y = votes_y / registered_y;
@@ -42,6 +43,15 @@ def expected(target, years, baselines, registration, listed_in=None):
     why = {y: {(l[0], l[1]): l for l in listed_in.get(y, [])} for y in (early, late)}
     rows, listed = [], []
     keys = set(by[early]) | set(by[late]) | set(why[early]) | set(why[late])
+    fips_of = {}
+    for y in (early, late):
+        for (st, fips), r in by[y].items():
+            fips_of.setdefault((st, norm_county(r["county_name"])), {})[fips] = r["county_name"]
+    for (st, _), seen in sorted(fips_of.items()):
+        if len(seen) > 1:
+            ids = sorted(seen)
+            listed.append((st, " ".join(ids), seen[ids[0]], "county under two FIPS across years: " + ", ".join(ids)))
+            keys -= {(st, f) for f in ids}
     for key in sorted(keys):
         have = [y for y in (early, late) if key in by[y]]
         if not have:

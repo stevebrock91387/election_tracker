@@ -22,8 +22,10 @@ county_totals(rows) sums with the rules of tools/medsl_county.py:
   A name with both named and write-in rows (VT 2018: write-ins recorded as "BERNIE SANDERS") gives two
   output rows, one per flag;
 - any other non-integer votes value raises ValueError (nothing is guessed).
-Rows with a blank county_fips go to county "" (kept for the state check, never a county baseline) and are
-counted in notes["blank_county"][state]. Output rows: state_po, county_fips, county_name, office, district,
+A 4-digit numeric county_fips is zero-padded (MEDSL 2022 AL, AR, CA). Rows whose county_fips isn't a real
+county (blank, "NA"/"NAN", or a state's xx000 pseudo-county such as ME 2018 STATE UOCAVA or MO KANSAS CITY)
+go to county "" (kept for the state check, never a county baseline): rows counted in
+notes["blank_county"][state], votes in notes["no_county"][(state, fips, name)]. Output rows: state_po, county_fips, county_name, office, district,
 special, candidate, writein, votes, suppressed_rows (the county's suppressed rows for that office).
 """
 import collections
@@ -76,7 +78,10 @@ def read_precincts(paths, year):
                         r = {cols.get(k, k): v for k, v in raw.items()} if cols else raw
                         if r["office"] not in OFFICES or r["stage"] != "GEN":
                             continue
-                        yield {"state_po": r["state_po"], "county_fips": r["county_fips"],
+                        fips = r["county_fips"].strip()
+                        if fips.isdigit() and len(fips) == 4:
+                            fips = "0" + fips  # MEDSL 2022 AL, AR, CA drop the leading zero
+                        yield {"state_po": r["state_po"], "county_fips": fips,
                                "county_name": r["county_name"], "jurisdiction_fips": r["jurisdiction_fips"],
                                "precinct": r["precinct"], "office": r["office"], "district": r["district"],
                                "special": _bool(r["special"]), "candidate": r["candidate"],
@@ -138,17 +143,24 @@ def _int(v, r):
     return int(f)
 
 
+def _real_county(fips):
+    """A 5-digit FIPS that isn't a state's xx000 pseudo-county (ME 2018 "23000" STATE UOCAVA, MO "36000"
+    KANSAS CITY); blank, "NA" and "NAN" (RI) aren't counties either."""
+    return len(fips) == 5 and fips.isdigit() and not fips.endswith("000")
+
+
 def county_totals(rows):
     lines = collections.defaultdict(lambda: collections.defaultdict(int))
     suppressed = collections.Counter()
-    notes = {"blank_county": collections.Counter(), "suppressed": collections.Counter()}
+    notes = {"blank_county": collections.Counter(), "suppressed": collections.Counter(),
+             "no_county": collections.Counter()}
     for r in rows:
         if r["candidate"] in TALLIES:
             continue
         if r["writein"] is None:
             raise ValueError(f"blank writein flag on a candidate: {r['state_po']} {r['precinct']} {r['candidate']}")
         county = (r["state_po"], r["county_fips"], r["county_name"])
-        if not r["county_fips"]:
+        if not _real_county(r["county_fips"]):
             notes["blank_county"][r["state_po"]] += 1
         if r["votes"] == "*":
             suppressed[county + (r["office"],)] += 1
@@ -158,7 +170,12 @@ def county_totals(rows):
         lines[county + (r["jurisdiction_fips"], r["precinct"]) + contest + (r["party"],)][r["mode"]] += _int(r["votes"], r)
     votes = collections.Counter()
     for key, modes in lines.items():
-        votes[key[:3] + key[5:10]] += modes["TOTAL"] if "TOTAL" in modes else sum(modes.values())
+        v = modes["TOTAL"] if "TOTAL" in modes else sum(modes.values())
+        where = key[:3]
+        if not _real_county(key[1]):
+            notes["no_county"][where] += v
+            where = (key[0], "", "")
+        votes[where + key[5:10]] += v
     out = []
     for key in sorted(votes, key=lambda k: tuple(str(x) for x in k)):
         st, fips, name, office, district, special, cand, wi = key

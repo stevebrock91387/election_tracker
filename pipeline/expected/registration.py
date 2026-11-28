@@ -8,7 +8,10 @@ registration_2026(conn) -> (rows, listed); rows {state, county_name, registered,
   parish, and a district race counts only its part of a parish), only the contests covering the most
   counties in that snapshot (the statewide ones) are read, and they must agree per county; a county where
   they differ is listed.
-- A county with any unit's registered voters NULL, or whose sum is 0 (31 AL counties publish 0), is listed.
+- A unit with neither a precinct id nor a name beside named units is the county's total (NJ Clarity counties):
+  it is used only when it equals the precincts' sum, which are then the county's units; otherwise listed.
+- A county with any unit's registered voters NULL, whose sum is 0 (31 AL counties publish 0), or whose sum is
+  below its ballots cast (AL Cleburne, Henry, Randolph: 0 everywhere but a provisional unit), is listed.
 - A county that two sources both report is listed as "two sources" and taken from neither.
 listed entries: (state, source_id(s), county_name, reason).
 """
@@ -29,8 +32,9 @@ def registration_2026(conn):
     found = collections.defaultdict(list)  # (state, county) -> [(registered, source, snapshot)]
     listed = []
     for sid, source, state in snaps:
-        units = conn.execute("SELECT layout, county_name, contest_id, registered_voters FROM turnout WHERE snapshot_id = ?",
-                             (sid,)).fetchall()
+        units = conn.execute("SELECT layout, county_name, contest_id, registered_voters, ballots_cast,"
+                             " coalesce(precinct_id, '') <> '' OR coalesce(precinct_name, '') <> ''"
+                             " FROM turnout WHERE snapshot_id = ?", (sid,)).fetchall()
         if not units:
             continue
         layouts = {u[0] for u in units}
@@ -44,7 +48,7 @@ def registration_2026(conn):
             cover = collections.Counter(contest for contest, _ in {(u[2], u[1]) for u in units})
             widest = max(cover.values())
             per = collections.defaultdict(set)
-            for _, county, contest, reg in units:
+            for _, county, contest, reg, _, _ in units:
                 if cover[contest] == widest:
                     per[county].add(reg)
             for county, regs in sorted(per.items()):
@@ -53,11 +57,11 @@ def registration_2026(conn):
                                    + ", ".join(str(r) for r in sorted(regs, key=lambda x: (x is None, x)))))
                 else:
                     (reg,) = regs
-                    _add(found, listed, state, source, sid, county, [reg])
+                    _add(found, listed, state, source, sid, county, [(reg, None, True)])
             continue
         per = collections.defaultdict(list)
-        for _, county, _, reg in units:
-            per[county].append(reg)
+        for _, county, _, reg, ballots, named in units:
+            per[county].append((reg, ballots, bool(named)))
         for county, regs in sorted(per.items()):
             _add(found, listed, state, source, sid, county, regs)
     rows = []
@@ -70,14 +74,30 @@ def registration_2026(conn):
     return rows, sorted(listed)
 
 
-def _add(found, listed, state, source, sid, county, regs):
+def _add(found, listed, state, source, sid, county, units):
+    """units: [(registered, ballots_cast, has a precinct id or name)]."""
     if not county:
-        listed.append((state, source, "", f"{len(regs)} unit(s) with no county name"))
+        listed.append((state, source, "", f"{len(units)} unit(s) with no county name"))
         return
+    totals = [u for u in units if not u[2]]
+    if totals and len(totals) < len(units):
+        if len(totals) > 1 or any(u[0] is None for u in units):
+            listed.append((state, source, county, f"{len(totals)} county-total unit(s) beside precincts"))
+            return
+        precincts = [u for u in units if u[2]]
+        if totals[0][0] != sum(u[0] for u in precincts):
+            listed.append((state, source, county, f"county-total unit {totals[0][0]} differs from its precincts "
+                           f"{sum(u[0] for u in precincts)}"))
+            return
+        units = precincts
+    regs = [u[0] for u in units]
     missing = sum(r is None for r in regs)
+    ballots = sum(u[1] for u in units if u[1] is not None)
     if missing:
         listed.append((state, source, county, f"registered voters missing for {missing} unit(s)"))
     elif sum(regs) == 0:
         listed.append((state, source, county, "registered voters 0"))
+    elif sum(regs) < ballots:
+        listed.append((state, source, county, f"registered voters {sum(regs)} below ballots cast {ballots}"))
     else:
         found[(state, county)].append((sum(regs), source, sid))

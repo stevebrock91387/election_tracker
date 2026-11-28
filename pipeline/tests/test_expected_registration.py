@@ -18,10 +18,10 @@ class RegistrationTest(unittest.TestCase):
                           (self.sid, source, state, seen, pruned))
         return self.sid
 
-    def unit(self, sid, layout, county, reg, precinct="", contest=""):
+    def unit(self, sid, layout, county, reg, precinct="", contest="", ballots=None):
         self.conn.execute("INSERT INTO turnout (snapshot_id, layout, county_id, county_name, precinct_id, precinct_name,"
-                          " contest_id, registered_voters) VALUES (?,?,?,?,?,?,?,?)",
-                          (sid, layout, "", county, "", precinct, contest, reg))
+                          " contest_id, registered_voters, ballots_cast) VALUES (?,?,?,?,?,?,?,?,?)",
+                          (sid, layout, "", county, "", precinct, contest, reg, ballots))
 
     def regs(self):
         rows, listed = registration_2026(self.conn)
@@ -33,6 +33,33 @@ class RegistrationTest(unittest.TestCase):
         self.unit(s, "clarity_county", "Atlantic", 1511, "Absecon W1 D2")
         got, _ = self.regs()
         self.assertEqual(got, {("NJ", "Atlantic"): 2798})
+
+    def test_county_total_unit_beside_precincts_not_added(self):
+        # NJ Clarity county turnout carries a county-total unit (no precinct) as well as the precincts
+        s = self.snap("clarity-NJ-Hudson-2026-general", "NJ")
+        self.unit(s, "clarity_county", "Hudson", 3000)
+        self.unit(s, "clarity_county", "Hudson", 1000, "Bayonne W1 D1")
+        self.unit(s, "clarity_county", "Hudson", 2000, "Bayonne W1 D2")
+        got, listed = self.regs()
+        self.assertEqual((got, listed), ({("NJ", "Hudson"): 3000}, []))
+
+    def test_county_total_unit_that_differs_listed(self):
+        s = self.snap("clarity-NJ-Hudson-2026-general", "NJ")
+        self.unit(s, "clarity_county", "Hudson", 3100)
+        self.unit(s, "clarity_county", "Hudson", 3000, "Bayonne W1 D1")
+        got, listed = self.regs()
+        self.assertEqual(got, {})
+        self.assertEqual(listed, [("NJ", "clarity-NJ-Hudson-2026-general", "Hudson",
+                                   "county-total unit 3100 differs from its precincts 3000")])
+
+    def test_registered_below_ballots_listed(self):
+        # AL 2026: Cleburne publishes 0 for every precinct and 2 for its provisional unit, 4,496 ballots cast
+        s = self.snap("al-2026-general", "AL")
+        self.unit(s, "al", "CLEBURNE", 0, "ABEL", ballots=4000)
+        self.unit(s, "al", "CLEBURNE", 2, "PROVISIONAL", ballots=496)
+        got, listed = self.regs()
+        self.assertEqual(got, {})
+        self.assertEqual(listed, [("AL", "al-2026-general", "CLEBURNE", "registered voters 2 below ballots cast 4496")])
 
     def test_latest_snapshot_only(self):
         old = self.snap("tx-2026-general", "TX", "2026-11-05T00:00:00Z")

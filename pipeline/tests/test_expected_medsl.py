@@ -85,6 +85,21 @@ class MedslTest(unittest.TestCase):
         t, notes = totals([rec("P1", "A", "10", st="AK", county="", fips="")])
         self.assertEqual([(r["county_fips"], r["votes"]) for r in t], [("", 10)])
         self.assertEqual(notes["blank_county"]["AK"], 1)
+        self.assertEqual(dict(notes["no_county"]), {("AK", "", ""): 10})
+
+    def test_four_digit_fips_padded(self):
+        # MEDSL 2022 AL, AR, CA publish "1001"; 2018 publishes "01001"
+        t, _ = totals([rec("P1", "A", "10", st="AL", fips="1001", county="AUTAUGA")])
+        self.assertEqual([r["county_fips"] for r in t], ["01001"])
+
+    def test_pseudo_counties_are_no_county(self):
+        # ME 2018 "23000" STATE UOCAVA, MO "36000" KANSAS CITY, RI "NAN" / "NA": in the state check, no baseline
+        t, notes = totals([rec("P1", "A", "10", st="ME", fips="23000", county="STATE UOCAVA"),
+                           rec("P1", "A", "5", st="RI", fips="NAN", county=""),
+                           rec("P1", "A", "7", st="RI", fips="44001", county="BRISTOL")])
+        self.assertEqual(sorted((r["state_po"], r["county_fips"], r["votes"]) for r in t),
+                         [("ME", "", 10), ("RI", "", 5), ("RI", "44001", 7)])
+        self.assertEqual(dict(notes["no_county"]), {("ME", "23000", "STATE UOCAVA"): 10, ("RI", "NAN", ""): 5})
 
     def test_party_lines_kept_apart_for_mode_choice(self):
         # a fusion candidate: DEM line by TOTAL, WOR line only by split modes -> both lines count
