@@ -1,0 +1,2 @@
+repo,commit,path,url,fetched_utc,http_status,bytes,expected_bytes,git_sha,sha256,error
+MEDSL/2018-elections-official,42055b11dcd5477bc125cdec5a18fbcc60fb6bed,HOUSE/HOUSE_precinct_general.zip,https://raw.githubusercontent.com/MEDSL/2018-elections-official/42055b11dcd5477bc125cdec5a18fbcc60fb6bed/HOUSE/HOUSE_precinct_general.zip,2026-11-28T01:53:34Z,200,5896198,5896198,4c2259db93e3fd9c65925f5d086d9a73a56f852e,1c9cba5d1e4ae8a614280c7e2d4b1fb0c2932c00a0e2a52d4443c298e0f29b86,

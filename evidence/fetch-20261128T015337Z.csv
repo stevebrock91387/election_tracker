@@ -1,0 +1,2 @@
+repo,commit,path,url,fetched_utc,http_status,bytes,expected_bytes,git_sha,sha256,error
+MEDSL/2018-elections-official,42055b11dcd5477bc125cdec5a18fbcc60fb6bed,STATE/STATE_precinct_general.zip,https://raw.githubusercontent.com/MEDSL/2018-elections-official/42055b11dcd5477bc125cdec5a18fbcc60fb6bed/STATE/STATE_precinct_general.zip,2026-11-28T01:53:37Z,200,77979826,77979826,71e19e9e0e8176bd7129ccd00e22d1091e588f3f,a9c2a201b3efaf1a0c8a62249f65b5aed3ce1ca5bcbcb4aa6a8a3e2702f6c626,

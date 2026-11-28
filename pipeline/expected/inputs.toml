@@ -1,0 +1,21 @@
+# Step 4 inputs.
+#
+# FEC: the official federal-elections compilation per year (xlsx), fetched by
+# `python3 -m pipeline.expected.run fetch` through pipeline/fetch.py.
+#
+# MEDSL precinct returns (not fetched here):
+# - 2022: data/raw/medsl-2022-precinct, commit a8126c5790b8 (evidence/fetch-20261120T200305Z.csv).
+# - 2018: data/raw/medsl-2018-precinct/{SENATE,HOUSE,STATE}, MEDSL/2018-elections-official commit
+#   42055b11dcd5, fetched 2026-11-28 with tools/fetch_github_dir.py (evidence/fetch-20261128T0153{31,34,37}Z.csv).
+#   The repo says it is deprecated in favour of Harvard Dataverse (Senate doi:10.7910/DVN/DGNAFS, House
+#   doi:10.7910/DVN/IVIXLK, State doi:10.7910/DVN/ZFXEJU, version 1.1), whose files need a guestbook
+#   response to download; Steve chose the GitHub copy (2026-11-27). The two are not byte-identical
+#   (each Dataverse CSV is 4-24 MB larger, cause unknown); see docs/expected.md.
+
+[fec]
+2018 = "https://www.fec.gov/documents/2706/federalelections2018.xlsx"
+2022 = "https://www.fec.gov/documents/5676/federalelections2022.xlsx"
+
+[medsl]
+2018 = "data/raw/medsl-2018-precinct"
+2022 = "data/raw/medsl-2022-precinct"

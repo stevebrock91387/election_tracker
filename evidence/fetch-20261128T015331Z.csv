@@ -1,0 +1,2 @@
+repo,commit,path,url,fetched_utc,http_status,bytes,expected_bytes,git_sha,sha256,error
+MEDSL/2018-elections-official,42055b11dcd5477bc125cdec5a18fbcc60fb6bed,SENATE/SENATE_precinct_general.zip,https://raw.githubusercontent.com/MEDSL/2018-elections-official/42055b11dcd5477bc125cdec5a18fbcc60fb6bed/SENATE/SENATE_precinct_general.zip,2026-11-28T01:53:31Z,200,5663496,5663496,cfd7694ffd0fe0ebbd7294d7b90a145b1a0e80f8,b07d7852578d3c94bc06931f6d31fd64324fd4877ae1f641fd1af634de639b75,
